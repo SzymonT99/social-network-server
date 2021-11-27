@@ -1,6 +1,5 @@
 package com.server.springboot.domain.entity;
 
-import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.server.springboot.domain.enumeration.ActivityStatus;
 import com.server.springboot.domain.enumeration.Role;
 import lombok.*;
@@ -9,6 +8,8 @@ import javax.validation.constraints.Email;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
 import java.util.Date;
+import java.util.List;
+import java.util.Set;
 
 @AllArgsConstructor
 @NoArgsConstructor
@@ -28,25 +29,25 @@ public class User {
 
     @NotNull
     @Enumerated(EnumType.STRING)
-    @Column(name = "role")
+    @Column(name = "role", nullable = false)
     private Role role;
 
     @NotNull
-    @Column(name = "username")
+    @Column(name = "username", nullable = false, length = 20)
     @Size(max = 20)
     private String username;
 
     @NotNull
-    @Column(name = "password")
+    @Column(name = "password", nullable = false, length = 100)
     @Size(max = 100)
     private String password;
 
     @NotNull
     @Email
-    @Column(name = "email")
+    @Column(name = "email", nullable = false)
     private String email;
 
-    @Column(name = "phone_number")
+    @Column(name = "phone_number", length = 20)
     private String phoneNumber;
 
     @Column(name = "incorrect_login_counter")
@@ -54,7 +55,7 @@ public class User {
 
     @Temporal(TemporalType.TIMESTAMP)
     @NotNull
-    @Column(name = "created_at")
+    @Column(name = "created_at", nullable = false)
     private Date createdAt;
 
     @Column(name = "verified_account")
@@ -65,15 +66,30 @@ public class User {
     private ActivityStatus activityStatus;
 
     @NotNull
-    @Column(name = "is_blocked")
+    @Column(name = "is_blocked", nullable = false)
     private boolean isBlocked;
 
     @NotNull
-    @Column(name = "is_deleted")
+    @Column(name = "is_deleted", nullable = false)
     private boolean isDeleted;
 
     @OneToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_profile_id", nullable = false)
     private UserProfile userProfile;
+
+    @OneToMany(mappedBy = "user", fetch = FetchType.LAZY,
+            cascade = CascadeType.ALL)
+    private Set<AccountVerification> verificationCodes;
+
+    @OneToMany(mappedBy = "user", fetch = FetchType.LAZY,
+            cascade = CascadeType.ALL)
+    private Set<Token> tokens;
+
+    @ManyToMany
+    @JoinTable(
+            name = "user_interest",
+            joinColumns = @JoinColumn(name = "user_id"),
+            inverseJoinColumns = @JoinColumn(name = "interest_id"))
+    private List<Interest> userInterests;
 
 }
