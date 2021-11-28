@@ -5,6 +5,7 @@ import lombok.*;
 import javax.persistence.*;
 import javax.validation.constraints.NotNull;
 import java.util.Date;
+import java.util.List;
 
 @AllArgsConstructor
 @NoArgsConstructor
@@ -41,5 +42,8 @@ public class Photo {
     @ManyToOne(cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     @JoinColumn(name = "user_profile_id", nullable = false)
     private UserProfile userProfile;
+
+    @ManyToMany(mappedBy = "photos")
+    private List<Post> posts;
 
 }

@@ -45,4 +45,8 @@ public class Address {
             cascade = CascadeType.ALL)
     private UserProfile userProfile;
 
+    @OneToOne(mappedBy = "eventAddress", fetch = FetchType.LAZY,
+            cascade = CascadeType.ALL)
+    private Event event;
+
 }

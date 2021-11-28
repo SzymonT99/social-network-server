@@ -85,11 +85,81 @@ public class User {
             cascade = CascadeType.ALL)
     private Set<Token> tokens;
 
+    @OneToMany(mappedBy = "postAuthor", fetch = FetchType.LAZY,
+            cascade = CascadeType.ALL)
+    private Set<Post> posts;
+
+    @OneToMany(mappedBy = "commentAuthor", fetch = FetchType.LAZY,
+            cascade = CascadeType.ALL)
+    private Set<Comment> comments;
+
+    @OneToMany(mappedBy = "sharedPostUser", fetch = FetchType.LAZY,
+            cascade = CascadeType.ALL)
+    private Set<SharedPost> sharedPosts;
+
+    @OneToMany(mappedBy = "likedPostUser", fetch = FetchType.LAZY,
+            cascade = CascadeType.ALL)
+    private Set<LikedPost> likedPosts;
+
+    @OneToMany(mappedBy = "user", fetch = FetchType.LAZY,
+            cascade = CascadeType.ALL)
+    private Set<Friend> friends;
+
+    @OneToMany(mappedBy = "userFriend", fetch = FetchType.LAZY,
+            cascade = CascadeType.ALL)
+    private Set<Friend> userFriends;
+
+    @OneToMany(mappedBy = "chatCreator", fetch = FetchType.LAZY,
+            cascade = CascadeType.ALL)
+    private Set<Chat> createdChats;
+
+    @OneToMany(mappedBy = "messageAuthor", fetch = FetchType.LAZY,
+            cascade = CascadeType.ALL)
+    private Set<Message> messages;
+
+    @OneToMany(mappedBy = "chatMember", fetch = FetchType.LAZY,
+            cascade = CascadeType.ALL)
+    private Set<ChatMember> memberOfChats;
+
+    @OneToMany(mappedBy = "eventCreator", fetch = FetchType.LAZY,
+            cascade = CascadeType.ALL)
+    private Set<Event> createdEvents;
+
+    @OneToMany(mappedBy = "eventMember", fetch = FetchType.LAZY,
+            cascade = CascadeType.ALL)
+    private Set<EventMember> memberOfEvents;
+
+    @OneToMany(mappedBy = "sharedEventUser", fetch = FetchType.LAZY,
+            cascade = CascadeType.ALL)
+    private Set<SharedEvent> sharedEvents;
+
+    @OneToMany(mappedBy = "suspect", fetch = FetchType.LAZY,
+            cascade = CascadeType.ALL)
+    private Set<Report> reports;
+
+    @OneToMany(mappedBy = "user", fetch = FetchType.LAZY,
+            cascade = CascadeType.ALL)
+    private Set<Activity> activities;
+
     @ManyToMany
     @JoinTable(
             name = "user_interest",
             joinColumns = @JoinColumn(name = "user_id"),
             inverseJoinColumns = @JoinColumn(name = "interest_id"))
     private List<Interest> userInterests;
+
+    @ManyToMany
+    @JoinTable(
+            name = "favourite_post",
+            joinColumns = @JoinColumn(name = "user_id"),
+            inverseJoinColumns = @JoinColumn(name = "post_id"))
+    private List<Post> favouritePosts;
+
+    @ManyToMany
+    @JoinTable(
+            name = "liked_comment",
+            joinColumns = @JoinColumn(name = "user_id"),
+            inverseJoinColumns = @JoinColumn(name = "comment_id"))
+    private List<Post> likedComments;
 
 }
