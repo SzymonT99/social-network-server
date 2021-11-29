@@ -35,6 +35,10 @@ public class ChatMember {
     @Column(name = "has_unread_message", nullable = false)
     private boolean hasUnreadMessage;
 
+    @NotNull
+    @Column(name = "can_add_others", nullable = false)
+    private boolean canAddOthers;
+
     @ManyToOne(cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     @JoinColumn(name = "chat_id", nullable = false)
     private Chat chat;

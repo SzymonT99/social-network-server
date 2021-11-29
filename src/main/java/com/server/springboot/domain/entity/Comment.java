@@ -32,10 +32,6 @@ public class Comment {
     @Column(name = "date", nullable = false)
     private Date date;
 
-    @NotNull
-    @Column(name = "is_deleted", nullable = false)
-    private boolean isDeleted;
-
     @ManyToOne(cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     @JoinColumn(name = "author_id", nullable = false)
     private User commentAuthor;

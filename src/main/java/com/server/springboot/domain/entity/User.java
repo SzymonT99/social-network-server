@@ -141,6 +141,14 @@ public class User {
             cascade = CascadeType.ALL)
     private Set<Activity> activities;
 
+    @OneToMany(mappedBy = "groupCreator", fetch = FetchType.LAZY,
+            cascade = CascadeType.ALL)
+    private Set<Group> createdGroups;
+
+    @OneToMany(mappedBy = "groupMember", fetch = FetchType.LAZY,
+            cascade = CascadeType.ALL)
+    private Set<GroupMember> memberOfGroups;
+
     @ManyToMany
     @JoinTable(
             name = "user_interest",

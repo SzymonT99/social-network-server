@@ -31,4 +31,7 @@ public class Interest {
     @ManyToMany(mappedBy = "userInterests")
     private List<User> interestedUsers;
 
+    @ManyToMany(mappedBy = "groupInterests")
+    private List<Group> interestedGroup;
+
 }

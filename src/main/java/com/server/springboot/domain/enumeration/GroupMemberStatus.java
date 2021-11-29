@@ -1,8 +1,9 @@
 package com.server.springboot.domain.enumeration;
 
-public enum ParticipationStatus {
-    TAKE_PART,
+public enum GroupMemberStatus {
+    WANT_TO_JOIN,
     INVITED,
     REJECTED,
-    INTERESTED
+    JOINED,
+    DELETED
 }

@@ -69,6 +69,10 @@ public class Post {
             cascade = CascadeType.ALL)
     private Set<Comment> comments;
 
+    @ManyToOne(cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @JoinColumn(name = "group_id")
+    private Group group;
+
     @ManyToMany(mappedBy = "favouritePosts")
     private List<User> favourites;
 

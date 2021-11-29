@@ -1,6 +1,6 @@
 package com.server.springboot.domain.entity;
 
-import com.server.springboot.domain.enumeration.ParticipationStatus;
+import com.server.springboot.domain.enumeration.EventParticipationStatus;
 import lombok.*;
 
 import javax.persistence.*;
@@ -25,7 +25,7 @@ public class EventMember {
 
     @NotNull
     @Column(name = "participation_status", nullable = false)
-    private ParticipationStatus participationStatus;
+    private EventParticipationStatus participationStatus;
 
     @Temporal(TemporalType.TIMESTAMP)
     @Column(name = "added_in")
