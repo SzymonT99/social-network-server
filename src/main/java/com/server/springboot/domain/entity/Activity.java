@@ -5,7 +5,7 @@ import lombok.*;
 
 import javax.persistence.*;
 import javax.validation.constraints.NotNull;
-import java.util.Date;
+import java.time.LocalDateTime;
 
 @AllArgsConstructor
 @NoArgsConstructor
@@ -23,14 +23,14 @@ public class Activity {
     @Column(name = "activity_id")
     private Long activityId;
 
+    @Enumerated(EnumType.STRING)
     @NotNull
     @Column(name = "activity_type", nullable = false)
     private ActivityType activityType;
 
-    @Temporal(TemporalType.TIMESTAMP)
     @NotNull
     @Column(name = "activity_date", nullable = false)
-    private Date activityDate;
+    private LocalDateTime activityDate;
 
     @ManyToOne(cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", nullable = false)

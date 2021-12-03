@@ -1,10 +1,13 @@
 package com.server.springboot.domain.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.*;
 
 import javax.persistence.*;
 import javax.validation.constraints.NotNull;
-import java.util.Date;
+import java.time.LocalDateTime;
+import java.time.temporal.ChronoField;
+
 
 @AllArgsConstructor
 @NoArgsConstructor
@@ -26,18 +29,23 @@ public class AccountVerification {
     @Column(name = "verification_code", nullable = false)
     private String verificationCode;
 
-    @Temporal(TemporalType.TIMESTAMP)
     @NotNull
     @Column(name = "created_at", nullable = false)
-    private Date createdAt;
+    private LocalDateTime createdAt;
 
-    @Temporal(TemporalType.TIMESTAMP)
     @NotNull
     @Column(name = "expired_at", nullable = false)
-    private Date expiredAt;
+    private LocalDateTime expiredAt;
 
     @ManyToOne(cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", nullable = false)
+    @JsonIgnore
     private User user;
 
+    public AccountVerification(User user, String verificationCode, int tokenTime) {
+        this.verificationCode = verificationCode;
+        this.createdAt = LocalDateTime.now();
+        this.expiredAt = LocalDateTime.now().plus(tokenTime, ChronoField.MILLI_OF_DAY.getBaseUnit());
+        this.user = user;
+    }
 }

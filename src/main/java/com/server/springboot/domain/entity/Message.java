@@ -4,7 +4,7 @@ import lombok.*;
 
 import javax.persistence.*;
 import javax.validation.constraints.NotNull;
-import java.util.Date;
+import java.time.LocalDateTime;
 
 @AllArgsConstructor
 @NoArgsConstructor
@@ -30,15 +30,13 @@ public class Message {
     @Column(name = "image", nullable = false)
     private String image;
 
-    @Temporal(TemporalType.TIMESTAMP)
     @NotNull
     @Column(name = "created_at", nullable = false)
-    private Date createdAt;
+    private LocalDateTime createdAt;
 
-    @Temporal(TemporalType.TIMESTAMP)
     @NotNull
     @Column(name = "edited_at", nullable = false)
-    private Date editedAt;
+    private LocalDateTime editedAt;
 
     @NotNull
     @Column(name = "is_deleted", nullable = false)

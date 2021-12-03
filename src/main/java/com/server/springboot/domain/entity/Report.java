@@ -5,7 +5,7 @@ import lombok.*;
 
 import javax.persistence.*;
 import javax.validation.constraints.NotNull;
-import java.util.Date;
+import java.time.LocalDateTime;
 
 @AllArgsConstructor
 @NoArgsConstructor
@@ -23,6 +23,7 @@ public class Report {
     @Column(name = "report_id")
     private Long reportId;
 
+    @Enumerated(EnumType.STRING)
     @NotNull
     @Column(name = "report_type", nullable = false)
     private ReportType reportType;
@@ -30,10 +31,9 @@ public class Report {
     @Column(name = "description")
     private String description;
 
-    @Temporal(TemporalType.TIMESTAMP)
     @NotNull
     @Column(name = "created_at", nullable = false)
-    private Date createdAt;
+    private LocalDateTime createdAt;
 
     @NotNull
     @Column(name = "is_confirmed", nullable = false)

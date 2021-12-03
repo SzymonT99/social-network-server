@@ -4,6 +4,7 @@ import lombok.*;
 
 import javax.persistence.*;
 import javax.validation.constraints.NotNull;
+import java.time.LocalDateTime;
 import java.util.Set;
 
 @AllArgsConstructor
@@ -28,6 +29,10 @@ public class ThreadAnswer {
 
     @Column(name = "average_rate")
     private Float averageRate;
+
+    @NotNull
+    @Column(name = "date", nullable = false)
+    private LocalDateTime date;
 
     @ManyToOne(cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     @JoinColumn(name = "group_member_id", nullable = false)

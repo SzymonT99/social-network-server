@@ -23,6 +23,7 @@ public class UserFavourite {
     @Column(name = "user_favourite_id")
     private Long userFavouriteId;
 
+    @Enumerated(EnumType.STRING)
     @NotNull
     @Column(name = "favourite_type", nullable = false)
     private FavouriteType favouriteType;

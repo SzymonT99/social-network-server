@@ -4,7 +4,8 @@ import lombok.*;
 
 import javax.persistence.*;
 import javax.validation.constraints.NotNull;
-import java.util.Date;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 
 @AllArgsConstructor
 @NoArgsConstructor
@@ -30,13 +31,11 @@ public class Friend {
     private boolean invitationDisplayed;
 
     @NotNull
-    @Temporal(TemporalType.DATE)
     @Column(name = "invitation_date", nullable = false)
-    private Date invitationDate;
+    private LocalDateTime invitationDate;
 
-    @Temporal(TemporalType.DATE)
     @Column(name = "friend_from_date")
-    private Date friendFromDate;
+    private LocalDate friendFromDate;
 
     @ManyToOne(cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", nullable = false)
