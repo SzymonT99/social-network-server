@@ -5,6 +5,7 @@ import lombok.*;
 import javax.persistence.*;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
+import java.time.LocalDateTime;
 import java.util.Date;
 import java.util.Set;
 
@@ -35,15 +36,13 @@ public class Event {
     @Column(name = "image")
     private String image;
 
-    @Temporal(TemporalType.TIMESTAMP)
     @NotNull
     @Column(name = "event_date", nullable = false)
-    private Date eventDate;
+    private LocalDateTime eventDate;
 
-    @Temporal(TemporalType.TIMESTAMP)
     @NotNull
     @Column(name = "created_at", nullable = false)
-    private Date createdAt;
+    private LocalDateTime createdAt;
 
     @NotNull
     @Column(name = "is_deleted", nullable = false)

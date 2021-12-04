@@ -6,7 +6,7 @@ import lombok.*;
 
 import javax.persistence.*;
 import javax.validation.constraints.NotNull;
-import java.util.Date;
+import java.time.LocalDateTime;
 import java.util.Set;
 
 @AllArgsConstructor
@@ -25,17 +25,18 @@ public class GroupMember {
     @Column(name = "group_member_id")
     private Long groupMemberId;
 
+    @Enumerated(EnumType.STRING)
     @NotNull
     @Column(name = "group_permission_type", nullable = false)
     private GroupPermissionType groupPermissionType;
 
+    @Enumerated(EnumType.STRING)
     @NotNull
     @Column(name = "group_member_status", nullable = false)
     private GroupMemberStatus groupMemberStatus;
 
-    @Temporal(TemporalType.TIMESTAMP)
     @Column(name = "added_in")
-    private Date addedIn;
+    private LocalDateTime addedIn;
 
     @NotNull
     @Column(name = "invitation_displayed", nullable = false)

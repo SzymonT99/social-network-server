@@ -4,7 +4,7 @@ import lombok.*;
 
 import javax.persistence.*;
 import javax.validation.constraints.NotNull;
-import java.util.Date;
+import java.time.LocalDateTime;
 import java.util.List;
 
 @AllArgsConstructor
@@ -30,10 +30,9 @@ public class Photo {
     @Column(name = "caption")
     private String caption;
 
-    @Temporal(TemporalType.TIMESTAMP)
     @NotNull
     @Column(name = "added_in", nullable = false)
-    private Date addedIn;
+    private LocalDateTime addedIn;
 
     @NotNull
     @Column(name = "is_profile_photo", nullable = false)

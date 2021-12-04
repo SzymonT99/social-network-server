@@ -4,7 +4,7 @@ import lombok.*;
 
 import javax.persistence.*;
 import javax.validation.constraints.NotNull;
-import java.util.Date;
+import java.time.LocalDateTime;
 
 @AllArgsConstructor
 @NoArgsConstructor
@@ -22,10 +22,9 @@ public class SharedEvent {
     @Column(name = "shared_event_id")
     private Long sharedEventId;
 
-    @Temporal(TemporalType.TIMESTAMP)
     @NotNull
-    @Column(name = "date", nullable = false)
-    private Date date;
+    @Column(name = "date",  nullable = false)
+    private LocalDateTime date;
 
     @ManyToOne(cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", nullable = false)

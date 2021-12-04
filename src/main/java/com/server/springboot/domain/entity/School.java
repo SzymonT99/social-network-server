@@ -6,7 +6,7 @@ import lombok.*;
 import javax.persistence.*;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
-import java.util.Date;
+import java.time.LocalDate;
 
 @AllArgsConstructor
 @NoArgsConstructor
@@ -34,15 +34,13 @@ public class School {
     @Column(name = "name", nullable = false, length = 100)
     private String name;
 
-    @Temporal(TemporalType.DATE)
     @NotNull
     @Column(name = "start_date", nullable = false)
-    private Date startDate;
+    private LocalDate startDate;
 
-    @Temporal(TemporalType.DATE)
     @NotNull
     @Column(name = "graduation_date")
-    private Date graduationDate;
+    private LocalDate graduationDate;
 
     @ManyToOne(cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     @JoinColumn(name = "user_profile_id", nullable = false)

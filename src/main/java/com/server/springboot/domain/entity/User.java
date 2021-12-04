@@ -3,11 +3,12 @@ package com.server.springboot.domain.entity;
 import com.server.springboot.domain.enumeration.ActivityStatus;
 import com.server.springboot.domain.enumeration.Role;
 import lombok.*;
+
 import javax.persistence.*;
 import javax.validation.constraints.Email;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
-import java.util.Date;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Set;
 
@@ -34,7 +35,7 @@ public class User {
 
     @NotNull
     @Column(name = "username", nullable = false, length = 20)
-    @Size(max = 20)
+    @Size(min = 6, max = 20)
     private String username;
 
     @NotNull
@@ -53,14 +54,14 @@ public class User {
     @Column(name = "incorrect_login_counter")
     private Integer incorrectLoginCounter;
 
-    @Temporal(TemporalType.TIMESTAMP)
     @NotNull
     @Column(name = "created_at", nullable = false)
-    private Date createdAt;
+    private LocalDateTime createdAt;
 
     @Column(name = "verified_account")
     private boolean verifiedAccount;
 
+    @Enumerated(EnumType.STRING)
     @NotNull
     @Column(name = "activity_status")
     private ActivityStatus activityStatus;
@@ -73,7 +74,7 @@ public class User {
     @Column(name = "is_deleted", nullable = false)
     private boolean isDeleted;
 
-    @OneToOne(fetch = FetchType.LAZY)
+    @OneToOne(fetch = FetchType.LAZY, cascade = CascadeType.ALL)
     @JoinColumn(name = "user_profile_id", nullable = false)
     private UserProfile userProfile;
 
@@ -168,6 +169,6 @@ public class User {
             name = "liked_comment",
             joinColumns = @JoinColumn(name = "user_id"),
             inverseJoinColumns = @JoinColumn(name = "comment_id"))
-    private List<Post> likedComments;
+    private List<Comment> likedComments;
 
 }

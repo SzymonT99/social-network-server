@@ -4,7 +4,7 @@ import lombok.*;
 
 import javax.persistence.*;
 import javax.validation.constraints.NotNull;
-import java.util.Date;
+import java.time.LocalDateTime;
 
 @AllArgsConstructor
 @NoArgsConstructor
@@ -22,10 +22,9 @@ public class SharedPost {
     @Column(name = "shared_post_id")
     private Long sharedPostId;
 
-    @Temporal(TemporalType.TIMESTAMP)
     @NotNull
     @Column(name = "date", nullable = false)
-    private Date date;
+    private LocalDateTime date;
 
     @ManyToOne(cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", nullable = false)

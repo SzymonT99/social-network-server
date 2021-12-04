@@ -5,7 +5,7 @@ import lombok.*;
 
 import javax.persistence.*;
 import javax.validation.constraints.NotNull;
-import java.util.Date;
+import java.time.LocalDateTime;
 
 @AllArgsConstructor
 @NoArgsConstructor
@@ -23,13 +23,13 @@ public class EventMember {
     @Column(name = "event_member_id")
     private Long eventMemberId;
 
+    @Enumerated(EnumType.STRING)
     @NotNull
     @Column(name = "participation_status", nullable = false)
     private EventParticipationStatus participationStatus;
 
-    @Temporal(TemporalType.TIMESTAMP)
     @Column(name = "added_in")
-    private Date addedIn;
+    private LocalDateTime addedIn;
 
     @NotNull
     @Column(name = "invitation_displayed", nullable = false)

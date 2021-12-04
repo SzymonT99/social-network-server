@@ -4,7 +4,7 @@ import lombok.*;
 
 import javax.persistence.*;
 import javax.validation.constraints.NotNull;
-import java.util.Date;
+import java.time.LocalDateTime;
 
 @AllArgsConstructor
 @NoArgsConstructor
@@ -26,15 +26,13 @@ public class Token {
     @Column(name = "token", nullable = false)
     private String token;
 
-    @Temporal(TemporalType.TIMESTAMP)
     @NotNull
     @Column(name = "created_at", nullable = false)
-    private Date createdAt;
+    private LocalDateTime createdAt;
 
-    @Temporal(TemporalType.TIMESTAMP)
     @NotNull
     @Column(name = "token_expires", nullable = false)
-    private Date tokenExpires;
+    private LocalDateTime tokenExpires;
 
     @ManyToOne(cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", nullable = false)

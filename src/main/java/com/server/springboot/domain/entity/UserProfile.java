@@ -7,7 +7,7 @@ import lombok.*;
 import javax.persistence.*;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
-import java.util.Date;
+import java.time.LocalDate;
 import java.util.Set;
 
 @AllArgsConstructor
@@ -48,10 +48,9 @@ public class UserProfile {
     @Column(name = "gender", nullable = false)
     private Gender gender;
 
-    @Temporal(TemporalType.DATE)
     @NotNull
     @Column(name = "date_of_birth", nullable = false)
-    private Date dateOfBirth;
+    private LocalDate dateOfBirth;
 
     @NotNull
     @Column(name = "age", nullable = false)
@@ -72,7 +71,7 @@ public class UserProfile {
     private User user;
 
     @OneToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "address_id", nullable = false)
+    @JoinColumn(name = "address_id")
     private Address address;
 
     @OneToMany(mappedBy = "userProfile", fetch = FetchType.LAZY,

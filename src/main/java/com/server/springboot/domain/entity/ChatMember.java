@@ -4,7 +4,7 @@ import lombok.*;
 
 import javax.persistence.*;
 import javax.validation.constraints.NotNull;
-import java.util.Date;
+import java.time.LocalDateTime;
 
 @AllArgsConstructor
 @NoArgsConstructor
@@ -22,10 +22,9 @@ public class ChatMember {
     @Column(name = "chat_member_id")
     private Long chatMemberId;
 
-    @Temporal(TemporalType.TIMESTAMP)
     @NotNull
     @Column(name = "added_in", nullable = false)
-    private Date createdAt;
+    private LocalDateTime createdAt;
 
     @NotNull
     @Column(name = "has_muted_chat", nullable = false)

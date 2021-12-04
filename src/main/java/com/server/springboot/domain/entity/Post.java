@@ -4,7 +4,7 @@ import lombok.*;
 
 import javax.persistence.*;
 import javax.validation.constraints.NotNull;
-import java.util.Date;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Set;
 
@@ -31,15 +31,13 @@ public class Post {
     @Column(name = "is_public", nullable = false)
     private boolean isPublic;
 
-    @Temporal(TemporalType.TIMESTAMP)
     @NotNull
     @Column(name = "created_at", nullable = false)
-    private Date createdAt;
+    private LocalDateTime createdAt;
 
-    @Temporal(TemporalType.TIMESTAMP)
     @NotNull
     @Column(name = "edited_at", nullable = false)
-    private Date editedAt;
+    private LocalDateTime editedAt;
 
     @NotNull
     @Column(name = "is_edited", nullable = false)
