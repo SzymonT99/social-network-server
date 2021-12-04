@@ -22,12 +22,10 @@ public class UserApiController {
     private static final Logger LOGGER = LoggerFactory.getLogger(UserApiController.class);
 
     private final UserService userService;
-    private final AccountVerificationRepository accountVerificationRepository;
 
     @Autowired
-    public UserApiController(UserService userService, AccountVerificationRepository accountVerificationRepository) {
+    public UserApiController(UserService userService) {
         this.userService = userService;
-        this.accountVerificationRepository = accountVerificationRepository;
     }
 
     @PostMapping("/register")

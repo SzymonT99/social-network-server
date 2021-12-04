@@ -45,5 +45,4 @@ public class CreateUserDto {
 
     @NotEmpty
     private String dateOfBirth;
-
 }

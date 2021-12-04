@@ -10,12 +10,15 @@ import com.server.springboot.exception.BadRequestException;
 import com.server.springboot.exception.ExistingDataException;
 import com.server.springboot.exception.NotFoundException;
 import com.server.springboot.exception.ResourceGoneException;
+import com.server.springboot.service.EmailService;
 import com.server.springboot.service.UserService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.thymeleaf.TemplateEngine;
+import org.thymeleaf.context.Context;
 
 import java.time.LocalDateTime;
 import java.util.UUID;
@@ -29,12 +32,16 @@ public class UserServiceImpl implements UserService {
     private final UserRepository userRepository;
     private final AccountVerificationRepository accountVerificationRepository;
     private final UserMapper userMapper;
+    private final EmailService emailService;
+    private final TemplateEngine templateEngine;
 
     @Autowired
-    public UserServiceImpl(UserRepository userRepository, AccountVerificationRepository accountVerificationRepository, UserMapper userMapper) {
+    public UserServiceImpl(UserRepository userRepository, AccountVerificationRepository accountVerificationRepository, UserMapper userMapper, EmailService emailService, TemplateEngine templateEngine) {
         this.userRepository = userRepository;
         this.accountVerificationRepository = accountVerificationRepository;
         this.userMapper = userMapper;
+        this.emailService = emailService;
+        this.templateEngine = templateEngine;
     }
 
     @Override
@@ -53,9 +60,16 @@ public class UserServiceImpl implements UserService {
         newUser.setPassword(bCryptPasswordEncoder.encode(createUserDto.getPassword()));
         userRepository.save(newUser);
 
-        AccountVerification accountVerification = new AccountVerification(newUser, UUID.randomUUID().toString(), VERIFICATION_TOKEN_EXPIRATION_TIME);
+        String activationCode = UUID.randomUUID().toString();
+        AccountVerification accountVerification = new AccountVerification(newUser, activationCode, VERIFICATION_TOKEN_EXPIRATION_TIME);
         accountVerificationRepository.save(accountVerification);
 
+        String activationLink = "CLIENT_URL?token=" + activationCode;
+        Context context = new Context();
+        context.setVariable("link", activationLink);
+        context.setVariable("name", createUserDto.getFirstName() + " " + createUserDto.getLastName());
+        String html = templateEngine.process("ActivationAccount", context);
+        emailService.sendEmail(createUserDto.getEmail(), "Serwis społecznościowy - aktywacja konta", html);
     }
 
     @Override
