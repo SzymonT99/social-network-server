@@ -2,8 +2,6 @@ package com.server.springboot.domain.dto.request;
 
 import com.server.springboot.domain.enumeration.Gender;
 import lombok.*;
-import org.hibernate.validator.constraints.Length;
-
 import javax.validation.constraints.*;
 
 @AllArgsConstructor
