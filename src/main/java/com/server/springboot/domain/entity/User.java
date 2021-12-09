@@ -1,7 +1,6 @@
 package com.server.springboot.domain.entity;
 
 import com.server.springboot.domain.enumeration.ActivityStatus;
-import com.server.springboot.domain.enumeration.Role;
 import lombok.*;
 
 import javax.persistence.*;
@@ -27,11 +26,6 @@ public class User {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "user_id")
     private Long userId;
-
-    @NotNull
-    @Enumerated(EnumType.STRING)
-    @Column(name = "role", nullable = false)
-    private Role role;
 
     @NotNull
     @Column(name = "username", nullable = false, length = 20)
@@ -78,13 +72,12 @@ public class User {
     @JoinColumn(name = "user_profile_id", nullable = false)
     private UserProfile userProfile;
 
-    @OneToMany(mappedBy = "user", fetch = FetchType.LAZY,
-            cascade = CascadeType.ALL)
-    private Set<AccountVerification> verificationCodes;
+    @OneToOne(mappedBy = "user", orphanRemoval = true)
+    private RefreshToken refreshToken;
 
     @OneToMany(mappedBy = "user", fetch = FetchType.LAZY,
             cascade = CascadeType.ALL)
-    private Set<Token> tokens;
+    private Set<AccountVerification> verificationCodes;
 
     @OneToMany(mappedBy = "postAuthor", fetch = FetchType.LAZY,
             cascade = CascadeType.ALL)
@@ -170,5 +163,12 @@ public class User {
             joinColumns = @JoinColumn(name = "user_id"),
             inverseJoinColumns = @JoinColumn(name = "comment_id"))
     private List<Comment> likedComments;
+
+    @ManyToMany(fetch = FetchType.LAZY)
+    @JoinTable(
+            name = "user_role",
+            joinColumns = @JoinColumn(name = "user_id"),
+            inverseJoinColumns = @JoinColumn(name = "role_id"))
+    private List<Role> roles;
 
 }

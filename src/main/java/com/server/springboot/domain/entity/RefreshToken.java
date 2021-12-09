@@ -14,13 +14,13 @@ import java.time.LocalDateTime;
 @Builder
 
 @Entity
-@Table(name = "token")
-public class Token {
+@Table(name = "refresh_token")
+public class RefreshToken {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "token_id")
-    private Long tokenId;
+    @Column(name = "refresh_token_id")
+    private Long refreshTokenId;
 
     @NotNull
     @Column(name = "token", nullable = false)
@@ -31,11 +31,10 @@ public class Token {
     private LocalDateTime createdAt;
 
     @NotNull
-    @Column(name = "token_expires", nullable = false)
-    private LocalDateTime tokenExpires;
+    @Column(name = "expiry_date", nullable = false)
+    private LocalDateTime expiryDate;
 
-    @ManyToOne(cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @OneToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
-
 }

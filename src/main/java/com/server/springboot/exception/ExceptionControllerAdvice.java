@@ -27,9 +27,9 @@ public class ExceptionControllerAdvice {
         return errors;
     }
 
-    @ExceptionHandler(value = ExistingDataException.class)
+    @ExceptionHandler(ForbiddenException.class )
     @ResponseStatus(HttpStatus.FORBIDDEN)
-    public ErrorMessage handleExistingDataException(ExistingDataException ex, WebRequest request) {
+    public ErrorMessage handleForbiddenDataException(RuntimeException ex, WebRequest request) {
         return new ErrorMessage(
                 HttpStatus.FORBIDDEN,
                 HttpStatus.FORBIDDEN.value(),
@@ -39,7 +39,7 @@ public class ExceptionControllerAdvice {
 
     @ExceptionHandler(value = {BadRequestException.class, IllegalStateException.class, DateTimeParseException.class})
     @ResponseStatus(HttpStatus.BAD_REQUEST)
-    public ErrorMessage handleBadRequestException(BadRequestException ex, WebRequest request) {
+    public ErrorMessage handleBadRequestException(RuntimeException ex, WebRequest request) {
         return new ErrorMessage(
                 HttpStatus.BAD_REQUEST,
                 HttpStatus.BAD_REQUEST.value(),

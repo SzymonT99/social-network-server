@@ -4,13 +4,11 @@ import com.server.springboot.domain.dto.request.CreateUserDto;
 import com.server.springboot.domain.entity.User;
 import com.server.springboot.domain.entity.UserProfile;
 import com.server.springboot.domain.enumeration.ActivityStatus;
-import com.server.springboot.domain.enumeration.Role;
+import com.server.springboot.domain.enumeration.AppRole;
 import org.springframework.stereotype.Component;
 
 import java.time.LocalDateTime;
-import java.util.Date;
 import java.time.LocalDate;
-import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 
 @Component
@@ -31,7 +29,6 @@ public class UserMapper implements Converter<User, CreateUserDto>{
                 .build();
 
         return User.builder()
-                .role(Role.ROLE_USER)
                 .username(from.getUsername())
                 .password(from.getPassword())
                 .email(from.getEmail())
@@ -39,6 +36,7 @@ public class UserMapper implements Converter<User, CreateUserDto>{
                 .createdAt(LocalDateTime.now())
                 .verifiedAccount(false)
                 .activityStatus(ActivityStatus.OFFLINE)
+                .incorrectLoginCounter(0)
                 .isBlocked(false)
                 .isDeleted(false)
                 .userProfile(userProfile)
