@@ -3,20 +3,21 @@ package com.server.springboot.service.impl;
 import com.server.springboot.domain.dto.request.CreateUserDto;
 import com.server.springboot.domain.dto.request.UserLoginDto;
 import com.server.springboot.domain.dto.response.JwtResponse;
+import com.server.springboot.domain.dto.response.RefreshTokenResponse;
 import com.server.springboot.domain.entity.AccountVerification;
+import com.server.springboot.domain.entity.RefreshToken;
 import com.server.springboot.domain.entity.Role;
 import com.server.springboot.domain.entity.User;
+import com.server.springboot.domain.enumeration.ActivityStatus;
 import com.server.springboot.domain.enumeration.AppRole;
 import com.server.springboot.domain.mapper.UserMapper;
 import com.server.springboot.domain.repository.AccountVerificationRepository;
 import com.server.springboot.domain.repository.RoleRepository;
 import com.server.springboot.domain.repository.UserRepository;
-import com.server.springboot.exception.BadRequestException;
-import com.server.springboot.exception.ExistingDataException;
-import com.server.springboot.exception.NotFoundException;
-import com.server.springboot.exception.ResourceGoneException;
+import com.server.springboot.exception.*;
 import com.server.springboot.security.JwtUtils;
 import com.server.springboot.service.EmailService;
+import com.server.springboot.service.RefreshTokenService;
 import com.server.springboot.service.UserService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -24,7 +25,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -42,9 +45,10 @@ import java.util.stream.Collectors;
 public class UserServiceImpl implements UserService {
 
     private static final int VERIFICATION_TOKEN_EXPIRATION_TIME = 7200000;
+    private final Integer MAX_LOGIN_ATTEMPTS = 5;
 
-    @Value("${jwtExpirationMs}")
-    private int jwtExpirationMs;
+    @Value("${jwtAccessExpirationMs}")
+    private Long accessTokenExpirationMs;
 
     private static final Logger LOGGER = LoggerFactory.getLogger(UserServiceImpl.class);
     private final UserRepository userRepository;
@@ -56,12 +60,15 @@ public class UserServiceImpl implements UserService {
     private final AuthenticationManager authenticationManager;
     private final PasswordEncoder encoder;
     private final JwtUtils jwtUtils;
+    private final RefreshTokenService refreshTokenService;
+    private final UserDetailsServiceImpl userDetailsService;
 
     @Autowired
     public UserServiceImpl(UserRepository userRepository, RoleRepository roleRepository,
                            AccountVerificationRepository accountVerificationRepository,
                            UserMapper userMapper, EmailService emailService, TemplateEngine templateEngine,
-                           AuthenticationManager authenticationManager, PasswordEncoder encoder, JwtUtils jwtUtils) {
+                           AuthenticationManager authenticationManager, PasswordEncoder encoder, JwtUtils jwtUtils,
+                           RefreshTokenService refreshTokenService, UserDetailsServiceImpl userDetailsService) {
         this.userRepository = userRepository;
         this.roleRepository = roleRepository;
         this.accountVerificationRepository = accountVerificationRepository;
@@ -71,17 +78,19 @@ public class UserServiceImpl implements UserService {
         this.authenticationManager = authenticationManager;
         this.encoder = encoder;
         this.jwtUtils = jwtUtils;
+        this.refreshTokenService = refreshTokenService;
+        this.userDetailsService = userDetailsService;
     }
 
     @Override
     public void addUser(CreateUserDto createUserDto) {
         if (userRepository.existsByUsername(createUserDto.getUsername())) {
-            LOGGER.info("---- username already exist");
-            throw new ExistingDataException("username");
+            LOGGER.info("---- Username already exist");
+            throw new ForbiddenException("There is already a user with the given username");
         }
         if (userRepository.existsByEmail(createUserDto.getEmail())) {
-            LOGGER.info("---- email already exist");
-            throw new ExistingDataException("email");
+            LOGGER.info("---- Email already exist");
+            throw new ForbiddenException("There is already a user with the given email");
         }
 
         BCryptPasswordEncoder bCryptPasswordEncoder = new BCryptPasswordEncoder();
@@ -90,7 +99,7 @@ public class UserServiceImpl implements UserService {
 
         List<Role> roles = new ArrayList<>();
         Role userRole = roleRepository.findByName(AppRole.ROLE_USER)
-                .orElseThrow(() -> new NotFoundException("Not found role"));
+                .orElseThrow(() -> new NotFoundException("Not found role: ROLE_USER"));
         roles.add(userRole);
         newUser.setRoles(roles);
 
@@ -130,25 +139,76 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public JwtResponse loginUser(UserLoginDto userLoginDto) {
+        User authorizedUser = userRepository.findByUsernameOrEmail(userLoginDto.getLogin(), userLoginDto.getLogin())
+                .orElse(new User());
+        if (userRepository.existsByUsernameOrEmail(userLoginDto.getLogin(), userLoginDto.getLogin())) {
+            authorizedUser.setBlocked(authorizedUser.getIncorrectLoginCounter() >= MAX_LOGIN_ATTEMPTS);
+            authorizedUser.setIncorrectLoginCounter(authorizedUser.getIncorrectLoginCounter() + 1);
+            userRepository.save(authorizedUser);
+        }
+
+        if (authorizedUser.getIncorrectLoginCounter() >= MAX_LOGIN_ATTEMPTS + 1 && authorizedUser.isBlocked()) {
+            throw new ForbiddenException(String.format("User account with login: %s is blocked", userLoginDto.getLogin()));
+        }
 
         Authentication authentication = authenticationManager.authenticate(
-                new UsernamePasswordAuthenticationToken(userLoginDto.getUsername(), userLoginDto.getPassword()));
+                new UsernamePasswordAuthenticationToken(userLoginDto.getLogin(), userLoginDto.getPassword()));
+
+        // Gdy autentykacja jest pomyślna, wykonywany jest poniższy kod
+        authorizedUser.setIncorrectLoginCounter(0);
+        authorizedUser.setActivityStatus(ActivityStatus.ONLINE);
+        userRepository.save(authorizedUser);
+
+        if (!authorizedUser.isVerifiedAccount()) {
+            throw new ForbiddenException(String.format("User account with login: %s has not been activated", userLoginDto.getLogin()));
+        }
 
         SecurityContextHolder.getContext().setAuthentication(authentication);
-        String jwt = jwtUtils.generateJwtToken(authentication);
-
         UserDetailsImpl userDetails = (UserDetailsImpl) authentication.getPrincipal();
+        String accessToken = jwtUtils.generateAccessToken(userDetails);
+
         List<String> roles = userDetails.getAuthorities().stream()
-                .map(item -> item.getAuthority())
+                .map(GrantedAuthority::getAuthority)
                 .collect(Collectors.toList());
+
+        RefreshToken refreshToken = refreshTokenService.createRefreshToken(userDetails.getUsername());
 
         return new JwtResponse(
                 userDetails.getId(),
                 userDetails.getUsername(),
                 userDetails.getEmail(),
-                roles, jwt,
+                roles,
+                accessToken,
                 "Bearer",
-                jwtExpirationMs);
+                accessTokenExpirationMs,
+                refreshToken.getToken());
+    }
+
+    @Override
+    public RefreshTokenResponse refreshExpiredToken(String refreshTokenStr) {
+        RefreshToken lastRefreshToken = refreshTokenService.findToken(refreshTokenStr)
+                .orElseThrow(() -> new NotFoundException("Not found received refreshToken: " + refreshTokenStr));
+        if (refreshTokenService.checkExpirationDate(lastRefreshToken)) {
+            User user = lastRefreshToken.getUser();
+            String username = user.getUsername();
+            UserDetails userDetails = userDetailsService.loadUserByUsername(username);
+            String newAccessToken = jwtUtils.generateAccessToken(userDetails);
+            String newRefreshToken = refreshTokenService.createRefreshToken(userDetails.getUsername()).getToken();
+
+            return new RefreshTokenResponse(
+                    newAccessToken,
+                    newRefreshToken,
+                    "Bearer"
+            );
+        }
+        return new RefreshTokenResponse();
+    }
+
+    @Override
+    public void logoutUser(Long userId) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new NotFoundException("Not found user with given id: " + userId));
+        refreshTokenService.deleteByUser(user);
     }
 
 }

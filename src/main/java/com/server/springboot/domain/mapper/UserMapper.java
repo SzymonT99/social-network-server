@@ -36,6 +36,7 @@ public class UserMapper implements Converter<User, CreateUserDto>{
                 .createdAt(LocalDateTime.now())
                 .verifiedAccount(false)
                 .activityStatus(ActivityStatus.OFFLINE)
+                .incorrectLoginCounter(0)
                 .isBlocked(false)
                 .isDeleted(false)
                 .userProfile(userProfile)

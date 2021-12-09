@@ -1,7 +1,7 @@
 package com.server.springboot.domain.enumeration;
 
 public enum ActivityStatus {
-    AVAILABLE,
+    ONLINE,
     BE_RIGHT_BACK,
     BUSY,
     OFFLINE

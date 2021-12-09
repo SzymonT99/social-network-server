@@ -72,13 +72,12 @@ public class User {
     @JoinColumn(name = "user_profile_id", nullable = false)
     private UserProfile userProfile;
 
-    @OneToMany(mappedBy = "user", fetch = FetchType.LAZY,
-            cascade = CascadeType.ALL)
-    private Set<AccountVerification> verificationCodes;
+    @OneToOne(mappedBy = "user", orphanRemoval = true)
+    private RefreshToken refreshToken;
 
     @OneToMany(mappedBy = "user", fetch = FetchType.LAZY,
             cascade = CascadeType.ALL)
-    private Set<Token> tokens;
+    private Set<AccountVerification> verificationCodes;
 
     @OneToMany(mappedBy = "postAuthor", fetch = FetchType.LAZY,
             cascade = CascadeType.ALL)

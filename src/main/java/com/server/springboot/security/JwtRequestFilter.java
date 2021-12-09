@@ -1,5 +1,7 @@
 package com.server.springboot.security;
 
+import com.server.springboot.exception.ForbiddenException;
+import com.server.springboot.service.RefreshTokenService;
 import com.server.springboot.service.impl.UserDetailsServiceImpl;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -9,7 +11,6 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
 import org.springframework.stereotype.Component;
-import org.springframework.util.StringUtils;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import javax.servlet.FilterChain;
@@ -23,12 +24,14 @@ public class JwtRequestFilter extends OncePerRequestFilter {
 
     private final JwtUtils jwtUtils;
     private final UserDetailsServiceImpl userDetailsService;
+    private final RefreshTokenService refreshTokenService;
     private static final Logger LOGGER = LoggerFactory.getLogger(JwtRequestFilter.class);
 
     @Autowired
-    public JwtRequestFilter(JwtUtils jwtUtils, UserDetailsServiceImpl userDetailsService) {
+    public JwtRequestFilter(JwtUtils jwtUtils, UserDetailsServiceImpl userDetailsService, RefreshTokenService refreshTokenService) {
         this.jwtUtils = jwtUtils;
         this.userDetailsService = userDetailsService;
+        this.refreshTokenService = refreshTokenService;
     }
 
     @Override
@@ -36,24 +39,29 @@ public class JwtRequestFilter extends OncePerRequestFilter {
             throws ServletException, IOException {
         try {
             String requestHeader = request.getHeader("Authorization");
-            String jwt = null;
+            String accessJwtToken = null;
             if (requestHeader != null && requestHeader.startsWith("Bearer ")) {
-                jwt = requestHeader.substring(7);
+                accessJwtToken = requestHeader.substring(7);
             }
 
-            if (jwt != null && jwtUtils.validateJwtToken(jwt)) {
-                String username = jwtUtils.getUserNameFromJwtToken(jwt);
+            if (accessJwtToken != null && jwtUtils.validateJwtToken(accessJwtToken)) {
+                String login = jwtUtils.geLoginFromJwtToken(accessJwtToken);
 
-                UserDetails userDetails = userDetailsService.loadUserByUsername(username);
+                UserDetails userDetails = userDetailsService.loadUserByUsername(login);
+                if (!refreshTokenService.existByUsername(userDetails.getUsername())) {
+                    response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "User is logged out");
+                }
+
                 UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(
-                        userDetails, null, userDetails.getAuthorities());
+                        userDetails, userDetails.getPassword(), userDetails.getAuthorities());
                 authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
 
                 SecurityContextHolder.getContext().setAuthentication(authentication);
-                LOGGER.info("Token is correct");
+                LOGGER.info("---- Token is correct");
             }
         } catch (Exception e) {
-            LOGGER.warn("Cannot set user authentication: {}", e);
+            LOGGER.warn("---- User authentication error: {}", e);
+            response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Unauthorized: " + e.getMessage());
         }
 
         filterChain.doFilter(request, response);
