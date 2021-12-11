@@ -10,7 +10,7 @@ import com.server.springboot.domain.entity.Role;
 import com.server.springboot.domain.entity.User;
 import com.server.springboot.domain.enumeration.ActivityStatus;
 import com.server.springboot.domain.enumeration.AppRole;
-import com.server.springboot.domain.mapper.UserMapper;
+import com.server.springboot.domain.mapper.Converter;
 import com.server.springboot.domain.repository.AccountVerificationRepository;
 import com.server.springboot.domain.repository.RoleRepository;
 import com.server.springboot.domain.repository.UserRepository;
@@ -54,7 +54,7 @@ public class UserServiceImpl implements UserService {
     private final UserRepository userRepository;
     private final RoleRepository roleRepository;
     private final AccountVerificationRepository accountVerificationRepository;
-    private final UserMapper userMapper;
+    private final Converter<User, CreateUserDto> userMapper;
     private final EmailService emailService;
     private final TemplateEngine templateEngine;
     private final AuthenticationManager authenticationManager;
@@ -66,7 +66,7 @@ public class UserServiceImpl implements UserService {
     @Autowired
     public UserServiceImpl(UserRepository userRepository, RoleRepository roleRepository,
                            AccountVerificationRepository accountVerificationRepository,
-                           UserMapper userMapper, EmailService emailService, TemplateEngine templateEngine,
+                           Converter<User, CreateUserDto> userMapper, EmailService emailService, TemplateEngine templateEngine,
                            AuthenticationManager authenticationManager, PasswordEncoder encoder, JwtUtils jwtUtils,
                            RefreshTokenService refreshTokenService, UserDetailsServiceImpl userDetailsService) {
         this.userRepository = userRepository;

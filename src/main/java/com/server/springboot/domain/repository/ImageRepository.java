@@ -1,9 +1,9 @@
 package com.server.springboot.domain.repository;
 
-import com.server.springboot.domain.entity.Photo;
+import com.server.springboot.domain.entity.Image;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
 @Repository
-public interface PhotoRepository extends JpaRepository<Photo, Long> {
+public interface ImageRepository extends JpaRepository<Image, String> {
 }

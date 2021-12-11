@@ -88,6 +88,6 @@ public class UserProfile {
 
     @OneToMany(mappedBy = "userProfile", fetch = FetchType.LAZY,
             cascade = CascadeType.ALL)
-    private Set<Photo> userPhotos;
+    private Set<Image> userImages;
 
 }

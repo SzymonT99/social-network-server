@@ -7,6 +7,7 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.context.request.WebRequest;
+import org.springframework.web.multipart.MaxUploadSizeExceededException;
 
 import java.time.format.DateTimeParseException;
 import java.util.HashMap;
@@ -63,6 +64,16 @@ public class ExceptionControllerAdvice {
         return new ErrorMessage(
                 HttpStatus.GONE,
                 HttpStatus.GONE.value(),
+                ex.getMessage(),
+                request.getDescription(false).substring(4));
+    }
+
+    @ExceptionHandler(MaxUploadSizeExceededException.class)
+    @ResponseStatus(HttpStatus.EXPECTATION_FAILED)
+    public ErrorMessage handleFileMaxSizeException(MaxUploadSizeExceededException ex, WebRequest request) {
+        return new ErrorMessage(
+                HttpStatus.EXPECTATION_FAILED,
+                HttpStatus.EXPECTATION_FAILED.value(),
                 ex.getMessage(),
                 request.getDescription(false).substring(4));
     }

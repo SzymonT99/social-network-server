@@ -35,8 +35,7 @@ public class Post {
     @Column(name = "created_at", nullable = false)
     private LocalDateTime createdAt;
 
-    @NotNull
-    @Column(name = "edited_at", nullable = false)
+    @Column(name = "edited_at")
     private LocalDateTime editedAt;
 
     @NotNull
@@ -76,9 +75,9 @@ public class Post {
 
     @ManyToMany
     @JoinTable(
-            name = "post_photo",
+            name = "post_images",
             joinColumns = @JoinColumn(name = "post_id"),
-            inverseJoinColumns = @JoinColumn(name = "photo_id"))
-    private List<Photo> photos;
+            inverseJoinColumns = @JoinColumn(name = "image_id"))
+    private List<Image> images;
 
 }

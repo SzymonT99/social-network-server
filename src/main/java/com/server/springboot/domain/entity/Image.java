@@ -1,6 +1,7 @@
 package com.server.springboot.domain.entity;
 
 import lombok.*;
+import org.hibernate.annotations.GenericGenerator;
 
 import javax.persistence.*;
 import javax.validation.constraints.NotNull;
@@ -15,20 +16,26 @@ import java.util.List;
 @Builder
 
 @Entity
-@Table(name = "photo")
-public class Photo {
+@Table(name = "image")
+public class Image {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "photo_id")
-    private Long photoId;
+    @GeneratedValue(generator = "uuid")
+    @GenericGenerator(name = "uuid", strategy = "uuid2")
+    private String imageId;
 
     @NotNull
-    @Column(name = "name", nullable = false)
+    @Column(name = "filename", nullable = false)
     private String filename;
 
-    @Column(name = "caption")
-    private String caption;
+    @NotNull
+    @Column(name = "data",  nullable = false)
+    @Lob
+    private byte[] data;
+
+    @NotNull
+    @Column(name = "type", nullable = false)
+    private String type;
 
     @NotNull
     @Column(name = "added_in", nullable = false)
@@ -42,7 +49,7 @@ public class Photo {
     @JoinColumn(name = "user_profile_id", nullable = false)
     private UserProfile userProfile;
 
-    @ManyToMany(mappedBy = "photos")
+    @ManyToMany(mappedBy = "images")
     private List<Post> posts;
 
 }
