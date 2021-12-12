@@ -1,6 +1,7 @@
 package com.server.springboot.service.impl;
 
 import com.server.springboot.domain.dto.request.RequestPostDto;
+import com.server.springboot.domain.dto.response.PostDto;
 import com.server.springboot.domain.entity.Image;
 import com.server.springboot.domain.entity.Post;
 import com.server.springboot.domain.entity.User;
@@ -8,6 +9,7 @@ import com.server.springboot.domain.mapper.Converter;
 import com.server.springboot.domain.repository.ImageRepository;
 import com.server.springboot.domain.repository.PostRepository;
 import com.server.springboot.domain.repository.UserRepository;
+import com.server.springboot.exception.ForbiddenException;
 import com.server.springboot.exception.NotFoundException;
 import com.server.springboot.service.FileService;
 import com.server.springboot.service.PostService;
@@ -29,16 +31,37 @@ public class PostServiceImpl implements PostService {
     private final PostRepository postRepository;
     private final ImageRepository imageRepository;
     private final FileService fileService;
+    private final Converter<List<PostDto>, List<Post>> postDtoListMapper;
+    private final Converter<PostDto, Post> postDtoMapper;
 
 
     @Autowired
     public PostServiceImpl(Converter<Post, RequestPostDto> postMapper, UserRepository userRepository,
-                           PostRepository postRepository, ImageRepository imageRepository, FileService fileService) {
+                           PostRepository postRepository, ImageRepository imageRepository, FileService fileService,
+                           Converter<List<PostDto>, List<Post>> postDtoListMapper, Converter<PostDto, Post> postDtoMapper) {
         this.postMapper = postMapper;
         this.userRepository = userRepository;
         this.postRepository = postRepository;
         this.imageRepository = imageRepository;
         this.fileService = fileService;
+        this.postDtoListMapper = postDtoListMapper;
+        this.postDtoMapper = postDtoMapper;
+    }
+
+    @Override
+    public List<PostDto> findAllPosts() {
+        List<Post> posts = postRepository.findByIsDeletedOrderByCreatedAtDesc(false);
+        return postDtoListMapper.convert(posts);
+    }
+
+    @Override
+    public PostDto findPostById(Long postId) {
+        Post post = postRepository.findById(postId)
+                .orElseThrow(() -> new NotFoundException("Not found post with id: " + postId));
+        if (post.isDeleted()) {
+            throw new ForbiddenException("Post with id: " + postId + " is archived");
+        }
+        return postDtoMapper.convert(post);
     }
 
     @Override
@@ -67,7 +90,6 @@ public class PostServiceImpl implements PostService {
         post.setEdited(true);
         postRepository.save(post);
         imageRepository.deleteAll(lastImages);
-        System.out.println("lastimages: " + lastImages.size());
     }
 
     @Override
@@ -80,10 +102,15 @@ public class PostServiceImpl implements PostService {
     }
 
     @Override
-    public void deletePostByIdWithArchiving(Long postId) {
-        Post post = postRepository.findById(postId)
-                .orElseThrow(() -> new NotFoundException("Not found post with id: " + postId));
-        post.setDeleted(true);
-        postRepository.save(post);
+    public void deletePostByIdWithArchiving(Long postId, boolean archive) {
+        if (archive) {
+            Post post = postRepository.findById(postId)
+                    .orElseThrow(() -> new NotFoundException("Not found post with id: " + postId));
+            post.setDeleted(true);
+            postRepository.save(post);
+        } else {
+            deletePostById(postId);
+        }
     }
+
 }

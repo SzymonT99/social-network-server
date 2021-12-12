@@ -1,6 +1,7 @@
 package com.server.springboot.controller;
 
 import com.server.springboot.domain.dto.request.RequestPostDto;
+import com.server.springboot.domain.dto.response.PostDto;
 import com.server.springboot.domain.entity.Image;
 import com.server.springboot.service.FileService;
 import com.server.springboot.service.PostService;
@@ -15,6 +16,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import javax.validation.Valid;
+import javax.validation.constraints.NotNull;
 import java.util.List;
 
 @CrossOrigin
@@ -23,12 +25,10 @@ import java.util.List;
 public class PostApiController {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(UserApiController.class);
-    private final FileService fileService;
     private final PostService postService;
 
     @Autowired
-    public PostApiController(FileService fileService, PostService postService) {
-        this.fileService = fileService;
+    public PostApiController(PostService postService) {
         this.postService = postService;
     }
 
@@ -52,20 +52,28 @@ public class PostApiController {
     }
 
     // usuwanie posta
-    @DeleteMapping(value = "/posts/{id}", consumes = {MediaType.APPLICATION_JSON_VALUE, MediaType.MULTIPART_FORM_DATA_VALUE})
+    @DeleteMapping(value = "/posts/{id}")
     public ResponseEntity<?> deletePost(@PathVariable(value = "id") Long postId) {
         LOGGER.info("---- Delete post with id: {}", postId);
         postService.deletePostById(postId);
         return new ResponseEntity<>(HttpStatus.OK);
     }
 
-    // pobieranie zdjęcia z bazy
-    @GetMapping(value = "/images/{id}")
-    public ResponseEntity<byte[]> getImage(@PathVariable(value = "id") String imageId) {
-        Image image = fileService.findImageById(imageId);
-        HttpHeaders headers = new HttpHeaders();
-        headers.add(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + image.getFilename() + "\"");
-        return new ResponseEntity<>(image.getData(), headers, HttpStatus.OK);
+    // usuwanie posta z archiwizacją
+    @DeleteMapping(value = "/posts")
+    public ResponseEntity<?> deletePostWithArchiving(@RequestParam(value = "id") Long postId, @RequestParam(value = "archive") @NotNull boolean archive) {
+        LOGGER.info("---- Delete post by archiving with id: {}", postId);
+        postService.deletePostByIdWithArchiving(postId, archive);
+        return new ResponseEntity<>(HttpStatus.OK);
     }
 
+    @GetMapping(value = "/posts")
+    public ResponseEntity<List<PostDto>> getPosts() {
+        return new ResponseEntity<>(postService.findAllPosts(), HttpStatus.OK);
+    }
+
+    @GetMapping(value = "/posts/{id}")
+    public ResponseEntity<PostDto> getPostById(@PathVariable(value = "id") Long postId) {
+        return new ResponseEntity<>(postService.findPostById(postId), HttpStatus.OK);
+    }
 }
