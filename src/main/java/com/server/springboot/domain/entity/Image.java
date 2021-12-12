@@ -6,11 +6,10 @@ import org.hibernate.annotations.GenericGenerator;
 import javax.persistence.*;
 import javax.validation.constraints.NotNull;
 import java.time.LocalDateTime;
-import java.util.List;
+import java.util.Set;
 
 @AllArgsConstructor
 @NoArgsConstructor
-@EqualsAndHashCode
 @Getter
 @Setter
 @Builder
@@ -45,11 +44,11 @@ public class Image {
     @Column(name = "is_profile_photo", nullable = false)
     private boolean isProfilePhoto;
 
-    @ManyToOne(cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_profile_id", nullable = false)
     private UserProfile userProfile;
 
     @ManyToMany(mappedBy = "images")
-    private List<Post> posts;
+    private Set<Post> posts;
 
 }

@@ -5,12 +5,10 @@ import lombok.*;
 import javax.persistence.*;
 import javax.validation.constraints.NotNull;
 import java.time.LocalDateTime;
-import java.util.List;
 import java.util.Set;
 
 @AllArgsConstructor
 @NoArgsConstructor
-@EqualsAndHashCode
 @Getter
 @Setter
 @Builder
@@ -46,38 +44,42 @@ public class Post {
     @Column(name = "is_deleted", nullable = false)
     private boolean isDeleted;
 
-    @ManyToOne(cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "author_id", nullable = false)
     private User postAuthor;
 
     @OneToMany(mappedBy = "basePost", fetch = FetchType.LAZY,
-            cascade = CascadeType.ALL)
+            cascade = CascadeType.ALL, orphanRemoval = true)
     private Set<SharedPost> sharedBasePosts;
 
     @OneToMany(mappedBy = "newPost", fetch = FetchType.LAZY,
-            cascade = CascadeType.ALL)
+            cascade = CascadeType.ALL, orphanRemoval = true)
     private Set<SharedPost> sharedNewPosts;
 
     @OneToMany(mappedBy = "post", fetch = FetchType.LAZY,
-            cascade = CascadeType.ALL)
+            cascade = CascadeType.ALL, orphanRemoval = true)
     private Set<LikedPost> likedPosts;
 
     @OneToMany(mappedBy = "commentedPost", fetch = FetchType.LAZY,
-            cascade = CascadeType.ALL)
+            cascade = CascadeType.ALL, orphanRemoval = true)
     private Set<Comment> comments;
 
-    @ManyToOne(cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "group_id")
     private Group group;
 
     @ManyToMany(mappedBy = "favouritePosts")
-    private List<User> favourites;
+    private Set<User> favourites;
 
     @ManyToMany
     @JoinTable(
             name = "post_images",
             joinColumns = @JoinColumn(name = "post_id"),
             inverseJoinColumns = @JoinColumn(name = "image_id"))
-    private List<Image> images;
+    private Set<Image> images;
+
+    public void removeImages() {
+        this.images.clear();
+    }
 
 }

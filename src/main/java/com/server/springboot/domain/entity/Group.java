@@ -11,7 +11,6 @@ import java.util.Set;
 
 @AllArgsConstructor
 @NoArgsConstructor
-@EqualsAndHashCode
 @Getter
 @Setter
 @Builder
@@ -44,24 +43,24 @@ public class Group {
     @Column(name = "is_deleted", nullable = false)
     private boolean isDeleted;
 
-    @ManyToOne(cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "creator_id", nullable = false)
     private User groupCreator;
 
     @OneToMany(mappedBy = "group", fetch = FetchType.LAZY,
-            cascade = CascadeType.ALL)
+            cascade = CascadeType.ALL, orphanRemoval = true)
     private Set<GroupRule> groupRules;
 
     @OneToMany(mappedBy = "group", fetch = FetchType.LAZY,
-            cascade = CascadeType.ALL)
+            cascade = CascadeType.ALL, orphanRemoval = true)
     private Set<GroupMember> groupMembers;
 
     @OneToMany(mappedBy = "group", fetch = FetchType.LAZY,
-            cascade = CascadeType.ALL)
+            cascade = CascadeType.ALL, orphanRemoval = true)
     private Set<Thread> threads;
 
     @OneToMany(mappedBy = "group", fetch = FetchType.LAZY,
-            cascade = CascadeType.ALL)
+            cascade = CascadeType.ALL, orphanRemoval = true)
     private Set<Post> posts;
 
     @ManyToMany
@@ -69,6 +68,6 @@ public class Group {
             name = "group_interest",
             joinColumns = @JoinColumn(name = "group_id"),
             inverseJoinColumns = @JoinColumn(name = "interest_id"))
-    private List<Interest> groupInterests;
+    private Set<Interest> groupInterests;
 
 }

@@ -12,7 +12,6 @@ import java.util.Set;
 
 @AllArgsConstructor
 @NoArgsConstructor
-@EqualsAndHashCode
 @Getter
 @Setter
 @Builder
@@ -75,19 +74,19 @@ public class UserProfile {
     private Address address;
 
     @OneToMany(mappedBy = "userProfile", fetch = FetchType.LAZY,
-            cascade = CascadeType.ALL)
+            cascade = CascadeType.ALL, orphanRemoval = true)
     private Set<School> schools;
 
     @OneToMany(mappedBy = "userProfile", fetch = FetchType.LAZY,
-            cascade = CascadeType.ALL)
+            cascade = CascadeType.ALL, orphanRemoval = true)
     private Set<UserFavourite> favourites;
 
     @OneToMany(mappedBy = "userProfile", fetch = FetchType.LAZY,
-            cascade = CascadeType.ALL)
+            cascade = CascadeType.ALL, orphanRemoval = true)
     private Set<WorkPlace> workPlaces;
 
     @OneToMany(mappedBy = "userProfile", fetch = FetchType.LAZY,
-            cascade = CascadeType.ALL)
+            cascade = CascadeType.ALL, orphanRemoval = true)
     private Set<Image> userImages;
 
 }

@@ -36,9 +36,7 @@ import org.thymeleaf.context.Context;
 import org.springframework.security.core.Authentication;
 
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.UUID;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
@@ -97,7 +95,7 @@ public class UserServiceImpl implements UserService {
         User newUser = userMapper.convert(createUserDto);
         newUser.setPassword(bCryptPasswordEncoder.encode(createUserDto.getPassword()));
 
-        List<Role> roles = new ArrayList<>();
+        Set<Role> roles = new HashSet<>();
         Role userRole = roleRepository.findByName(AppRole.ROLE_USER)
                 .orElseThrow(() -> new NotFoundException("Not found role: ROLE_USER"));
         roles.add(userRole);

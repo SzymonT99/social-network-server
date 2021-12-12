@@ -34,14 +34,32 @@ public class PostApiController {
 
     // tworzenie posta ze zdjeciami
     @PostMapping(value = "/posts", consumes = {MediaType.APPLICATION_JSON_VALUE, MediaType.MULTIPART_FORM_DATA_VALUE})
-    public ResponseEntity<?> createPost(@RequestPart(value = "images") List<MultipartFile> images, @Valid @RequestPart(value = "post") RequestPostDto postDto) {
+    public ResponseEntity<?> createPost(@RequestPart(value = "images") List<MultipartFile> imageFiles,
+                                        @Valid @RequestPart(value = "post") RequestPostDto requestPostDto) {
         LOGGER.info("---- Create post");
-        List<Image> postImages = fileService.storeImages(images, postDto.getUserId());
-        postService.addPost(postDto, postImages);
+        postService.addPost(requestPostDto, imageFiles);
         return new ResponseEntity<>(HttpStatus.CREATED);
     }
 
-    //pobieranie zdjęcia z bazy
+    // aktualizacja posta
+    @PutMapping(value = "/posts/{id}", consumes = {MediaType.APPLICATION_JSON_VALUE, MediaType.MULTIPART_FORM_DATA_VALUE})
+    public ResponseEntity<?> updatePost(@PathVariable(value = "id") Long postId,
+                                        @RequestPart(value = "images") List<MultipartFile> imageFiles,
+                                        @Valid @RequestPart(value = "post") RequestPostDto requestPostDto) {
+        LOGGER.info("---- Update post with id: {}", postId);
+        postService.editPost(postId, requestPostDto, imageFiles);
+        return new ResponseEntity<>(HttpStatus.OK);
+    }
+
+    // usuwanie posta
+    @DeleteMapping(value = "/posts/{id}", consumes = {MediaType.APPLICATION_JSON_VALUE, MediaType.MULTIPART_FORM_DATA_VALUE})
+    public ResponseEntity<?> deletePost(@PathVariable(value = "id") Long postId) {
+        LOGGER.info("---- Delete post with id: {}", postId);
+        postService.deletePostById(postId);
+        return new ResponseEntity<>(HttpStatus.OK);
+    }
+
+    // pobieranie zdjęcia z bazy
     @GetMapping(value = "/images/{id}")
     public ResponseEntity<byte[]> getImage(@PathVariable(value = "id") String imageId) {
         Image image = fileService.findImageById(imageId);

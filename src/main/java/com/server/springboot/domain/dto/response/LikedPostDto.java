@@ -9,9 +9,7 @@ import lombok.*;
 @Setter
 @Builder
 @ToString
-public class ResponseFile {
-    private String name;
-    private String url;
-    private String type;
-    private Long size;
+public class LikedPostDto {
+    private String username;
+    private String date;
 }

@@ -16,9 +16,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Objects;
+import java.util.*;
 
 @Service
 public class FileServiceImpl implements FileService {
@@ -34,14 +32,15 @@ public class FileServiceImpl implements FileService {
     }
 
     @Override
-    public List<Image> storeImages(List<MultipartFile> files, Long userId) {
+    public Set<Image> storageImages(List<MultipartFile> imageFiles, Long userId) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new NotFoundException("Not found user with id: " + userId));
         UserProfile userProfile = user.getUserProfile();
+        System.out.println("userProfile :" + userProfile);
 
-        List<Image> postImages = new ArrayList<>();
+        Set<Image> postImages = new HashSet<>();
 
-        files.forEach(file -> {
+        imageFiles.forEach(file -> {
             String fileName = StringUtils.cleanPath(Objects.requireNonNull(file.getOriginalFilename()));
             try {
                 if (!file.isEmpty()) {
