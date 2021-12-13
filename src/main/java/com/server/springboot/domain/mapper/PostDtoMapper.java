@@ -1,9 +1,6 @@
 package com.server.springboot.domain.mapper;
 
-import com.server.springboot.domain.dto.response.CommentDto;
-import com.server.springboot.domain.dto.response.ImageDto;
-import com.server.springboot.domain.dto.response.LikedPostDto;
-import com.server.springboot.domain.dto.response.PostDto;
+import com.server.springboot.domain.dto.response.*;
 import com.server.springboot.domain.entity.Post;
 import org.springframework.stereotype.Component;
 
@@ -18,6 +15,7 @@ public class PostDtoMapper implements Converter<PostDto, Post> {
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
         return PostDto.builder()
                 .postId(from.getPostId())
+                .postAuthorId(from.getPostAuthor().getUserId())
                 .postAuthor(from.getPostAuthor().getUserProfile().getFirstName()
                         + " " + from.getPostAuthor().getUserProfile().getLastName())
                 .text(from.getText())
@@ -37,6 +35,7 @@ public class PostDtoMapper implements Converter<PostDto, Post> {
                 .likes(
                         from.getLikedPosts().stream()
                                 .map(likedPost -> LikedPostDto.builder()
+                                        .userId(likedPost.getLikedPostUser().getUserId())
                                         .username(likedPost.getLikedPostUser().getUserProfile().getFirstName()
                                                 + " " + likedPost.getLikedPostUser().getUserProfile().getLastName())
                                         .date(likedPost.getDate().format(formatter))
@@ -56,6 +55,18 @@ public class PostDtoMapper implements Converter<PostDto, Post> {
                                                         .map(user -> user.getUserProfile().getFirstName() + " "
                                                                 + user.getUserProfile().getLastName())
                                                         .collect(Collectors.toList()))
+                                        .build())
+                                .collect(Collectors.toList())
+                )
+                .sharing(
+                        from.getSharedBasePosts().stream()
+                                .map(sharedPost -> SharedPostInfoDto.builder()
+                                        .userId(sharedPost.getSharedPostUser().getUserId())
+                                        .username(sharedPost.getSharedPostUser().getUserProfile().getFirstName() +
+                                                " " + sharedPost.getSharedPostUser().getUserProfile().getLastName())
+                                        .sharingText(sharedPost.getNewPost().getText())
+                                        .isPublic(sharedPost.getNewPost().isPublic())
+                                        .date(sharedPost.getDate().format(formatter))
                                         .build())
                                 .collect(Collectors.toList())
                 )

@@ -33,9 +33,8 @@ public class SharedPost {
     @JoinColumn(name = "base_post_id", nullable = false)
     private Post basePost;
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @OneToOne(fetch = FetchType.LAZY, cascade = CascadeType.ALL)
     @JoinColumn(name = "new_post_id", nullable = false)
     private Post newPost;
-
 }
 

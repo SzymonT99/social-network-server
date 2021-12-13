@@ -1,14 +1,13 @@
 package com.server.springboot.controller;
 
 import com.server.springboot.domain.dto.request.RequestPostDto;
+import com.server.springboot.domain.dto.request.RequestSharePostDto;
 import com.server.springboot.domain.dto.response.PostDto;
-import com.server.springboot.domain.entity.Image;
-import com.server.springboot.service.FileService;
+import com.server.springboot.domain.dto.response.SharedPostDto;
 import com.server.springboot.service.PostService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -32,7 +31,6 @@ public class PostApiController {
         this.postService = postService;
     }
 
-    // tworzenie posta ze zdjeciami
     @PostMapping(value = "/posts", consumes = {MediaType.APPLICATION_JSON_VALUE, MediaType.MULTIPART_FORM_DATA_VALUE})
     public ResponseEntity<?> createPost(@RequestPart(value = "images") List<MultipartFile> imageFiles,
                                         @Valid @RequestPart(value = "post") RequestPostDto requestPostDto) {
@@ -41,7 +39,6 @@ public class PostApiController {
         return new ResponseEntity<>(HttpStatus.CREATED);
     }
 
-    // aktualizacja posta
     @PutMapping(value = "/posts/{id}", consumes = {MediaType.APPLICATION_JSON_VALUE, MediaType.MULTIPART_FORM_DATA_VALUE})
     public ResponseEntity<?> updatePost(@PathVariable(value = "id") Long postId,
                                         @RequestPart(value = "images") List<MultipartFile> imageFiles,
@@ -51,7 +48,6 @@ public class PostApiController {
         return new ResponseEntity<>(HttpStatus.OK);
     }
 
-    // usuwanie posta
     @DeleteMapping(value = "/posts/{id}")
     public ResponseEntity<?> deletePost(@PathVariable(value = "id") Long postId) {
         LOGGER.info("---- Delete post with id: {}", postId);
@@ -59,7 +55,6 @@ public class PostApiController {
         return new ResponseEntity<>(HttpStatus.OK);
     }
 
-    // usuwanie posta z archiwizacją
     @DeleteMapping(value = "/posts")
     public ResponseEntity<?> deletePostWithArchiving(@RequestParam(value = "id") Long postId, @RequestParam(value = "archive") @NotNull boolean archive) {
         LOGGER.info("---- Delete post by archiving with id: {}", postId);
@@ -68,12 +63,48 @@ public class PostApiController {
     }
 
     @GetMapping(value = "/posts")
-    public ResponseEntity<List<PostDto>> getPosts() {
+    public ResponseEntity<List<PostDto>> getAllPosts() {
+        LOGGER.info("---- Get all posts");
         return new ResponseEntity<>(postService.findAllPosts(), HttpStatus.OK);
     }
 
     @GetMapping(value = "/posts/{id}")
-    public ResponseEntity<PostDto> getPostById(@PathVariable(value = "id") Long postId) {
+    public ResponseEntity<PostDto> getPost(@PathVariable(value = "id") Long postId) {
+        LOGGER.info("---- Get post with id: {}", postId);
         return new ResponseEntity<>(postService.findPostById(postId), HttpStatus.OK);
+    }
+
+    @PostMapping(value = "/posts/{postId}/like")
+    public ResponseEntity<?> likePost(@PathVariable(value = "postId") Long postId, @RequestParam(value = "userId") Long userId) {
+        LOGGER.info("---- User with id: {} likes post with id: {}", userId, postId);
+        postService.likePost(postId, userId);
+        return new ResponseEntity<>(HttpStatus.CREATED);
+    }
+
+    @DeleteMapping(value = "/posts/{postId}/like")
+    public ResponseEntity<?> deleteLikeFromPost(@PathVariable(value = "postId") Long postId, @RequestParam(value = "userId") Long userId) {
+        LOGGER.info("---- User with id: {} likes post with id: {}", userId, postId);
+        postService.deleteLikeFromPost(postId, userId);
+        return new ResponseEntity<>(HttpStatus.OK);
+    }
+
+    @PostMapping(value = "/posts/{basePostId}/share")
+    public ResponseEntity<?> sharePost(@PathVariable(value = "basePostId") Long basePostId, @Valid @RequestBody RequestSharePostDto requestSharePostDto) {
+        LOGGER.info("---- User with id: {} share post with id: {}", requestSharePostDto.getUserId(), basePostId);
+        postService.sharePost(basePostId, requestSharePostDto);
+        return new ResponseEntity<>(HttpStatus.CREATED);
+    }
+
+    @DeleteMapping(value = "/shared-posts")
+    public ResponseEntity<?> deleteSharedPost(@RequestParam(value = "sharedPostId") Long sharedPostId, @RequestParam(value = "userId") Long userId) {
+        LOGGER.info("---- Deleted shared post with id: {}", sharedPostId);
+        postService.deleteSharedPostById(sharedPostId, userId);
+        return new ResponseEntity<>(HttpStatus.OK);
+    }
+
+    @GetMapping(value = "/shared-posts")
+    public ResponseEntity<List<SharedPostDto>> getAllSharedPosts() {
+        LOGGER.info("---- Get all shared posts");
+        return new ResponseEntity<>(postService.findAllSharedPosts(), HttpStatus.OK);
     }
 }

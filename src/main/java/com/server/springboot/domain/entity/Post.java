@@ -52,9 +52,9 @@ public class Post {
             cascade = CascadeType.ALL, orphanRemoval = true)
     private Set<SharedPost> sharedBasePosts;
 
-    @OneToMany(mappedBy = "newPost", fetch = FetchType.LAZY,
+    @OneToOne(mappedBy = "newPost", fetch = FetchType.LAZY,
             cascade = CascadeType.ALL, orphanRemoval = true)
-    private Set<SharedPost> sharedNewPosts;
+    private SharedPost sharedNewPosts;
 
     @OneToMany(mappedBy = "post", fetch = FetchType.LAZY,
             cascade = CascadeType.ALL, orphanRemoval = true)

@@ -14,6 +14,7 @@ import java.util.List;
 @ToString
 public class PostDto {
     private Long postId;
+    private Long postAuthorId;
     private String postAuthor;
     private String text;
     private List<ImageDto> images;
@@ -25,5 +26,6 @@ public class PostDto {
     private boolean isEdited;
     private List<LikedPostDto> likes;
     private List<CommentDto> comments;
+    private List<SharedPostInfoDto> sharing;
 }
 

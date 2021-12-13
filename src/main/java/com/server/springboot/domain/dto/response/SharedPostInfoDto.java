@@ -1,5 +1,6 @@
 package com.server.springboot.domain.dto.response;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.*;
 
 @AllArgsConstructor
@@ -9,8 +10,11 @@ import lombok.*;
 @Setter
 @Builder
 @ToString
-public class LikedPostDto {
+public class SharedPostInfoDto {
     private Long userId;
     private String username;
+    private String sharingText;
     private String date;
+    @JsonProperty(value = "isPublic")
+    private boolean isPublic;
 }
