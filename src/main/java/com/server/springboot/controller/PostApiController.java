@@ -43,8 +43,8 @@ public class PostApiController {
         return new ResponseEntity<>(HttpStatus.CREATED);
     }
 
-    @PutMapping(value = "/posts/{id}", consumes = {MediaType.APPLICATION_JSON_VALUE, MediaType.MULTIPART_FORM_DATA_VALUE})
-    public ResponseEntity<?> updatePost(@PathVariable(value = "id") Long postId,
+    @PutMapping(value = "/posts/{postId}", consumes = {MediaType.APPLICATION_JSON_VALUE, MediaType.MULTIPART_FORM_DATA_VALUE})
+    public ResponseEntity<?> updatePost(@PathVariable(value = "postId") Long postId,
                                         @RequestPart(value = "images") List<MultipartFile> imageFiles,
                                         @Valid @RequestPart(value = "post") RequestPostDto requestPostDto) {
         LOGGER.info("---- Update post with id: {}", postId);
@@ -52,8 +52,8 @@ public class PostApiController {
         return new ResponseEntity<>(HttpStatus.OK);
     }
 
-    @DeleteMapping(value = "/posts/{id}")
-    public ResponseEntity<?> deletePost(@PathVariable(value = "id") Long postId, @RequestParam(value = "authorId") Long authorId) {
+    @DeleteMapping(value = "/posts/{postId}")
+    public ResponseEntity<?> deletePost(@PathVariable(value = "postId") Long postId, @RequestParam(value = "authorId") Long authorId) {
         LOGGER.info("---- Delete post with id: {}", postId);
         postService.deletePostById(postId, authorId);
         return new ResponseEntity<>(HttpStatus.OK);
@@ -73,8 +73,8 @@ public class PostApiController {
         return new ResponseEntity<>(postService.findAllPosts(), HttpStatus.OK);
     }
 
-    @GetMapping(value = "/posts/{id}")
-    public ResponseEntity<PostDto> getPost(@PathVariable(value = "id") Long postId) {
+    @GetMapping(value = "/posts/{postId}")
+    public ResponseEntity<PostDto> getPost(@PathVariable(value = "postId") Long postId) {
         LOGGER.info("---- Get post with id: {}", postId);
         return new ResponseEntity<>(postService.findPostById(postId), HttpStatus.OK);
     }

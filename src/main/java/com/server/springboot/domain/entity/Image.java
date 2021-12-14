@@ -28,7 +28,7 @@ public class Image {
     private String filename;
 
     @NotNull
-    @Column(name = "data",  nullable = false)
+    @Column(name = "data", nullable = false)
     @Lob
     private byte[] data;
 
@@ -45,10 +45,9 @@ public class Image {
     private boolean isProfilePhoto;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "user_profile_id", nullable = false)
+    @JoinColumn(name = "user_profile_id")
     private UserProfile userProfile;
 
     @ManyToMany(mappedBy = "images")
     private Set<Post> posts;
-
 }

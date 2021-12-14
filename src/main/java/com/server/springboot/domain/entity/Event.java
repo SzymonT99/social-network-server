@@ -32,8 +32,9 @@ public class Event {
     @Column(name = "description")
     private String description;
 
-    @Column(name = "image")
-    private String image;
+    @OneToOne(fetch = FetchType.LAZY, cascade = CascadeType.ALL)
+    @JoinColumn(name = "image_id")
+    private Image image;
 
     @NotNull
     @Column(name = "event_date", nullable = false)

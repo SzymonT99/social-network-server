@@ -4,6 +4,7 @@ import com.server.springboot.domain.dto.request.RequestPostDto;
 import com.server.springboot.domain.dto.request.RequestSharePostDto;
 import com.server.springboot.domain.dto.response.PostDto;
 import com.server.springboot.domain.dto.response.SharedPostDto;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
@@ -14,6 +15,7 @@ public interface PostService {
 
     void addPost(RequestPostDto requestPostDto, List<MultipartFile> imageFiles);
 
+    @Transactional
     void editPost(Long postId, RequestPostDto requestPostDto, List<MultipartFile> imageFiles);
 
     void deletePostById(Long postId, Long authorId);

@@ -29,8 +29,9 @@ public class Group {
     @Size(max = 30)
     private String name;
 
-    @Column(name = "image")
-    private String image;
+    @OneToOne(fetch = FetchType.LAZY, cascade = CascadeType.ALL)
+    @JoinColumn(name = "image_id")
+    private Image image;
 
     @Column(name = "description")
     private String description;

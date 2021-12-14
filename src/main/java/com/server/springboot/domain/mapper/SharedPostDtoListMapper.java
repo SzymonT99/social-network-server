@@ -22,7 +22,7 @@ public class SharedPostDtoListMapper implements Converter<List<SharedPostDto>, L
 
     @Override
     public List<SharedPostDto> convert(List<SharedPost> from) {
-        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd-MM-yyyy HH:mm:ss");
         List<SharedPostDto> sharedPostDtoList = new ArrayList<>();
 
         for (SharedPost sharedPost : from) {
