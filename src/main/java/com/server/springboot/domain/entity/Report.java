@@ -9,7 +9,6 @@ import java.time.LocalDateTime;
 
 @AllArgsConstructor
 @NoArgsConstructor
-@EqualsAndHashCode
 @Getter
 @Setter
 @Builder
@@ -39,7 +38,7 @@ public class Report {
     @Column(name = "is_confirmed", nullable = false)
     private boolean isConfirmed;
 
-    @ManyToOne(cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "suspect_id", nullable = false)
     private User suspect;
 

@@ -11,7 +11,6 @@ import java.time.temporal.ChronoField;
 
 @AllArgsConstructor
 @NoArgsConstructor
-@EqualsAndHashCode
 @Getter
 @Setter
 @Builder
@@ -37,7 +36,7 @@ public class AccountVerification {
     @Column(name = "expired_at", nullable = false)
     private LocalDateTime expiredAt;
 
-    @ManyToOne(cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", nullable = false)
     @JsonIgnore
     private User user;

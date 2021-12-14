@@ -8,12 +8,10 @@ import javax.validation.constraints.Email;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
 import java.time.LocalDateTime;
-import java.util.List;
 import java.util.Set;
 
 @AllArgsConstructor
 @NoArgsConstructor
-@EqualsAndHashCode
 @Getter
 @Setter
 @Builder
@@ -76,71 +74,71 @@ public class User {
     private RefreshToken refreshToken;
 
     @OneToMany(mappedBy = "user", fetch = FetchType.LAZY,
-            cascade = CascadeType.ALL)
+            cascade = CascadeType.ALL, orphanRemoval = true)
     private Set<AccountVerification> verificationCodes;
 
     @OneToMany(mappedBy = "postAuthor", fetch = FetchType.LAZY,
-            cascade = CascadeType.ALL)
+            cascade = CascadeType.ALL, orphanRemoval = true)
     private Set<Post> posts;
 
     @OneToMany(mappedBy = "commentAuthor", fetch = FetchType.LAZY,
-            cascade = CascadeType.ALL)
+            cascade = CascadeType.ALL, orphanRemoval = true)
     private Set<Comment> comments;
 
     @OneToMany(mappedBy = "sharedPostUser", fetch = FetchType.LAZY,
-            cascade = CascadeType.ALL)
+            cascade = CascadeType.ALL, orphanRemoval = true)
     private Set<SharedPost> sharedPosts;
 
     @OneToMany(mappedBy = "likedPostUser", fetch = FetchType.LAZY,
-            cascade = CascadeType.ALL)
+            cascade = CascadeType.ALL, orphanRemoval = true)
     private Set<LikedPost> likedPosts;
 
     @OneToMany(mappedBy = "user", fetch = FetchType.LAZY,
-            cascade = CascadeType.ALL)
+            cascade = CascadeType.ALL, orphanRemoval = true)
     private Set<Friend> friends;
 
     @OneToMany(mappedBy = "userFriend", fetch = FetchType.LAZY,
-            cascade = CascadeType.ALL)
+            cascade = CascadeType.ALL, orphanRemoval = true)
     private Set<Friend> userFriends;
 
     @OneToMany(mappedBy = "chatCreator", fetch = FetchType.LAZY,
-            cascade = CascadeType.ALL)
+            cascade = CascadeType.ALL, orphanRemoval = true)
     private Set<Chat> createdChats;
 
     @OneToMany(mappedBy = "messageAuthor", fetch = FetchType.LAZY,
-            cascade = CascadeType.ALL)
+            cascade = CascadeType.ALL, orphanRemoval = true)
     private Set<Message> messages;
 
     @OneToMany(mappedBy = "chatMember", fetch = FetchType.LAZY,
-            cascade = CascadeType.ALL)
+            cascade = CascadeType.ALL, orphanRemoval = true)
     private Set<ChatMember> memberOfChats;
 
     @OneToMany(mappedBy = "eventCreator", fetch = FetchType.LAZY,
-            cascade = CascadeType.ALL)
+            cascade = CascadeType.ALL, orphanRemoval = true)
     private Set<Event> createdEvents;
 
     @OneToMany(mappedBy = "eventMember", fetch = FetchType.LAZY,
-            cascade = CascadeType.ALL)
+            cascade = CascadeType.ALL, orphanRemoval = true)
     private Set<EventMember> memberOfEvents;
 
     @OneToMany(mappedBy = "sharedEventUser", fetch = FetchType.LAZY,
-            cascade = CascadeType.ALL)
+            cascade = CascadeType.ALL, orphanRemoval = true)
     private Set<SharedEvent> sharedEvents;
 
     @OneToMany(mappedBy = "suspect", fetch = FetchType.LAZY,
-            cascade = CascadeType.ALL)
+            cascade = CascadeType.ALL, orphanRemoval = true)
     private Set<Report> reports;
 
     @OneToMany(mappedBy = "user", fetch = FetchType.LAZY,
-            cascade = CascadeType.ALL)
+            cascade = CascadeType.ALL, orphanRemoval = true)
     private Set<Activity> activities;
 
     @OneToMany(mappedBy = "groupCreator", fetch = FetchType.LAZY,
-            cascade = CascadeType.ALL)
+            cascade = CascadeType.ALL, orphanRemoval = true)
     private Set<Group> createdGroups;
 
     @OneToMany(mappedBy = "groupMember", fetch = FetchType.LAZY,
-            cascade = CascadeType.ALL)
+            cascade = CascadeType.ALL, orphanRemoval = true)
     private Set<GroupMember> memberOfGroups;
 
     @ManyToMany
@@ -148,27 +146,31 @@ public class User {
             name = "user_interest",
             joinColumns = @JoinColumn(name = "user_id"),
             inverseJoinColumns = @JoinColumn(name = "interest_id"))
-    private List<Interest> userInterests;
+    private Set<Interest> userInterests;
 
     @ManyToMany
     @JoinTable(
             name = "favourite_post",
             joinColumns = @JoinColumn(name = "user_id"),
             inverseJoinColumns = @JoinColumn(name = "post_id"))
-    private List<Post> favouritePosts;
+    private Set<Post> favouritePosts;
 
     @ManyToMany
     @JoinTable(
             name = "liked_comment",
             joinColumns = @JoinColumn(name = "user_id"),
             inverseJoinColumns = @JoinColumn(name = "comment_id"))
-    private List<Comment> likedComments;
+    private Set<Comment> likedComments;
 
     @ManyToMany(fetch = FetchType.LAZY)
     @JoinTable(
             name = "user_role",
             joinColumns = @JoinColumn(name = "user_id"),
             inverseJoinColumns = @JoinColumn(name = "role_id"))
-    private List<Role> roles;
+    private Set<Role> roles;
+
+    public void removePostFromFavourite(Post post) {
+        this.favouritePosts.remove(post);
+    }
 
 }

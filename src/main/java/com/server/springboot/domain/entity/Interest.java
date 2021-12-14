@@ -5,11 +5,10 @@ import lombok.*;
 import javax.persistence.*;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
-import java.util.List;
+import java.util.Set;
 
 @AllArgsConstructor
 @NoArgsConstructor
-@EqualsAndHashCode
 @Getter
 @Setter
 @Builder
@@ -29,9 +28,9 @@ public class Interest {
     private String name;
 
     @ManyToMany(mappedBy = "userInterests")
-    private List<User> interestedUsers;
+    private Set<User> interestedUsers;
 
     @ManyToMany(mappedBy = "groupInterests")
-    private List<Group> interestedGroup;
+    private Set<Group> interestedGroup;
 
 }

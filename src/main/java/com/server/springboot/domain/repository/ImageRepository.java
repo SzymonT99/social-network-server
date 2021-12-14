@@ -1,15 +1,14 @@
 package com.server.springboot.domain.repository;
 
-import com.server.springboot.domain.entity.SharedPost;
+import com.server.springboot.domain.entity.Image;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
 
 @Repository
-public interface SharedPostRepository extends JpaRepository<SharedPost, Long> {
+public interface ImageRepository extends JpaRepository<Image, String> {
 
     @Transactional
-    void deleteBySharedPostId(Long sharedPostId);
+    void deleteByImageId(String id);
 
-    boolean existsBySharedPostId(Long sharedPostId);
 }

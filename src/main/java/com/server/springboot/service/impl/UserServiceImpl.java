@@ -10,7 +10,7 @@ import com.server.springboot.domain.entity.Role;
 import com.server.springboot.domain.entity.User;
 import com.server.springboot.domain.enumeration.ActivityStatus;
 import com.server.springboot.domain.enumeration.AppRole;
-import com.server.springboot.domain.mapper.UserMapper;
+import com.server.springboot.domain.mapper.Converter;
 import com.server.springboot.domain.repository.AccountVerificationRepository;
 import com.server.springboot.domain.repository.RoleRepository;
 import com.server.springboot.domain.repository.UserRepository;
@@ -36,9 +36,7 @@ import org.thymeleaf.context.Context;
 import org.springframework.security.core.Authentication;
 
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.UUID;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
@@ -54,7 +52,7 @@ public class UserServiceImpl implements UserService {
     private final UserRepository userRepository;
     private final RoleRepository roleRepository;
     private final AccountVerificationRepository accountVerificationRepository;
-    private final UserMapper userMapper;
+    private final Converter<User, CreateUserDto> userMapper;
     private final EmailService emailService;
     private final TemplateEngine templateEngine;
     private final AuthenticationManager authenticationManager;
@@ -66,7 +64,7 @@ public class UserServiceImpl implements UserService {
     @Autowired
     public UserServiceImpl(UserRepository userRepository, RoleRepository roleRepository,
                            AccountVerificationRepository accountVerificationRepository,
-                           UserMapper userMapper, EmailService emailService, TemplateEngine templateEngine,
+                           Converter<User, CreateUserDto> userMapper, EmailService emailService, TemplateEngine templateEngine,
                            AuthenticationManager authenticationManager, PasswordEncoder encoder, JwtUtils jwtUtils,
                            RefreshTokenService refreshTokenService, UserDetailsServiceImpl userDetailsService) {
         this.userRepository = userRepository;
@@ -97,7 +95,7 @@ public class UserServiceImpl implements UserService {
         User newUser = userMapper.convert(createUserDto);
         newUser.setPassword(bCryptPasswordEncoder.encode(createUserDto.getPassword()));
 
-        List<Role> roles = new ArrayList<>();
+        Set<Role> roles = new HashSet<>();
         Role userRole = roleRepository.findByName(AppRole.ROLE_USER)
                 .orElseThrow(() -> new NotFoundException("Not found role: ROLE_USER"));
         roles.add(userRole);

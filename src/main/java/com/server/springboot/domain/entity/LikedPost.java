@@ -1,5 +1,6 @@
 package com.server.springboot.domain.entity;
 
+import com.server.springboot.domain.entity.key.UserPostKey;
 import lombok.*;
 
 import javax.persistence.*;
@@ -8,7 +9,6 @@ import java.time.LocalDateTime;
 
 @AllArgsConstructor
 @NoArgsConstructor
-@EqualsAndHashCode
 @Getter
 @Setter
 @Builder
@@ -17,21 +17,20 @@ import java.time.LocalDateTime;
 @Table(name = "liked_post")
 public class LikedPost {
 
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "liked_post_id")
-    private Long likedPostId;
+    @EmbeddedId
+    UserPostKey id;
 
     @NotNull
     @Column(name = "date", nullable = false)
     private LocalDateTime date;
 
-    @ManyToOne(cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.LAZY)
+    @MapsId("userId")
     @JoinColumn(name = "user_id", nullable = false)
     private User likedPostUser;
 
-    @ManyToOne(cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.LAZY)
+    @MapsId("postId")
     @JoinColumn(name = "post_id", nullable = false)
     private Post post;
-
 }
