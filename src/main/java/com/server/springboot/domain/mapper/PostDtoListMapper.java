@@ -42,7 +42,7 @@ public class PostDtoListMapper implements Converter<List<PostDto>, List<Post>> {
                             post.getLikedPosts().stream()
                                     .map(likedPost -> LikedPostDto.builder()
                                             .userId(likedPost.getLikedPostUser().getUserId())
-                                            .username(likedPost.getLikedPostUser().getUserProfile().getFirstName()
+                                            .name(likedPost.getLikedPostUser().getUserProfile().getFirstName()
                                                     + " " + likedPost.getLikedPostUser().getUserProfile().getLastName())
                                             .date(likedPost.getDate().format(formatter))
                                             .build())
@@ -53,13 +53,18 @@ public class PostDtoListMapper implements Converter<List<PostDto>, List<Post>> {
                                     .map(comment -> CommentDto.builder()
                                             .commentId(comment.getCommentId())
                                             .text(comment.getText())
-                                            .date(comment.getDate().format(formatter))
+                                            .createdAt(comment.getCreatedAt().format(formatter))
+                                            .editedAt(comment.getEditedAt() != null ? comment.getEditedAt().format(formatter) : null)
+                                            .isEdited(comment.isEdited())
                                             .authorName(comment.getCommentAuthor().getUserProfile().getFirstName()
                                                     + " " + comment.getCommentAuthor().getUserProfile().getLastName())
                                             .userLikes(
                                                     comment.getLikes().stream()
-                                                            .map(user -> user.getUserProfile().getFirstName() + " "
-                                                                    + user.getUserProfile().getLastName())
+                                                            .map(user -> LikedCommentDto.builder()
+                                                                    .userId(user.getUserId())
+                                                                    .name(user.getUserProfile().getFirstName() +
+                                                                            " " + user.getUserProfile().getLastName())
+                                                                    .build())
                                                             .collect(Collectors.toList()))
                                             .build())
                                     .collect(Collectors.toList())
@@ -68,7 +73,7 @@ public class PostDtoListMapper implements Converter<List<PostDto>, List<Post>> {
                             post.getSharedBasePosts().stream()
                                     .map(sharedPost -> SharedPostInfoDto.builder()
                                             .userId(sharedPost.getSharedPostUser().getUserId())
-                                            .username(sharedPost.getSharedPostUser().getUserProfile().getFirstName() +
+                                            .authorOfSharing(sharedPost.getSharedPostUser().getUserProfile().getFirstName() +
                                                     " " + sharedPost.getSharedPostUser().getUserProfile().getLastName())
                                             .sharingText(sharedPost.getNewPost().getText())
                                             .isPublic(sharedPost.getNewPost().isPublic())

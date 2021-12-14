@@ -12,7 +12,7 @@ import lombok.*;
 @ToString
 public class SharedPostInfoDto {
     private Long userId;
-    private String username;
+    private String authorOfSharing;
     private String sharingText;
     private String date;
     @JsonProperty(value = "isPublic")

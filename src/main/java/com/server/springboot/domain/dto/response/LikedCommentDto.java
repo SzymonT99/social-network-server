@@ -9,8 +9,7 @@ import lombok.*;
 @Setter
 @Builder
 @ToString
-public class LikedPostDto {
+public class LikedCommentDto {
     private Long userId;
     private String name;
-    private String date;
 }

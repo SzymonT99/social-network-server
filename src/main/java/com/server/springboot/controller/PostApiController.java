@@ -1,9 +1,11 @@
 package com.server.springboot.controller;
 
+import com.server.springboot.domain.dto.request.RequestCommentDto;
 import com.server.springboot.domain.dto.request.RequestPostDto;
 import com.server.springboot.domain.dto.request.RequestSharePostDto;
 import com.server.springboot.domain.dto.response.PostDto;
 import com.server.springboot.domain.dto.response.SharedPostDto;
+import com.server.springboot.service.PostCommentService;
 import com.server.springboot.service.PostService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -25,10 +27,12 @@ public class PostApiController {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(AuthenticationApiController.class);
     private final PostService postService;
+    private final PostCommentService postCommentService;
 
     @Autowired
-    public PostApiController(PostService postService) {
+    public PostApiController(PostService postService, PostCommentService postCommentService) {
         this.postService = postService;
+        this.postCommentService = postCommentService;
     }
 
     @PostMapping(value = "/posts", consumes = {MediaType.APPLICATION_JSON_VALUE, MediaType.MULTIPART_FORM_DATA_VALUE})
@@ -49,9 +53,9 @@ public class PostApiController {
     }
 
     @DeleteMapping(value = "/posts/{id}")
-    public ResponseEntity<?> deletePost(@PathVariable(value = "id") Long postId) {
+    public ResponseEntity<?> deletePost(@PathVariable(value = "id") Long postId, @RequestParam(value = "authorId") Long authorId) {
         LOGGER.info("---- Delete post with id: {}", postId);
-        postService.deletePostById(postId);
+        postService.deletePostById(postId, authorId);
         return new ResponseEntity<>(HttpStatus.OK);
     }
 
@@ -84,7 +88,7 @@ public class PostApiController {
 
     @DeleteMapping(value = "/posts/{postId}/like")
     public ResponseEntity<?> deleteLikeFromPost(@PathVariable(value = "postId") Long postId, @RequestParam(value = "userId") Long userId) {
-        LOGGER.info("---- User with id: {} likes post with id: {}", userId, postId);
+        LOGGER.info("---- User with id: {} delete like from post with id: {}", userId, postId);
         postService.deleteLikeFromPost(postId, userId);
         return new ResponseEntity<>(HttpStatus.OK);
     }
@@ -120,6 +124,41 @@ public class PostApiController {
     public ResponseEntity<?> deletePostFromFavourite(@RequestParam(value = "postId") Long postId, @RequestParam(value = "userId") Long userId) {
         LOGGER.info("---- User with id: {} delete post with id: {} from favourite posts", userId, postId);
         postService.deletePostFromFavourite(postId, userId);
+        return new ResponseEntity<>(HttpStatus.OK);
+    }
+
+    @PostMapping(value = "/posts/{postId}/comments")
+    public ResponseEntity<?> addCommentToPost(@PathVariable(value = "postId") Long postId, @Valid @RequestBody RequestCommentDto requestCommentDto) {
+        LOGGER.info("---- User with id: {} add comment to post with id: {}", requestCommentDto.getUserId(), postId);
+        postCommentService.addComment(postId, requestCommentDto);
+        return new ResponseEntity<>(HttpStatus.CREATED);
+    }
+
+    @PutMapping(value = "/posts/comments/{commentId}")
+    public ResponseEntity<?> updateComment(@PathVariable(value = "commentId") Long commentId, @Valid @RequestBody RequestCommentDto requestCommentDto) {
+        LOGGER.info("---- User with id: {} edit post comment with id: {}", requestCommentDto.getUserId(), commentId);
+        postCommentService.editCommentById(commentId, requestCommentDto);
+        return new ResponseEntity<>(HttpStatus.OK);
+    }
+
+    @DeleteMapping(value = "/posts/comments/{commentId}")
+    public ResponseEntity<?> deleteComment(@PathVariable(value = "commentId") Long commentId, @RequestParam(value = "authorId") Long authorId) {
+        LOGGER.info("---- User with id: {} delete post comment with id: {}", authorId, commentId);
+        postCommentService.deleteCommentById(commentId, authorId);
+        return new ResponseEntity<>(HttpStatus.OK);
+    }
+
+    @PostMapping(value = "/posts/comments/{commentId}/like")
+    public ResponseEntity<?> likeComment(@PathVariable(value = "commentId") Long commentId, @RequestParam(value = "userId") Long userId) {
+        LOGGER.info("---- User with id: {} like post comment with id: {}", userId, commentId);
+        postCommentService.likeCommentById(commentId, userId);
+        return new ResponseEntity<>(HttpStatus.CREATED);
+    }
+
+    @DeleteMapping(value = "/posts/comments/{commentId}/like")
+    public ResponseEntity<?> dislikeComment(@PathVariable(value = "commentId") Long commentId, @RequestParam(value = "userId") Long userId) {
+        LOGGER.info("---- User with id: {} like post comment with id: {}", userId, commentId);
+        postCommentService.dislikeCommentById(commentId, userId);
         return new ResponseEntity<>(HttpStatus.OK);
     }
 }

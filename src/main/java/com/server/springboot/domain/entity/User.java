@@ -173,4 +173,8 @@ public class User {
         this.favouritePosts.remove(post);
     }
 
+    public void dislikeComment(Comment comment) {
+        this.likedComments.remove(comment);
+    }
+
 }
