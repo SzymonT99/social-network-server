@@ -18,7 +18,7 @@ public interface PostService {
 
     void deletePostById(Long postId);
 
-    void deletePostByIdWithArchiving(Long postId, boolean archive);
+    void deletePostByIdWithArchiving(Long postId, Long authorId, boolean archive);
 
     PostDto findPostById(Long postId);
 
@@ -31,4 +31,10 @@ public interface PostService {
     void deleteSharedPostById(Long sharedPostId, Long userId);
 
     List<SharedPostDto> findAllSharedPosts();
+
+    void addPostToFavourite(Long postId, Long userId);
+
+    void deletePostFromFavourite(Long postId, Long userId);
+
+    List<PostDto> findAllFavouritePostsByUserId(Long userId);
 }

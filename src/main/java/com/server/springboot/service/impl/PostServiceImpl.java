@@ -8,6 +8,8 @@ import com.server.springboot.domain.entity.*;
 import com.server.springboot.domain.entity.key.UserPostKey;
 import com.server.springboot.domain.mapper.Converter;
 import com.server.springboot.domain.repository.*;
+import com.server.springboot.exception.BadRequestException;
+import com.server.springboot.exception.ConflictRequestException;
 import com.server.springboot.exception.ForbiddenException;
 import com.server.springboot.exception.NotFoundException;
 import com.server.springboot.service.FileService;
@@ -124,10 +126,13 @@ public class PostServiceImpl implements PostService {
     }
 
     @Override
-    public void deletePostByIdWithArchiving(Long postId, boolean archive) {
+    public void deletePostByIdWithArchiving(Long postId, Long authorId, boolean archive) {
         if (archive) {
             Post post = postRepository.findById(postId)
                     .orElseThrow(() -> new NotFoundException("Not found post with id: " + postId));
+            if (!post.getPostAuthor().getUserId().equals(authorId)) {
+                throw new ForbiddenException("Invalid post author id - post deleting access forbidden");
+            }
             post.setDeleted(true);
             sharedPostRepository.deleteAll(post.getSharedBasePosts());
             postRepository.save(post);
@@ -148,9 +153,12 @@ public class PostServiceImpl implements PostService {
                 .likedPostUser(likedUser)
                 .date(LocalDateTime.now())
                 .build();
-        Set<LikedPost> postLikes = post.getLikedPosts();
-        postLikes.add(newLikedPost);
-        post.setLikedPosts(postLikes);
+        Set<LikedPost> likes = post.getLikedPosts();
+        if (likedPostRepository.existsByPostAndLikedPostUser(post, likedUser)) {
+            throw new ConflictRequestException("The user already liked this post");
+        }
+        likes.add(newLikedPost);
+        post.setLikedPosts(likes);
         postRepository.save(post);
     }
 
@@ -158,12 +166,12 @@ public class PostServiceImpl implements PostService {
     public void deleteLikeFromPost(Long postId, Long userId) {
         Post post = postRepository.findById(postId)
                 .orElseThrow(() -> new NotFoundException("Not found post with id: " + postId));
-        if (!post.getPostAuthor().getUserId().equals(userId)) {
-            throw new ForbiddenException("Invalid post author id - post deleting access forbidden");
-        }
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new NotFoundException("Not found user with id: " + userId));
-        likedPostRepository.deleteByPostAndLikedPostUser(post, user);
+
+        LikedPost likedPost = likedPostRepository.findByPostAndLikedPostUser(post, user)
+                .orElseThrow(() -> new BadRequestException("The user does not like the post"));
+        likedPostRepository.delete(likedPost);
     }
 
     @Override
@@ -202,6 +210,44 @@ public class PostServiceImpl implements PostService {
     public List<SharedPostDto> findAllSharedPosts() {
         List<SharedPost> sharedPosts = sharedPostRepository.findAll();
         return sharedPostDtoListMapper.convert(sharedPosts);
+    }
+
+    @Override
+    public void addPostToFavourite(Long postId, Long userId) {
+        Post post = postRepository.findById(postId)
+                .orElseThrow(() -> new NotFoundException("Not found shared post with id: " + postId));
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new NotFoundException("Not found user with id: " + userId));
+        Set<Post> favouritePosts = user.getFavouritePosts();
+        if (favouritePosts.contains(post)) {
+            throw new ConflictRequestException("The given post has already been added to the user's favorites");
+        }
+        favouritePosts.add(post);
+        user.setFavouritePosts(favouritePosts);
+        userRepository.save(user);
+    }
+
+    @Override
+    public void deletePostFromFavourite(Long postId, Long userId) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new NotFoundException("Not found user with id: " + userId));
+        Post deletedPost = user.getFavouritePosts().stream()
+                .filter(post -> post.getPostId().equals(postId))
+                .findFirst().orElse(null);
+        if (deletedPost != null) {
+            user.removePostFromFavourite(deletedPost);
+            userRepository.save(user);
+        } else {
+            throw new BadRequestException("The post is not one of the user's favorite posts");
+        }
+    }
+
+    @Override
+    public List<PostDto> findAllFavouritePostsByUserId(Long userId) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new NotFoundException("Not found user with id: " + userId));
+        List<Post> favouritePosts = postRepository.findByFavourites(user);
+        return postDtoListMapper.convert(favouritePosts);
     }
 
 }

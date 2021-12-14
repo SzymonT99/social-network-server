@@ -169,4 +169,8 @@ public class User {
             inverseJoinColumns = @JoinColumn(name = "role_id"))
     private Set<Role> roles;
 
+    public void removePostFromFavourite(Post post) {
+        this.favouritePosts.remove(post);
+    }
+
 }

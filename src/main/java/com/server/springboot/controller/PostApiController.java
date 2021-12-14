@@ -23,7 +23,7 @@ import java.util.List;
 @RequestMapping("/api")
 public class PostApiController {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(UserApiController.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(AuthenticationApiController.class);
     private final PostService postService;
 
     @Autowired
@@ -56,9 +56,10 @@ public class PostApiController {
     }
 
     @DeleteMapping(value = "/posts")
-    public ResponseEntity<?> deletePostWithArchiving(@RequestParam(value = "id") Long postId, @RequestParam(value = "archive") @NotNull boolean archive) {
+    public ResponseEntity<?> deletePostWithArchiving(@RequestParam(value = "postId") Long postId, @RequestParam(value = "authorId") Long authorId,
+                                                     @RequestParam(value = "archive") @NotNull boolean archive) {
         LOGGER.info("---- Delete post by archiving with id: {}", postId);
-        postService.deletePostByIdWithArchiving(postId, archive);
+        postService.deletePostByIdWithArchiving(postId, authorId, archive);
         return new ResponseEntity<>(HttpStatus.OK);
     }
 
@@ -106,5 +107,19 @@ public class PostApiController {
     public ResponseEntity<List<SharedPostDto>> getAllSharedPosts() {
         LOGGER.info("---- Get all shared posts");
         return new ResponseEntity<>(postService.findAllSharedPosts(), HttpStatus.OK);
+    }
+
+    @PostMapping(value = "/posts/{postId}/favourite")
+    public ResponseEntity<?> addToFavouritePost(@PathVariable(value = "postId") Long postId, @RequestParam(value = "userId") Long userId) {
+        LOGGER.info("---- User with id: {} add post with id: {} to favourite posts", userId, postId);
+        postService.addPostToFavourite(postId, userId);
+        return new ResponseEntity<>(HttpStatus.CREATED);
+    }
+
+    @DeleteMapping(value = "/favourite-posts")
+    public ResponseEntity<?> deletePostFromFavourite(@RequestParam(value = "postId") Long postId, @RequestParam(value = "userId") Long userId) {
+        LOGGER.info("---- User with id: {} delete post with id: {} from favourite posts", userId, postId);
+        postService.deletePostFromFavourite(postId, userId);
+        return new ResponseEntity<>(HttpStatus.OK);
     }
 }

@@ -18,4 +18,6 @@ public interface PostRepository extends JpaRepository<Post, Long> {
 
     List<Post> findByIsDeletedOrderByCreatedAtDesc(boolean isDeleted);
 
+    List<Post> findByFavourites(User user);
+
 }

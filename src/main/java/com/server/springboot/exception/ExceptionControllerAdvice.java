@@ -78,4 +78,13 @@ public class ExceptionControllerAdvice {
                 request.getDescription(false).substring(4));
     }
 
+    @ExceptionHandler(value = ConflictRequestException.class)
+    @ResponseStatus(HttpStatus.CONFLICT)
+    public ErrorMessage handleConflictRequestException(ConflictRequestException ex, WebRequest request) {
+        return new ErrorMessage(
+                HttpStatus.CONFLICT,
+                HttpStatus.CONFLICT.value(),
+                ex.getMessage(),
+                request.getDescription(false).substring(4));
+    }
 }
