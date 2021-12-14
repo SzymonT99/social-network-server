@@ -16,7 +16,7 @@ public interface PostService {
 
     void editPost(Long postId, RequestPostDto requestPostDto, List<MultipartFile> imageFiles);
 
-    void deletePostById(Long postId);
+    void deletePostById(Long postId, Long authorId);
 
     void deletePostByIdWithArchiving(Long postId, Long authorId, boolean archive);
 

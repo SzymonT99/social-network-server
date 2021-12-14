@@ -116,9 +116,12 @@ public class PostServiceImpl implements PostService {
     }
 
     @Override
-    public void deletePostById(Long postId) {
+    public void deletePostById(Long postId, Long authorId) {
         Post post = postRepository.findById(postId)
                 .orElseThrow(() -> new NotFoundException("Not found post with id: " + postId));
+        if (!post.getPostAuthor().getUserId().equals(authorId)) {
+            throw new ForbiddenException("Invalid post author id - post deleting access forbidden");
+        }
         List<Image> lastImages = new ArrayList<>(post.getImages());
         sharedPostRepository.deleteAll(post.getSharedBasePosts());
         postRepository.deleteByPostId(postId);
@@ -137,7 +140,7 @@ public class PostServiceImpl implements PostService {
             sharedPostRepository.deleteAll(post.getSharedBasePosts());
             postRepository.save(post);
         } else {
-            deletePostById(postId);
+            deletePostById(postId, authorId);
         }
     }
 

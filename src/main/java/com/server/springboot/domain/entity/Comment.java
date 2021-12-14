@@ -27,8 +27,15 @@ public class Comment {
     private String text;
 
     @NotNull
-    @Column(name = "date", nullable = false)
-    private LocalDateTime date;
+    @Column(name = "created_at", nullable = false)
+    private LocalDateTime createdAt;
+
+    @Column(name = "edited_at")
+    private LocalDateTime editedAt;
+
+    @NotNull
+    @Column(name = "is_edited", nullable = false)
+    private boolean isEdited;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "author_id", nullable = false)

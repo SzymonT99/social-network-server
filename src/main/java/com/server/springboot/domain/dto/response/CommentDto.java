@@ -1,5 +1,6 @@
 package com.server.springboot.domain.dto.response;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.*;
 
 import java.util.List;
@@ -14,7 +15,10 @@ import java.util.List;
 public class CommentDto {
     private Long commentId;
     private String text;
-    private String date;
+    private String createdAt;
+    private String editedAt;
+    @JsonProperty(value = "isEdited")
+    private boolean isEdited;
     private String authorName;
-    private List<String> userLikes;
+    private List<LikedCommentDto> userLikes;
 }
