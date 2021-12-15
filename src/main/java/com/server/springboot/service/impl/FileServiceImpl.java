@@ -32,11 +32,8 @@ public class FileServiceImpl implements FileService {
     }
 
     @Override
-    public Set<Image> storageImages(List<MultipartFile> imageFiles, Long userId) {
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new NotFoundException("Not found user with id: " + userId));
-        UserProfile userProfile = user.getUserProfile();
-        System.out.println("userProfile :" + userProfile);
+    public Set<Image> storageImages(List<MultipartFile> imageFiles, User creator) {
+        UserProfile userProfile = creator.getUserProfile();
 
         Set<Image> postImages = new HashSet<>();
 
@@ -49,7 +46,6 @@ public class FileServiceImpl implements FileService {
                             .data(file.getBytes())
                             .type(file.getContentType())
                             .addedIn(LocalDateTime.now())
-                            .isProfilePhoto(false)
                             .userProfile(userProfile)
                             .build();
                     imageRepository.save(newImage);
@@ -61,6 +57,30 @@ public class FileServiceImpl implements FileService {
             }
         });
         return postImages;
+    }
+
+    @Override
+    public Image storageOneImage(MultipartFile imageFile, User creator, boolean assignToProfile) {
+        UserProfile userProfile = creator.getUserProfile();
+
+        String fileName = StringUtils.cleanPath(Objects.requireNonNull(imageFile.getOriginalFilename()));
+        Image image = null;
+        try {
+            if (!imageFile.isEmpty()) {
+                image = Image.builder()
+                        .filename(fileName)
+                        .data(imageFile.getBytes())
+                        .type(imageFile.getContentType())
+                        .addedIn(LocalDateTime.now())
+                        .userProfile(assignToProfile ? userProfile : null)
+                        .build();
+                imageRepository.save(image);
+            }
+        } catch (IOException e) {
+            LOGGER.error("Uploading file error - message: {}", e.getMessage());
+            e.printStackTrace();
+        }
+        return image;
     }
 
     @Override

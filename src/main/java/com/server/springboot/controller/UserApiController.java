@@ -1,6 +1,8 @@
 package com.server.springboot.controller;
 
 import com.server.springboot.domain.dto.response.PostDto;
+import com.server.springboot.service.EventService;
+import com.server.springboot.service.PostCommentService;
 import com.server.springboot.service.PostService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -18,15 +20,14 @@ public class UserApiController {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(AuthenticationApiController.class);
     private final PostService postService;
+    private final EventService eventService;
+    private final PostCommentService postCommentService;
 
     @Autowired
-    public UserApiController(PostService postService) {
+    public UserApiController(PostService postService, EventService eventService, PostCommentService postCommentService) {
         this.postService = postService;
+        this.eventService = eventService;
+        this.postCommentService = postCommentService;
     }
 
-    @GetMapping(value = "/users/{userId}/favourite-posts")
-    public ResponseEntity<List<PostDto>> getUserFavouritePosts(@PathVariable(value = "userId") Long userId) {
-        LOGGER.info("---- Get all favourite post for user with id {}", userId);
-        return new ResponseEntity<>(postService.findAllFavouritePostsByUserId(userId), HttpStatus.OK);
-    }
 }

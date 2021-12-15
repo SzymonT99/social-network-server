@@ -85,9 +85,9 @@ public class PostServiceImpl implements PostService {
 
     @Override
     public void addPost(RequestPostDto requestPostDto, List<MultipartFile> imageFiles) {
-        Set<Image> postImages = fileService.storageImages(imageFiles, requestPostDto.getUserId());
         User author = userRepository.findById(requestPostDto.getUserId())
                 .orElseThrow(() -> new NotFoundException("Not found user with id: " + requestPostDto.getUserId()));
+        Set<Image> postImages = fileService.storageImages(imageFiles, author);
         Post addedPost = postMapper.convert(requestPostDto);
         addedPost.setPostAuthor(author);
         addedPost.setImages(postImages);
@@ -105,7 +105,7 @@ public class PostServiceImpl implements PostService {
         Set<Image> lastImages =  new HashSet<>(post.getImages());
         post.removeImages();    // Usuwanie zdjęć dodanych przed edycją
 
-        Set<Image> updatedImages = fileService.storageImages(imageFiles, requestPostDto.getUserId());
+        Set<Image> updatedImages = fileService.storageImages(imageFiles, post.getPostAuthor());
         post.setImages(updatedImages);
         post.setText(requestPostDto.getText());
         post.setPublic(Boolean.parseBoolean(requestPostDto.getIsPublic()));
@@ -116,7 +116,7 @@ public class PostServiceImpl implements PostService {
     }
 
     @Override
-    public void deletePostById(Long postId, Long authorId) {
+    public void deleteUserPostById(Long postId, Long authorId) {
         Post post = postRepository.findById(postId)
                 .orElseThrow(() -> new NotFoundException("Not found post with id: " + postId));
         if (!post.getPostAuthor().getUserId().equals(authorId)) {
@@ -137,10 +137,9 @@ public class PostServiceImpl implements PostService {
                 throw new ForbiddenException("Invalid post author id - post deleting access forbidden");
             }
             post.setDeleted(true);
-            sharedPostRepository.deleteAll(post.getSharedBasePosts());
             postRepository.save(post);
         } else {
-            deletePostById(postId, authorId);
+            deleteUserPostById(postId, authorId);
         }
     }
 

@@ -12,7 +12,7 @@ public class PostDtoMapper implements Converter<PostDto, Post> {
 
     @Override
     public PostDto convert(Post from) {
-        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd-MM-yyyy HH:mm:ss");
         return PostDto.builder()
                 .postId(from.getPostId())
                 .postAuthorId(from.getPostAuthor().getUserId())

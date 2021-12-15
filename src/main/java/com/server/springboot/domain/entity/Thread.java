@@ -32,8 +32,9 @@ public class Thread {
     @Column(name = "content", nullable = false)
     private String content;
 
-    @Column(name = "image")
-    private String image;
+    @OneToOne(fetch = FetchType.LAZY, cascade = CascadeType.ALL)
+    @JoinColumn(name = "image_id")
+    private Image image;
 
     @NotNull
     @Column(name = "created_at", nullable = false)

@@ -5,7 +5,6 @@ import com.server.springboot.domain.entity.Comment;
 import org.springframework.stereotype.Component;
 
 import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
 
 @Component
 public class CommentMapper implements Converter<Comment, RequestCommentDto> {

@@ -15,7 +15,7 @@ public class PostDtoListMapper implements Converter<List<PostDto>, List<Post>> {
 
     @Override
     public List<PostDto> convert(List<Post> from) {
-        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd-MM-yyyy HH:mm:ss");
         List<PostDto> postsDto = new ArrayList<>();
 
         for (Post post : from) {
