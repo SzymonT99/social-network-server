@@ -1,7 +1,6 @@
 package com.server.springboot.domain.mapper;
 
 import com.server.springboot.domain.dto.request.RequestEventDto;
-import com.server.springboot.domain.entity.*;
 import com.server.springboot.domain.entity.Event;
 import org.springframework.stereotype.Component;
 

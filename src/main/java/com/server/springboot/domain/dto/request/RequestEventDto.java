@@ -18,7 +18,7 @@ public class RequestEventDto {
     private Long userId;
 
     @NotNull
-    private AddressDto eventAddress;
+    private RequestAddressDto eventAddress;
 
     @NotEmpty
     private String title;

@@ -1,13 +1,16 @@
 package com.server.springboot.service.impl;
 
-import com.server.springboot.domain.dto.request.AddressDto;
+import com.server.springboot.domain.dto.request.RequestAddressDto;
 import com.server.springboot.domain.dto.request.RequestEventDto;
+import com.server.springboot.domain.dto.response.EventDto;
+import com.server.springboot.domain.dto.response.EventInvitationDto;
+import com.server.springboot.domain.dto.response.SharedEventDto;
 import com.server.springboot.domain.entity.*;
+import com.server.springboot.domain.entity.key.UserEventKey;
+import com.server.springboot.domain.entity.key.UserPostKey;
+import com.server.springboot.domain.enumeration.EventParticipationStatus;
 import com.server.springboot.domain.mapper.Converter;
-import com.server.springboot.domain.repository.AddressRepository;
-import com.server.springboot.domain.repository.EventRepository;
-import com.server.springboot.domain.repository.ImageRepository;
-import com.server.springboot.domain.repository.UserRepository;
+import com.server.springboot.domain.repository.*;
 import com.server.springboot.exception.ForbiddenException;
 import com.server.springboot.exception.NotFoundException;
 import com.server.springboot.service.EventService;
@@ -18,6 +21,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.List;
 
 @Service
 public class EventServiceImpl implements EventService {
@@ -25,22 +29,35 @@ public class EventServiceImpl implements EventService {
     private final FileService fileService;
     private final UserRepository userRepository;
     private final EventRepository eventRepository;
+    private final EventMemberRepository eventMemberRepository;
     private final AddressRepository addressRepository;
     private final ImageRepository imageRepository;
+    private final SharedEventRepository sharedEventRepository;
     private final Converter<Event, RequestEventDto> eventMapper;
-    private final Converter<Address, AddressDto> addressMapper;
+    private final Converter<Address, RequestAddressDto> addressMapper;
+    private final Converter<List<EventDto>, List<Event>> eventDtoListMapper;
+    private final Converter<List<EventInvitationDto>, List<EventMember>> eventInvitationDtoListMapper;
+    private final Converter<List<SharedEventDto>, List<SharedEvent>> sharedEventDtoListMapper;
 
     @Autowired
     public EventServiceImpl(FileService fileService, UserRepository userRepository, EventRepository eventRepository,
-                            AddressRepository addressRepository, ImageRepository imageRepository,
-                            Converter<Event, RequestEventDto> eventMapper, Converter<Address, AddressDto> addressMapper) {
+                            EventMemberRepository eventMemberRepository, AddressRepository addressRepository, ImageRepository imageRepository,
+                            SharedEventRepository sharedEventRepository, Converter<Event, RequestEventDto> eventMapper,
+                            Converter<Address, RequestAddressDto> addressMapper, Converter<List<EventDto>, List<Event>> eventDtoListMapper,
+                            Converter<List<EventInvitationDto>, List<EventMember>> eventInvitationDtoListMapper,
+                            Converter<List<SharedEventDto>, List<SharedEvent>> sharedEventDtoListMapper) {
         this.fileService = fileService;
         this.userRepository = userRepository;
         this.eventRepository = eventRepository;
+        this.eventMemberRepository = eventMemberRepository;
         this.addressRepository = addressRepository;
         this.imageRepository = imageRepository;
+        this.sharedEventRepository = sharedEventRepository;
         this.eventMapper = eventMapper;
         this.addressMapper = addressMapper;
+        this.eventDtoListMapper = eventDtoListMapper;
+        this.eventInvitationDtoListMapper = eventInvitationDtoListMapper;
+        this.sharedEventDtoListMapper = sharedEventDtoListMapper;
     }
 
     @Override
@@ -70,10 +87,6 @@ public class EventServiceImpl implements EventService {
             throw new ForbiddenException("Invalid event creator id - event editing access forbidden");
         }
         if (event.getImage() != null) {
-            System.out.println("ELOOOOOOOOOOOOOOOOOOOOOOOO");
-            System.out.println(event.getImage());
-            System.out.println(event.getImage().getImageId());
-            System.out.println(imageRepository.existsById(event.getImage().getImageId()));
             imageRepository.deleteByImageId(event.getImage().getImageId());
         }
         Image updatedImages = fileService.storageOneImage(imageFile, event.getEventCreator(), false);
@@ -102,7 +115,6 @@ public class EventServiceImpl implements EventService {
         if (!event.getEventCreator().getUserId().equals(authorId)) {
             throw new ForbiddenException("Invalid event creator id - event deleting access forbidden");
         }
-        //TODO: usuwanie członków i udostępnień wydarzenia
         eventRepository.deleteByEventId(eventId);
     }
 
@@ -116,10 +128,90 @@ public class EventServiceImpl implements EventService {
             }
             event.setDeleted(true);
             eventRepository.save(event);
-            //TODO: usuwanie członków i udostępnień wydarzenia
         } else {
             deleteEventById(eventId, authorId);
         }
     }
-}
 
+    @Override
+    public List<EventDto> findAllEvents() {
+        List<Event> events = eventRepository.findByIsDeletedOrderByCreatedAtDesc(false);
+        return eventDtoListMapper.convert(events);
+    }
+
+    @Override
+    public void inviteUser(Long eventId, Long userId) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new NotFoundException("Not found user with id: " + userId));
+        Event event = eventRepository.findById(eventId)
+                .orElseThrow(() -> new NotFoundException("Not found event with id: " + eventId));
+        EventMember eventMember = EventMember.builder()
+                .participationStatus(EventParticipationStatus.INVITED)
+                .invitationDisplayed(false)
+                .invitationDate(LocalDateTime.now())
+                .eventMember(user)
+                .event(event)
+                .build();
+        eventMemberRepository.save(eventMember);
+    }
+
+    @Override
+    public List<EventInvitationDto> findAllUserEventInvitation(Long userId) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new NotFoundException("Not found user with id: " + userId));
+        List<EventMember> eventMembers = eventMemberRepository.findByEventMemberAndParticipationStatus(user, EventParticipationStatus.INVITED);
+        return eventInvitationDtoListMapper.convert(eventMembers);
+    }
+
+    @Override
+    public void respondToEvent(Long eventId, Long userId, String reactionToEvent) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new NotFoundException("Not found user with id: " + userId));
+        Event event = eventRepository.findById(eventId)
+                .orElseThrow(() -> new NotFoundException("Not found event with id: " + eventId));
+        EventMember eventMember = EventMember.builder()
+                .eventMember(user)
+                .event(event)
+                .participationStatus(EventParticipationStatus.valueOf(reactionToEvent))
+                .addedIn(LocalDateTime.now())
+                .build();
+        if (EventParticipationStatus.valueOf(reactionToEvent) == EventParticipationStatus.TAKE_PART) {
+            eventMember.setAddedIn(LocalDateTime.now());
+        }
+        eventMemberRepository.save(eventMember);
+    }
+
+    @Override
+    public void shareEvent(Long eventId, Long userId) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new NotFoundException("Not found user with id: " + userId));
+        Event event = eventRepository.findById(eventId)
+                .orElseThrow(() -> new NotFoundException("Not found event with id: " + eventId));
+        SharedEvent sharedEvent = SharedEvent.builder()
+                .id(UserEventKey.builder().eventId(eventId).userId(userId).build())
+                .sharedEventUser(user)
+                .event(event)
+                .date(LocalDateTime.now())
+                .build();
+        sharedEventRepository.save(sharedEvent);
+    }
+
+    @Override
+    public void deleteSharedEvent(Long eventId, Long userId) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new NotFoundException("Not found user with id: " + userId));
+        Event event = eventRepository.findById(eventId)
+                .orElseThrow(() -> new NotFoundException("Not found event with id: " + eventId));
+        SharedEvent sharedEvent = sharedEventRepository.findBySharedEventUserAndEvent(user, event)
+                .orElseThrow(() -> new NotFoundException("Not found shared event where:  user id: " + userId + " and event id: " + eventId));
+        sharedEventRepository.delete(sharedEvent);
+    }
+
+    @Override
+    public List<SharedEventDto> findAllSharedEventsByUser(Long userId) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new NotFoundException("Not found user with id: " + userId));
+        List<SharedEvent> sharedEvents = sharedEventRepository.findBySharedEventUser(user);
+        return sharedEventDtoListMapper.convert(sharedEvents);
+    }
+}

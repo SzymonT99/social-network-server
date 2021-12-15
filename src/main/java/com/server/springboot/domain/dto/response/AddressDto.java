@@ -1,8 +1,6 @@
-package com.server.springboot.domain.dto.request;
+package com.server.springboot.domain.dto.response;
 
 import lombok.*;
-
-import javax.validation.constraints.NotEmpty;
 
 @AllArgsConstructor
 @NoArgsConstructor
@@ -12,15 +10,8 @@ import javax.validation.constraints.NotEmpty;
 @Builder
 @ToString
 public class AddressDto {
-
-    @NotEmpty
     private String country;
-
-    @NotEmpty
     private String city;
-
     private String street;
-
-    @NotEmpty
     private String zipCode;
 }

@@ -30,9 +30,11 @@ public class EventMember {
     @Column(name = "added_in")
     private LocalDateTime addedIn;
 
-    @NotNull
-    @Column(name = "invitation_displayed", nullable = false)
+    @Column(name = "invitation_displayed")
     private boolean invitationDisplayed;
+
+    @Column(name = "invitation_date")
+    private LocalDateTime invitationDate;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", nullable = false)

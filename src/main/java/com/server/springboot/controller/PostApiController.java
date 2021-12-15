@@ -55,7 +55,7 @@ public class PostApiController {
     @DeleteMapping(value = "/posts/{postId}")
     public ResponseEntity<?> deletePost(@PathVariable(value = "postId") Long postId, @RequestParam(value = "authorId") Long authorId) {
         LOGGER.info("---- Delete post with id: {}", postId);
-        postService.deletePostById(postId, authorId);
+        postService.deleteUserPostById(postId, authorId);
         return new ResponseEntity<>(HttpStatus.OK);
     }
 
@@ -118,6 +118,12 @@ public class PostApiController {
         LOGGER.info("---- User with id: {} add post with id: {} to favourite posts", userId, postId);
         postService.addPostToFavourite(postId, userId);
         return new ResponseEntity<>(HttpStatus.CREATED);
+    }
+
+    @GetMapping(value = "/favourite-posts")
+    public ResponseEntity<List<PostDto>> getUserFavouritePosts(@RequestParam(value = "userId") Long userId) {
+        LOGGER.info("---- Get all favourite post for user with id {}", userId);
+        return new ResponseEntity<>(postService.findAllFavouritePostsByUserId(userId), HttpStatus.OK);
     }
 
     @DeleteMapping(value = "/favourite-posts")

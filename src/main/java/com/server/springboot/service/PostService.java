@@ -18,7 +18,7 @@ public interface PostService {
     @Transactional
     void editPost(Long postId, RequestPostDto requestPostDto, List<MultipartFile> imageFiles);
 
-    void deletePostById(Long postId, Long authorId);
+    void deleteUserPostById(Long postId, Long authorId);
 
     void deletePostByIdWithArchiving(Long postId, Long authorId, boolean archive);
 
