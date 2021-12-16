@@ -2,6 +2,7 @@ package com.server.springboot.controller;
 
 import com.server.springboot.domain.entity.Image;
 import com.server.springboot.service.FileService;
+import io.swagger.annotations.ApiOperation;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
@@ -20,6 +21,7 @@ public class FileApiController {
         this.fileService = fileService;
     }
 
+    @ApiOperation(value = "Get image by id")
     @GetMapping(value = "/images/{id}")
     public ResponseEntity<byte[]> getImage(@PathVariable(value = "id") String imageId) {
         Image image = fileService.findImageById(imageId);
