@@ -40,7 +40,7 @@ public class EventDtoMapper implements Converter<EventDto, Event> {
                                         .userId(member.getEventMember().getUserId())
                                         .eventMemberName(member.getEventMember().getUserProfile().getFirstName()
                                                 + " " + member.getEventMember().getUserProfile().getLastName())
-                                        .participationStatus(member.getParticipationStatus().toString())
+                                        .participationStatus(member.getParticipationStatus())
                                         .addedIn(member.getAddedIn().format(formatter))
                                         .invitationDate(member.getInvitationDate().format(formatter))
                                         .invitationDisplayed(member.isInvitationDisplayed())

@@ -1,4 +1,4 @@
-package com.server.springboot.domain.dto.response;
+package com.server.springboot.domain.dto.request;
 
 import lombok.*;
 
@@ -9,8 +9,7 @@ import lombok.*;
 @Setter
 @Builder
 @ToString
-public class AddressDto {
-    private String addressId;
+public class UpdateAddressDto {
     private String country;
     private String city;
     private String street;
