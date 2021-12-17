@@ -7,12 +7,12 @@ import com.server.springboot.domain.dto.response.EventInvitationDto;
 import com.server.springboot.domain.dto.response.SharedEventDto;
 import com.server.springboot.domain.entity.*;
 import com.server.springboot.domain.entity.key.UserEventKey;
-import com.server.springboot.domain.entity.key.UserPostKey;
 import com.server.springboot.domain.enumeration.EventParticipationStatus;
 import com.server.springboot.domain.mapper.Converter;
 import com.server.springboot.domain.repository.*;
 import com.server.springboot.exception.ForbiddenException;
 import com.server.springboot.exception.NotFoundException;
+import com.server.springboot.security.JwtUtils;
 import com.server.springboot.service.EventService;
 import com.server.springboot.service.FileService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -33,6 +33,7 @@ public class EventServiceImpl implements EventService {
     private final AddressRepository addressRepository;
     private final ImageRepository imageRepository;
     private final SharedEventRepository sharedEventRepository;
+    private final JwtUtils jwtUtils;
     private final Converter<Event, RequestEventDto> eventMapper;
     private final Converter<Address, RequestAddressDto> addressMapper;
     private final Converter<List<EventDto>, List<Event>> eventDtoListMapper;
@@ -42,7 +43,7 @@ public class EventServiceImpl implements EventService {
     @Autowired
     public EventServiceImpl(FileService fileService, UserRepository userRepository, EventRepository eventRepository,
                             EventMemberRepository eventMemberRepository, AddressRepository addressRepository, ImageRepository imageRepository,
-                            SharedEventRepository sharedEventRepository, Converter<Event, RequestEventDto> eventMapper,
+                            SharedEventRepository sharedEventRepository, JwtUtils jwtUtils, Converter<Event, RequestEventDto> eventMapper,
                             Converter<Address, RequestAddressDto> addressMapper, Converter<List<EventDto>, List<Event>> eventDtoListMapper,
                             Converter<List<EventInvitationDto>, List<EventMember>> eventInvitationDtoListMapper,
                             Converter<List<SharedEventDto>, List<SharedEvent>> sharedEventDtoListMapper) {
@@ -53,6 +54,7 @@ public class EventServiceImpl implements EventService {
         this.addressRepository = addressRepository;
         this.imageRepository = imageRepository;
         this.sharedEventRepository = sharedEventRepository;
+        this.jwtUtils = jwtUtils;
         this.eventMapper = eventMapper;
         this.addressMapper = addressMapper;
         this.eventDtoListMapper = eventDtoListMapper;
@@ -62,8 +64,9 @@ public class EventServiceImpl implements EventService {
 
     @Override
     public void addEvent(RequestEventDto requestEventDto, MultipartFile imageFile) {
-        User eventAuthor = userRepository.findById(requestEventDto.getUserId())
-                .orElseThrow(() -> new NotFoundException("Not found user with id: " + requestEventDto.getUserId()));
+        Long userId = jwtUtils.getLoggedUserId();
+        User eventAuthor = userRepository.findById(userId)
+                .orElseThrow(() -> new NotFoundException("Not found user with id: " + userId));
         Event createdEvent = eventMapper.convert(requestEventDto);
         createdEvent.setEventCreator(eventAuthor);
 
@@ -81,9 +84,10 @@ public class EventServiceImpl implements EventService {
 
     @Override
     public void editEvent(Long eventId, RequestEventDto requestEventDto, MultipartFile imageFile) {
+        Long userId = jwtUtils.getLoggedUserId();
         Event event = eventRepository.findById(eventId)
                 .orElseThrow(() -> new NotFoundException("Not found event with id: " + eventId));
-        if (!event.getEventCreator().getUserId().equals(requestEventDto.getUserId())) {
+        if (!event.getEventCreator().getUserId().equals(userId)) {
             throw new ForbiddenException("Invalid event creator id - event editing access forbidden");
         }
         if (event.getImage() != null) {
@@ -102,34 +106,26 @@ public class EventServiceImpl implements EventService {
         updatedAddress.setZipCode(requestEventDto.getEventAddress().getZipCode());
         event.setEventAddress(updatedAddress);
 
-        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd-MM-yyyy HH:mm");
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd.MM.yyyy HH:mm");
         event.setEventDate(LocalDateTime.parse(requestEventDto.getEventDate(), formatter));
 
         eventRepository.save(event);
     }
 
     @Override
-    public void deleteEventById(Long eventId, Long authorId) {
+    public void deleteEventById(Long eventId, boolean archive) {
+        Long userId = jwtUtils.getLoggedUserId();
         Event event = eventRepository.findById(eventId)
                 .orElseThrow(() -> new NotFoundException("Not found event with id: " + eventId));
-        if (!event.getEventCreator().getUserId().equals(authorId)) {
+        if (!event.getEventCreator().getUserId().equals(userId)) {
             throw new ForbiddenException("Invalid event creator id - event deleting access forbidden");
         }
-        eventRepository.deleteByEventId(eventId);
-    }
 
-    @Override
-    public void deleteEventByIdWithArchiving(Long eventId, Long authorId, boolean archive) {
         if (archive) {
-            Event event = eventRepository.findById(eventId)
-                    .orElseThrow(() -> new NotFoundException("Not found event with id: " + eventId));
-            if (!event.getEventCreator().getUserId().equals(authorId)) {
-                throw new ForbiddenException("Invalid event creator id - event deleting access forbidden");
-            }
             event.setDeleted(true);
             eventRepository.save(event);
         } else {
-            deleteEventById(eventId, authorId);
+            eventRepository.deleteByEventId(eventId);
         }
     }
 
@@ -140,9 +136,9 @@ public class EventServiceImpl implements EventService {
     }
 
     @Override
-    public void inviteUser(Long eventId, Long userId) {
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new NotFoundException("Not found user with id: " + userId));
+    public void inviteUser(Long eventId, Long invitedUserId) {
+        User user = userRepository.findById(invitedUserId)
+                .orElseThrow(() -> new NotFoundException("Not found user with id: " + invitedUserId));
         Event event = eventRepository.findById(eventId)
                 .orElseThrow(() -> new NotFoundException("Not found event with id: " + eventId));
         EventMember eventMember = EventMember.builder()
@@ -164,7 +160,8 @@ public class EventServiceImpl implements EventService {
     }
 
     @Override
-    public void respondToEvent(Long eventId, Long userId, String reactionToEvent) {
+    public void respondToEvent(Long eventId, String reactionToEvent) {
+        Long userId = jwtUtils.getLoggedUserId();
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new NotFoundException("Not found user with id: " + userId));
         Event event = eventRepository.findById(eventId)
@@ -182,7 +179,8 @@ public class EventServiceImpl implements EventService {
     }
 
     @Override
-    public void shareEvent(Long eventId, Long userId) {
+    public void shareEvent(Long eventId) {
+        Long userId = jwtUtils.getLoggedUserId();
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new NotFoundException("Not found user with id: " + userId));
         Event event = eventRepository.findById(eventId)
@@ -197,7 +195,8 @@ public class EventServiceImpl implements EventService {
     }
 
     @Override
-    public void deleteSharedEvent(Long eventId, Long userId) {
+    public void deleteSharedEvent(Long eventId) {
+        Long userId = jwtUtils.getLoggedUserId();
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new NotFoundException("Not found user with id: " + userId));
         Event event = eventRepository.findById(eventId)

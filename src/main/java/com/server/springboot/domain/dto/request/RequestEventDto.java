@@ -15,9 +15,6 @@ import javax.validation.constraints.NotNull;
 public class RequestEventDto {
 
     @NotNull
-    private Long userId;
-
-    @NotNull
     private RequestAddressDto eventAddress;
 
     @NotEmpty

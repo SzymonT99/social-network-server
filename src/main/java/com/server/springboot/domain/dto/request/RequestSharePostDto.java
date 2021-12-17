@@ -14,12 +14,12 @@ import javax.validation.constraints.NotNull;
 @ToString
 public class RequestSharePostDto {
 
-    @NotNull
-    private Long userId;
-
     @NotEmpty
     private String text;
 
     @NotEmpty
     private String isPublic;
+
+    @NotEmpty
+    private String isCommentingBlocked;
 }

@@ -12,6 +12,7 @@ import com.server.springboot.exception.BadRequestException;
 import com.server.springboot.exception.ConflictRequestException;
 import com.server.springboot.exception.ForbiddenException;
 import com.server.springboot.exception.NotFoundException;
+import com.server.springboot.security.JwtUtils;
 import com.server.springboot.service.FileService;
 import com.server.springboot.service.PostService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -34,6 +35,7 @@ public class PostServiceImpl implements PostService {
     private final SharedPostRepository sharedPostRepository;
     private final LikedPostRepository likedPostRepository;
     private final ImageRepository imageRepository;
+    private final JwtUtils jwtUtils;
     private final FileService fileService;
     private final Converter<List<PostDto>, List<Post>> postDtoListMapper;
     private final Converter<PostDto, Post> postDtoMapper;
@@ -45,7 +47,7 @@ public class PostServiceImpl implements PostService {
     public PostServiceImpl(Converter<Post, RequestPostDto> postMapper, UserRepository userRepository,
                            PostRepository postRepository, SharedPostRepository sharedPostRepository,
                            LikedPostRepository likedPostRepository, ImageRepository imageRepository,
-                           FileService fileService, Converter<List<PostDto>, List<Post>> postDtoListMapper,
+                           JwtUtils jwtUtils, FileService fileService, Converter<List<PostDto>, List<Post>> postDtoListMapper,
                            Converter<PostDto, Post> postDtoMapper, Converter<Post, RequestSharePostDto> sharedPostMapper,
                            Converter<List<SharedPostDto>, List<SharedPost>> sharedPostDtoListMapper) {
         this.postMapper = postMapper;
@@ -54,6 +56,7 @@ public class PostServiceImpl implements PostService {
         this.sharedPostRepository = sharedPostRepository;
         this.likedPostRepository = likedPostRepository;
         this.imageRepository = imageRepository;
+        this.jwtUtils = jwtUtils;
         this.fileService = fileService;
         this.postDtoListMapper = postDtoListMapper;
         this.postDtoMapper = postDtoMapper;
@@ -62,8 +65,8 @@ public class PostServiceImpl implements PostService {
     }
 
     @Override
-    public List<PostDto> findAllPosts() {
-        List<Post> posts = postRepository.findByIsDeletedOrderByCreatedAtDesc(false);
+    public List<PostDto> findAllPublicPosts() {
+        List<Post> posts = postRepository.findByIsDeletedAndIsPublicOrderByCreatedAtDesc(false, true);
 
         List<Post> postWithShares = sharedPostRepository.findAll().stream()
                 .map(SharedPost::getNewPost)
@@ -85,8 +88,9 @@ public class PostServiceImpl implements PostService {
 
     @Override
     public void addPost(RequestPostDto requestPostDto, List<MultipartFile> imageFiles) {
-        User author = userRepository.findById(requestPostDto.getUserId())
-                .orElseThrow(() -> new NotFoundException("Not found user with id: " + requestPostDto.getUserId()));
+        Long userId  = jwtUtils.getLoggedUserId();
+        User author = userRepository.findById(userId)
+                .orElseThrow(() -> new NotFoundException("Not found user with id: " + userId));
         Set<Image> postImages = fileService.storageImages(imageFiles, author);
         Post addedPost = postMapper.convert(requestPostDto);
         addedPost.setPostAuthor(author);
@@ -96,9 +100,10 @@ public class PostServiceImpl implements PostService {
 
     @Override
     public void editPost(Long postId, RequestPostDto requestPostDto, List<MultipartFile> imageFiles) {
+        Long userId  = jwtUtils.getLoggedUserId();
         Post post = postRepository.findById(postId)
                 .orElseThrow(() -> new NotFoundException("Not found post with id: " + postId));
-        if (!post.getPostAuthor().getUserId().equals(requestPostDto.getUserId())) {
+        if (!post.getPostAuthor().getUserId().equals(userId)) {
             throw new ForbiddenException("Invalid post author id - post editing access forbidden");
         }
 
@@ -116,35 +121,28 @@ public class PostServiceImpl implements PostService {
     }
 
     @Override
-    public void deleteUserPostById(Long postId, Long authorId) {
+    public void deleteUserPostById(Long postId, boolean archive) {
+        Long userId  = jwtUtils.getLoggedUserId();
         Post post = postRepository.findById(postId)
                 .orElseThrow(() -> new NotFoundException("Not found post with id: " + postId));
-        if (!post.getPostAuthor().getUserId().equals(authorId)) {
+        if (!post.getPostAuthor().getUserId().equals(userId)) {
             throw new ForbiddenException("Invalid post author id - post deleting access forbidden");
         }
-        List<Image> lastImages = new ArrayList<>(post.getImages());
-        sharedPostRepository.deleteAll(post.getSharedBasePosts());
-        postRepository.deleteByPostId(postId);
-        imageRepository.deleteAll(lastImages);
-    }
 
-    @Override
-    public void deletePostByIdWithArchiving(Long postId, Long authorId, boolean archive) {
         if (archive) {
-            Post post = postRepository.findById(postId)
-                    .orElseThrow(() -> new NotFoundException("Not found post with id: " + postId));
-            if (!post.getPostAuthor().getUserId().equals(authorId)) {
-                throw new ForbiddenException("Invalid post author id - post deleting access forbidden");
-            }
             post.setDeleted(true);
             postRepository.save(post);
         } else {
-            deleteUserPostById(postId, authorId);
+            Set<Image> lastImages = new HashSet<>(post.getImages());
+            sharedPostRepository.deleteAll(post.getSharedBasePosts());
+            postRepository.deleteByPostId(postId);
+            imageRepository.deleteAll(lastImages);
         }
     }
 
     @Override
-    public void likePost(Long postId, Long userId) {
+    public void likePost(Long postId) {
+        Long userId  = jwtUtils.getLoggedUserId();
         Post post = postRepository.findById(postId)
                 .orElseThrow(() -> new NotFoundException("Not found post with id: " + postId));
         User likedUser = userRepository.findById(userId)
@@ -165,7 +163,8 @@ public class PostServiceImpl implements PostService {
     }
 
     @Override
-    public void deleteLikeFromPost(Long postId, Long userId) {
+    public void deleteLikeFromPost(Long postId) {
+        Long userId  = jwtUtils.getLoggedUserId();
         Post post = postRepository.findById(postId)
                 .orElseThrow(() -> new NotFoundException("Not found post with id: " + postId));
         User user = userRepository.findById(userId)
@@ -178,8 +177,9 @@ public class PostServiceImpl implements PostService {
 
     @Override
     public void sharePost(Long basePostId, RequestSharePostDto requestSharePostDto) {
-        User user = userRepository.findById(requestSharePostDto.getUserId())
-                .orElseThrow(() -> new NotFoundException("Not found user with id: " + requestSharePostDto.getUserId()));
+        Long userId  = jwtUtils.getLoggedUserId();
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new NotFoundException("Not found user with id: " + userId));
         Post basePost = postRepository.findById(basePostId)
                 .orElseThrow(() -> new NotFoundException("Not found shared post with id: " + basePostId));
         Post newPost = sharedPostMapper.convert(requestSharePostDto);
@@ -195,7 +195,8 @@ public class PostServiceImpl implements PostService {
     }
 
     @Override
-    public void deleteSharedPostById(Long sharedPostId, Long userId) {
+    public void deleteSharedPostById(Long sharedPostId) {
+        Long userId  = jwtUtils.getLoggedUserId();
         if (sharedPostRepository.existsBySharedPostId(sharedPostId)) {
             User postSharedAuthor = sharedPostRepository.findById(sharedPostId).get().getSharedPostUser();
             if (!postSharedAuthor.getUserId().equals(userId)) {
@@ -215,7 +216,8 @@ public class PostServiceImpl implements PostService {
     }
 
     @Override
-    public void addPostToFavourite(Long postId, Long userId) {
+    public void addPostToFavourite(Long postId) {
+        Long userId  = jwtUtils.getLoggedUserId();
         Post post = postRepository.findById(postId)
                 .orElseThrow(() -> new NotFoundException("Not found shared post with id: " + postId));
         User user = userRepository.findById(userId)
@@ -230,7 +232,8 @@ public class PostServiceImpl implements PostService {
     }
 
     @Override
-    public void deletePostFromFavourite(Long postId, Long userId) {
+    public void deletePostFromFavourite(Long postId) {
+        Long userId  = jwtUtils.getLoggedUserId();
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new NotFoundException("Not found user with id: " + userId));
         Post deletedPost = user.getFavouritePosts().stream()

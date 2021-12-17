@@ -14,6 +14,7 @@ public class PostMapper implements Converter<Post, RequestPostDto> {
         return Post.builder()
                 .text(from.getText())
                 .isPublic(Boolean.parseBoolean(from.getIsPublic()))
+                .isCommentingBlocked(Boolean.parseBoolean(from.getIsCommentingBlocked()))
                 .createdAt(LocalDateTime.now())
                 .isEdited(false)
                 .isDeleted(false)

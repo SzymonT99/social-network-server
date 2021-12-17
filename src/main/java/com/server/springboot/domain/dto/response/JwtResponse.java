@@ -12,9 +12,7 @@ import java.util.List;
 @Builder
 @ToString
 public class JwtResponse {
-    private Long id;
-    private String username;
-    private String email;
+    private Long userId;
     private List<String> roles;
     private String accessToken;
     private String tokenType;

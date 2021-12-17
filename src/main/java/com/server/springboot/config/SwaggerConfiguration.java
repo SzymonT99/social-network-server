@@ -19,8 +19,6 @@ import java.util.List;
 @EnableSwagger2
 public class SwaggerConfiguration {
 
-    public static final String DEFAULT_INCLUDE_PATTERN = "/api/.*";
-
     @Bean
     public Docket apiDocket() {
         return new Docket(DocumentationType.SWAGGER_2)

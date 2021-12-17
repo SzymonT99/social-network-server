@@ -15,7 +15,7 @@ public class EventInvitationDtoListMapper implements Converter<List<EventInvitat
 
     @Override
     public List<EventInvitationDto> convert(List<EventMember> from) {
-        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd-MM-yyyy HH:mm:ss");
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd.MM.yyyy HH:mm:ss");
         List<EventInvitationDto> eventInvitationDtoList = new ArrayList<>();
 
         for (EventMember eventMember : from) {

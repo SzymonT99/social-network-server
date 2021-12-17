@@ -51,15 +51,10 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
     @Override
     protected void configure(HttpSecurity http) throws Exception {
         http.cors().and().csrf().disable()
-                .authorizeRequests()
-                // adresy, ktore nie sa autoryzowane:
-                .antMatchers(
-                        //"/api/auth/**",
-                        "/**"
-                ).permitAll()
-                // pozostale adresy wymagaja do autoryzacji tokena
-                .antMatchers("/fser/srszrser/**")
-                .permitAll().anyRequest().authenticated()
+                .authorizeRequests().antMatchers("/api/auth/**").permitAll()
+                // Adresy nieautoryzowane
+                .antMatchers("/tmp/**").permitAll()
+                .anyRequest().authenticated()
                 .and().exceptionHandling().authenticationEntryPoint(jwtAuthenticationEntryPoint)
                 .and().sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS)
                 .and().addFilterBefore(jwtRequestFilter, UsernamePasswordAuthenticationFilter.class);

@@ -15,7 +15,7 @@ public class PostDtoListMapper implements Converter<List<PostDto>, List<Post>> {
 
     @Override
     public List<PostDto> convert(List<Post> from) {
-        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd-MM-yyyy HH:mm:ss");
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd.MM.yyyy HH:mm:ss");
         List<PostDto> postsDto = new ArrayList<>();
 
         for (Post post : from) {
@@ -37,6 +37,7 @@ public class PostDtoListMapper implements Converter<List<PostDto>, List<Post>> {
                     .createdAt(post.getCreatedAt().format(formatter))
                     .editedAt(post.getEditedAt() != null ? post.getEditedAt().format(formatter) : null)
                     .isPublic(post.isPublic())
+                    .isCommentingBlocked(post.isCommentingBlocked())
                     .isEdited(post.isEdited())
                     .likes(
                             post.getLikedPosts().stream()

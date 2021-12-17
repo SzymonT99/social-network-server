@@ -22,6 +22,8 @@ public class PostDto {
     private String editedAt;
     @JsonProperty(value = "isPublic")
     private boolean isPublic;
+    @JsonProperty(value = "isCommentingBlocked")
+    private boolean isCommentingBlocked;
     @JsonProperty(value = "isEdited")
     private boolean isEdited;
     private List<LikedPostDto> likes;

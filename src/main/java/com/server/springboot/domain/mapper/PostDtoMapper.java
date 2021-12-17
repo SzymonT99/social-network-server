@@ -12,7 +12,7 @@ public class PostDtoMapper implements Converter<PostDto, Post> {
 
     @Override
     public PostDto convert(Post from) {
-        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd-MM-yyyy HH:mm:ss");
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd.MM.yyyy HH:mm:ss");
         return PostDto.builder()
                 .postId(from.getPostId())
                 .postAuthorId(from.getPostAuthor().getUserId())
@@ -31,6 +31,7 @@ public class PostDtoMapper implements Converter<PostDto, Post> {
                 .createdAt(from.getCreatedAt().format(formatter))
                 .editedAt(from.getEditedAt() != null ? from.getEditedAt().format(formatter) : null)
                 .isPublic(from.isPublic())
+                .isCommentingBlocked(from.isCommentingBlocked())
                 .isEdited(from.isEdited())
                 .likes(
                         from.getLikedPosts().stream()

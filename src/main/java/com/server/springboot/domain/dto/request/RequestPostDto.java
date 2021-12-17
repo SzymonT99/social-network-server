@@ -3,7 +3,6 @@ package com.server.springboot.domain.dto.request;
 import lombok.*;
 
 import javax.validation.constraints.NotEmpty;
-import javax.validation.constraints.NotNull;
 
 @AllArgsConstructor
 @NoArgsConstructor
@@ -14,12 +13,12 @@ import javax.validation.constraints.NotNull;
 @ToString
 public class RequestPostDto {
 
-    @NotNull
-    private Long userId;
-
     @NotEmpty
     private String text;
 
     @NotEmpty
     private String isPublic;
+
+    @NotEmpty
+    private String isCommentingBlocked;
 }

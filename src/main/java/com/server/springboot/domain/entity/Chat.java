@@ -32,10 +32,6 @@ public class Chat {
     @Column(name = "created_at", nullable = false)
     private LocalDateTime createdAt;
 
-    @NotNull
-    @Column(name = "is_deleted", nullable = false)
-    private boolean isDeleted;
-
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "creator_id", nullable = false)
     private User chatCreator;

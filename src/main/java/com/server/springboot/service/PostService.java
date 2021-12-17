@@ -11,32 +11,30 @@ import java.util.List;
 
 public interface PostService {
 
-    List<PostDto> findAllPosts();
+    List<PostDto> findAllPublicPosts();
 
     void addPost(RequestPostDto requestPostDto, List<MultipartFile> imageFiles);
 
     @Transactional
     void editPost(Long postId, RequestPostDto requestPostDto, List<MultipartFile> imageFiles);
 
-    void deleteUserPostById(Long postId, Long authorId);
-
-    void deletePostByIdWithArchiving(Long postId, Long authorId, boolean archive);
+    void deleteUserPostById(Long postId, boolean archive);
 
     PostDto findPostById(Long postId);
 
-    void likePost(Long postId, Long userId);
+    void likePost(Long postId);
 
-    void deleteLikeFromPost(Long postId, Long userId);
+    void deleteLikeFromPost(Long postId);
 
     void sharePost(Long basePostId, RequestSharePostDto requestSharePostDto);
 
-    void deleteSharedPostById(Long sharedPostId, Long userId);
+    void deleteSharedPostById(Long sharedPostId);
 
     List<SharedPostDto> findAllSharedPosts();
 
-    void addPostToFavourite(Long postId, Long userId);
+    void addPostToFavourite(Long postId);
 
-    void deletePostFromFavourite(Long postId, Long userId);
+    void deletePostFromFavourite(Long postId);
 
     List<PostDto> findAllFavouritePostsByUserId(Long userId);
 }
