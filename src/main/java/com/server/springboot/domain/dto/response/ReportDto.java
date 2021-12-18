@@ -16,5 +16,5 @@ public class ReportDto {
     private String description;
     private String createdAt;
     private boolean isConfirmed;
-    private UserDto userDto;
+    private UserDetailsDto userDetailsDto;
 }

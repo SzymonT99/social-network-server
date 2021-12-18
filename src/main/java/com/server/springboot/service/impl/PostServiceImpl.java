@@ -20,7 +20,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.time.LocalDateTime;
-import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -253,6 +252,14 @@ public class PostServiceImpl implements PostService {
                 .orElseThrow(() -> new NotFoundException("Not found user with id: " + userId));
         List<Post> favouritePosts = postRepository.findByFavourites(user);
         return postDtoListMapper.convert(favouritePosts);
+    }
+
+    @Override
+    public List<PostDto> findPostsByUserId(Long userId) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new NotFoundException("Not found user with id: " + userId));
+        List<Post> userPosts = postRepository.findByPostAuthor(user);
+        return postDtoListMapper.convert(userPosts);
     }
 
 }

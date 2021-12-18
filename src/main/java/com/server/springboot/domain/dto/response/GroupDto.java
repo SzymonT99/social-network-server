@@ -12,7 +12,7 @@ import lombok.*;
 public class GroupDto {
     private Long groupId;
     private String name;
-    private String image;
+    private ImageDto image;
     private String description;
     private String createdAt;
 }

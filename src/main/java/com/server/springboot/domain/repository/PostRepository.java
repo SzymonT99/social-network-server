@@ -20,4 +20,6 @@ public interface PostRepository extends JpaRepository<Post, Long> {
 
     List<Post> findByFavourites(User user);
 
+    List<Post> findByPostAuthor(User user);
+
 }

@@ -11,7 +11,7 @@ import lombok.*;
 @Builder
 @ToString
 public class SchoolDto {
-    private String schoolId;
+    private Long schoolId;
     private SchoolType schoolType;
     private String name;
     private String startDate;

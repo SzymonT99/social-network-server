@@ -15,5 +15,5 @@ public class FriendDto {
     private boolean invitationDisplayed;
     private String invitationDate;
     private String friendFromDate;
-    private UserDto user;
+    private UserDetailsDto userDetails;
 }

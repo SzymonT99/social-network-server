@@ -9,10 +9,10 @@ import lombok.*;
 @Setter
 @Builder
 @ToString
-public class AddressDto {
-    private Long addressId;
-    private String country;
-    private String city;
-    private String street;
-    private String zipCode;
+public class ProfilePhotoDto {
+    private String filename;
+    private String url;
+    private String type;
+    private String caption;
+    private String addedIn;
 }

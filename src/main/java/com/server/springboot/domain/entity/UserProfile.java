@@ -65,6 +65,10 @@ public class UserProfile {
     @Column(name = "skills")
     private String skills;
 
+    @OneToOne(fetch = FetchType.LAZY, cascade = CascadeType.ALL)
+    @JoinColumn(name = "profile_photo_id")
+    private Image profilePhoto;
+
     @OneToOne(mappedBy = "userProfile", fetch = FetchType.LAZY,
             cascade = CascadeType.ALL)
     private User user;

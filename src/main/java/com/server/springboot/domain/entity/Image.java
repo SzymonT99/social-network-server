@@ -36,13 +36,12 @@ public class Image {
     @Column(name = "type", nullable = false)
     private String type;
 
+    @Column(name = "caption")
+    private String caption;
+
     @NotNull
     @Column(name = "added_in", nullable = false)
     private LocalDateTime addedIn;
-
-    @NotNull
-    @Column(name = "is_profile_photo", nullable = false)
-    private boolean isProfilePhoto;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_profile_id")

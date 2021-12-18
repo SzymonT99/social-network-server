@@ -11,7 +11,7 @@ import lombok.*;
 @Builder
 @ToString
 public class UserFavouriteDto {
-    private String favouriteId;
+    private Long favouriteId;
     private FavouriteType favouriteType;
     private String name;
 }

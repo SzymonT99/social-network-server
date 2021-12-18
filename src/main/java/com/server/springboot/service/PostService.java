@@ -37,4 +37,6 @@ public interface PostService {
     void deletePostFromFavourite(Long postId);
 
     List<PostDto> findAllFavouritePostsByUserId(Long userId);
+
+    List<PostDto> findPostsByUserId(Long userId);
 }
