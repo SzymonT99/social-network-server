@@ -16,8 +16,10 @@ public interface PostRepository extends JpaRepository<Post, Long> {
     @Transactional
     void deleteByPostId(Long id);
 
-    List<Post> findByIsDeletedOrderByCreatedAtDesc(boolean isDeleted);
+    List<Post> findByIsDeletedAndIsPublicOrderByCreatedAtDesc(boolean isDeleted, boolean isPublic);
 
     List<Post> findByFavourites(User user);
+
+    List<Post> findByPostAuthor(User user);
 
 }

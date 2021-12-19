@@ -26,6 +26,10 @@ public class Post {
     private String text;
 
     @NotNull
+    @Column(name = "is_commenting_blocked", nullable = false)
+    private boolean isCommentingBlocked;
+
+    @NotNull
     @Column(name = "is_public", nullable = false)
     private boolean isPublic;
 

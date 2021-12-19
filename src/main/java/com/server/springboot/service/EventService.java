@@ -16,22 +16,20 @@ public interface EventService {
     @Transactional
     void editEvent(Long eventId, RequestEventDto requestEventDto, MultipartFile imageFile);
 
-    void deleteEventById(Long eventId, Long authorId);
-
-    void deleteEventByIdWithArchiving(Long eventId, Long authorId, boolean archive);
+    void deleteEventById(Long eventId, boolean archive);
 
     List<EventDto> findAllEvents();
 
-    void inviteUser(Long eventId, Long userId);
+    void inviteUser(Long eventId, Long invitedUserId);
 
     List<EventInvitationDto> findAllUserEventInvitation(Long userId);
 
-    void respondToEvent(Long eventId, Long userId, String reactionToEvent);
+    void respondToEvent(Long eventId, String reactionToEvent);
 
-    void shareEvent(Long eventId, Long userId);
+    void shareEvent(Long eventId);
 
     @Transactional
-    void deleteSharedEvent(Long eventId, Long userId);
+    void deleteSharedEvent(Long eventId);
 
     List<SharedEventDto>  findAllSharedEventsByUser(Long userId);
 }

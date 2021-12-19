@@ -10,9 +10,10 @@ import lombok.*;
 @Setter
 @Builder
 @ToString
-public class UserDto {
+public class UserDetailsDto {
     private Long userId;
     private String email;
+    private String createdAt;
     private ActivityStatus activityStatus;
     private UserProfileDto userProfile;
 }

@@ -27,7 +27,6 @@ import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -143,10 +142,10 @@ public class UserServiceImpl implements UserService {
             authorizedUser.setBlocked(authorizedUser.getIncorrectLoginCounter() >= MAX_LOGIN_ATTEMPTS);
             authorizedUser.setIncorrectLoginCounter(authorizedUser.getIncorrectLoginCounter() + 1);
             userRepository.save(authorizedUser);
-        }
 
-        if (authorizedUser.getIncorrectLoginCounter() >= MAX_LOGIN_ATTEMPTS + 1 && authorizedUser.isBlocked()) {
-            throw new ForbiddenException(String.format("User account with login: %s is blocked", userLoginDto.getLogin()));
+            if (authorizedUser.getIncorrectLoginCounter() >= MAX_LOGIN_ATTEMPTS + 1 && authorizedUser.isBlocked()) {
+                throw new ForbiddenException(String.format("User account with login: %s is blocked", userLoginDto.getLogin()));
+            }
         }
 
         Authentication authentication = authenticationManager.authenticate(
@@ -172,9 +171,7 @@ public class UserServiceImpl implements UserService {
         RefreshToken refreshToken = refreshTokenService.createRefreshToken(userDetails.getUsername());
 
         return new JwtResponse(
-                userDetails.getId(),
-                userDetails.getUsername(),
-                userDetails.getEmail(),
+                userDetails.getUserId(),
                 roles,
                 accessToken,
                 "Bearer",
@@ -189,7 +186,7 @@ public class UserServiceImpl implements UserService {
         if (refreshTokenService.checkExpirationDate(lastRefreshToken)) {
             User user = lastRefreshToken.getUser();
             String username = user.getUsername();
-            UserDetails userDetails = userDetailsService.loadUserByUsername(username);
+            UserDetailsImpl userDetails = (UserDetailsImpl) userDetailsService.loadUserByUsername(username);
             String newAccessToken = jwtUtils.generateAccessToken(userDetails);
             String newRefreshToken = refreshTokenService.createRefreshToken(userDetails.getUsername()).getToken();
 

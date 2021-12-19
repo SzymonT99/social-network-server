@@ -43,8 +43,8 @@ public class EventApiController {
     @ApiOperation(value = "Update existing event by id")
     @PutMapping(value = "/events/{eventId}", consumes = {MediaType.APPLICATION_JSON_VALUE, MediaType.MULTIPART_FORM_DATA_VALUE})
     public ResponseEntity<?> updateEvent(@PathVariable(value = "eventId") Long eventId,
-                                        @RequestPart(value = "image") MultipartFile imageFile,
-                                        @Valid @RequestPart(value = "event") RequestEventDto requestEventDto) {
+                                         @RequestPart(value = "image") MultipartFile imageFile,
+                                         @Valid @RequestPart(value = "event") RequestEventDto requestEventDto) {
         LOGGER.info("---- Update event with id: {} and title: {}", eventId, requestEventDto.getTitle());
         eventService.editEvent(eventId, requestEventDto, imageFile);
         return new ResponseEntity<>(HttpStatus.OK);
@@ -53,18 +53,16 @@ public class EventApiController {
     @ApiOperation(value = "Delete an event by id")
     @DeleteMapping(value = "/events/{eventId}")
     public ResponseEntity<?> deleteEvent(@PathVariable(value = "eventId") Long eventId) {
-        Long authorId = 1L;
         LOGGER.info("---- Delete event with id: {}", eventId);
-        eventService.deleteEventById(eventId, authorId);
+        eventService.deleteEventById(eventId, false);
         return new ResponseEntity<>(HttpStatus.OK);
     }
 
     @ApiOperation(value = "Delete an event by id ith archiving")
     @DeleteMapping(value = "/events/{eventId}/archive")
     public ResponseEntity<?> deleteEventWithArchiving(@PathVariable(value = "eventId") Long eventId) {
-        Long authorId = 1L;
         LOGGER.info("---- Delete event by archiving with id: {}", eventId);
-        eventService.deleteEventByIdWithArchiving(eventId, authorId, true);
+        eventService.deleteEventById(eventId, true);
         return new ResponseEntity<>(HttpStatus.OK);
     }
 
@@ -77,9 +75,9 @@ public class EventApiController {
 
     @ApiOperation(value = "Invite user to events")
     @PostMapping(value = "/events/{eventId}/invite")
-    public ResponseEntity<?> inviteForEvent(@PathVariable(value = "eventId") Long eventId, @RequestParam(value = "userId") Long userId) {
-        LOGGER.info("---- Invitation to event for user with id: {}", userId);
-        eventService.inviteUser(eventId, userId);
+    public ResponseEntity<?> inviteForEvent(@PathVariable(value = "eventId") Long eventId, @RequestParam(value = "invitedUserId") Long invitedUserId) {
+        LOGGER.info("---- Invitation to event for user with id: {}", invitedUserId);
+        eventService.inviteUser(eventId, invitedUserId);
         return new ResponseEntity<>(HttpStatus.CREATED);
     }
 
@@ -93,28 +91,25 @@ public class EventApiController {
     @ApiOperation(value = "Respond to event")
     @PutMapping(value = "/events/{eventId}/response")
     public ResponseEntity<?> respondToEvent(@PathVariable(value = "eventId") Long eventId,
-                                        @RequestParam(value = "reaction") String reactionToEvent) {
-        Long userId = 1L;
-        LOGGER.info("----User with id: {} reaction to an event: {}", userId, reactionToEvent);
-        eventService.respondToEvent(eventId, userId, reactionToEvent);
+                                            @RequestParam(value = "reaction") String reactionToEvent) {
+        LOGGER.info("----User reactions to an event: {}", reactionToEvent);
+        eventService.respondToEvent(eventId, reactionToEvent);
         return new ResponseEntity<>(HttpStatus.OK);
     }
 
     @ApiOperation(value = "Share event")
     @PostMapping(value = "/events/{eventId}/share")
     public ResponseEntity<?> shareEvent(@PathVariable(value = "eventId") Long eventId) {
-        Long userId = 1L;
-        LOGGER.info("---- User with id: {} share event with id: {}", userId, eventId);
-        eventService.shareEvent(eventId, userId);
+        LOGGER.info("---- User shares event with id: {}", eventId);
+        eventService.shareEvent(eventId);
         return new ResponseEntity<>(HttpStatus.CREATED);
     }
 
     @ApiOperation(value = "Share event")
     @DeleteMapping(value = "/events/{eventId}/shared")
     public ResponseEntity<?> deleteSharedEvent(@PathVariable(value = "eventId") Long eventId) {
-        Long userId = 1L;
-        LOGGER.info("---- Deleted shared event");
-        eventService.deleteSharedEvent(eventId, userId);
+        LOGGER.info("---- User deletes shared event with id: {}", eventId);
+        eventService.deleteSharedEvent(eventId);
         return new ResponseEntity<>(HttpStatus.OK);
     }
 

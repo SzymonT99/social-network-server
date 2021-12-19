@@ -12,6 +12,7 @@ import com.server.springboot.exception.BadRequestException;
 import com.server.springboot.exception.ConflictRequestException;
 import com.server.springboot.exception.ForbiddenException;
 import com.server.springboot.exception.NotFoundException;
+import com.server.springboot.security.JwtUtils;
 import com.server.springboot.service.PostCommentService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -25,21 +26,25 @@ public class PostCommentServiceImpl implements PostCommentService {
     private final UserRepository userRepository;
     private final PostRepository postRepository;
     private final CommentRepository commentRepository;
+    private final JwtUtils jwtUtils;
     private final Converter<Comment, RequestCommentDto> commentMapper;
 
     @Autowired
     public PostCommentServiceImpl(UserRepository userRepository, PostRepository postRepository,
-                                  CommentRepository commentRepository, Converter<Comment, RequestCommentDto> commentMapper) {
+                                  CommentRepository commentRepository, JwtUtils jwtUtils,
+                                  Converter<Comment, RequestCommentDto> commentMapper) {
         this.userRepository = userRepository;
         this.postRepository = postRepository;
         this.commentRepository = commentRepository;
+        this.jwtUtils = jwtUtils;
         this.commentMapper = commentMapper;
     }
 
     @Override
     public void addComment(Long postId, RequestCommentDto requestCommentDto) {
-        User commentAuthor = userRepository.findById(requestCommentDto.getUserId())
-                .orElseThrow(() -> new NotFoundException("Not found user with id: " + requestCommentDto.getUserId()));
+        Long userId = jwtUtils.getLoggedUserId();
+        User commentAuthor = userRepository.findById(userId)
+                .orElseThrow(() -> new NotFoundException("Not found user with id: " + userId));
         Post post = postRepository.findById(postId)
                 .orElseThrow(() -> new NotFoundException("Not found shared post with id: " + postId));
         Comment comment = commentMapper.convert(requestCommentDto);
@@ -50,9 +55,10 @@ public class PostCommentServiceImpl implements PostCommentService {
 
     @Override
     public void editCommentById(Long commentId, RequestCommentDto requestCommentDto) {
+        Long userId = jwtUtils.getLoggedUserId();
         Comment comment = commentRepository.findById(commentId)
                 .orElseThrow(() -> new NotFoundException("Not found post comment with id: " + commentId));
-        if (!comment.getCommentAuthor().getUserId().equals(requestCommentDto.getUserId())) {
+        if (!comment.getCommentAuthor().getUserId().equals(userId)) {
             throw new ForbiddenException("Invalid comment author id - comment editing access forbidden");
         }
         comment.setEdited(true);
@@ -62,17 +68,19 @@ public class PostCommentServiceImpl implements PostCommentService {
     }
 
     @Override
-    public void deleteCommentById(Long commentId, Long authorId) {
+    public void deleteCommentById(Long commentId) {
+        Long userId = jwtUtils.getLoggedUserId();
         Comment comment = commentRepository.findById(commentId)
                 .orElseThrow(() -> new NotFoundException("Not found post comment with id: " + commentId));
-        if (!comment.getCommentAuthor().getUserId().equals(authorId)) {
+        if (!comment.getCommentAuthor().getUserId().equals(userId)) {
             throw new ForbiddenException("Invalid comment author id - comment deleting access forbidden");
         }
         commentRepository.deleteByCommentId(commentId);
     }
 
     @Override
-    public void likeCommentById(Long commentId, Long userId) {
+    public void likeCommentById(Long commentId) {
+        Long userId = jwtUtils.getLoggedUserId();
         Comment comment = commentRepository.findById(commentId)
                 .orElseThrow(() -> new NotFoundException("Not found post comment with id: " + commentId));
         User user = userRepository.findById(userId)
@@ -87,7 +95,8 @@ public class PostCommentServiceImpl implements PostCommentService {
     }
 
     @Override
-    public void dislikeCommentById(Long commentId, Long userId) {
+    public void dislikeCommentById(Long commentId) {
+        Long userId = jwtUtils.getLoggedUserId();
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new NotFoundException("Not found user with id: " + userId));
         Comment deletedLikeFromComment = user.getLikedComments().stream()

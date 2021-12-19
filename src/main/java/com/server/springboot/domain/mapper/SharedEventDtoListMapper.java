@@ -23,7 +23,7 @@ public class SharedEventDtoListMapper implements Converter<List<SharedEventDto>,
 
     @Override
     public List<SharedEventDto> convert(List<SharedEvent> from) {
-        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd-MM-yyyy HH:mm:ss");
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd.MM.yyyy HH:mm:ss");
         List<SharedEventDto> sharedEventDtoList = new ArrayList<>();
 
         for (SharedEvent sharedEvent : from) {

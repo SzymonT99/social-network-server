@@ -8,9 +8,9 @@ public interface PostCommentService {
 
     void editCommentById(Long commentId, RequestCommentDto requestCommentDto);
 
-    void deleteCommentById(Long commentId, Long authorId);
+    void deleteCommentById(Long commentId);
 
-    void likeCommentById(Long commentId, Long userId);
+    void likeCommentById(Long commentId);
 
-    void dislikeCommentById(Long commentId, Long userId);
+    void dislikeCommentById(Long commentId);
 }

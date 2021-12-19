@@ -17,5 +17,7 @@ public class SharedPostDto {
     private String sharingDate;
     @JsonProperty(value = "isPublic")
     private boolean isPublic;
+    @JsonProperty(value = "isCommentingBlocked")
+    private boolean isCommentingBlocked;
     private PostDto sharedPost;
 }

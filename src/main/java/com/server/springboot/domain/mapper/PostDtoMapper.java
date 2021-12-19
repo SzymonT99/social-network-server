@@ -1,7 +1,9 @@
 package com.server.springboot.domain.mapper;
 
 import com.server.springboot.domain.dto.response.*;
+import com.server.springboot.domain.entity.Image;
 import com.server.springboot.domain.entity.Post;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import java.time.format.DateTimeFormatter;
@@ -10,9 +12,16 @@ import java.util.stream.Collectors;
 @Component
 public class PostDtoMapper implements Converter<PostDto, Post> {
 
+    private final Converter<ImageDto, Image> imageDtoMapper;
+
+    @Autowired
+    public PostDtoMapper(Converter<ImageDto, Image> imageDtoMapper) {
+        this.imageDtoMapper = imageDtoMapper;
+    }
+
     @Override
     public PostDto convert(Post from) {
-        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd-MM-yyyy HH:mm:ss");
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd.MM.yyyy HH:mm:ss");
         return PostDto.builder()
                 .postId(from.getPostId())
                 .postAuthorId(from.getPostAuthor().getUserId())
@@ -21,16 +30,13 @@ public class PostDtoMapper implements Converter<PostDto, Post> {
                 .text(from.getText())
                 .images(
                         from.getImages().stream()
-                                .map(image -> ImageDto.builder()
-                                        .filename(image.getFilename())
-                                        .url("localhost:8080/api/images/" + image.getImageId())
-                                        .type(image.getType())
-                                        .build())
+                                .map(imageDtoMapper::convert)
                                 .collect(Collectors.toList())
                 )
                 .createdAt(from.getCreatedAt().format(formatter))
                 .editedAt(from.getEditedAt() != null ? from.getEditedAt().format(formatter) : null)
                 .isPublic(from.isPublic())
+                .isCommentingBlocked(from.isCommentingBlocked())
                 .isEdited(from.isEdited())
                 .likes(
                         from.getLikedPosts().stream()

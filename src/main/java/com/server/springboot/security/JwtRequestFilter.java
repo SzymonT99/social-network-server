@@ -1,6 +1,5 @@
 package com.server.springboot.security;
 
-import com.server.springboot.exception.ForbiddenException;
 import com.server.springboot.service.RefreshTokenService;
 import com.server.springboot.service.impl.UserDetailsServiceImpl;
 import org.slf4j.Logger;

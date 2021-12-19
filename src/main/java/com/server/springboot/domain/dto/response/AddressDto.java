@@ -10,7 +10,7 @@ import lombok.*;
 @Builder
 @ToString
 public class AddressDto {
-    private String addressId;
+    private Long addressId;
     private String country;
     private String city;
     private String street;

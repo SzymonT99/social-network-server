@@ -41,11 +41,11 @@ public class Address {
     private String zipCode;
 
     @OneToOne(mappedBy = "address", fetch = FetchType.LAZY,
-            cascade = CascadeType.ALL)
+            cascade = CascadeType.PERSIST)
     private UserProfile userProfile;
 
     @OneToOne(mappedBy = "eventAddress", fetch = FetchType.LAZY,
-            cascade = CascadeType.ALL)
+            cascade = CascadeType.PERSIST)
     private Event event;
 
 }

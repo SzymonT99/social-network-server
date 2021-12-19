@@ -4,7 +4,6 @@ import com.server.springboot.domain.enumeration.Gender;
 import com.server.springboot.domain.enumeration.RelationshipStatus;
 import lombok.*;
 
-import java.time.LocalDate;
 import java.util.List;
 
 @AllArgsConstructor
@@ -21,14 +20,14 @@ public class UserProfileDto {
     private String lastName;
     private String aboutUser;
     private Gender gender;
-    private LocalDate dateOfBirth;
+    private String dateOfBirth;
     private Integer age;
     private String job;
     private RelationshipStatus relationshipStatus;
     private String skills;
+    private ImageDto profilePhoto;
     private AddressDto address;
     private List<SchoolDto> schools;
-    private List<UserFavouriteDto> favourites;
     private List<WorkPlaceDto> workPlaces;
-    private List<ImageDto> userImages;
 }
+

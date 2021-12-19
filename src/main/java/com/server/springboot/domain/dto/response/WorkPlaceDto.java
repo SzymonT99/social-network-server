@@ -10,7 +10,7 @@ import lombok.*;
 @Builder
 @ToString
 public class WorkPlaceDto {
-    private String workPlaceId;
+    private Long workPlaceId;
     private String company;
     private String position;
     private String startDate;

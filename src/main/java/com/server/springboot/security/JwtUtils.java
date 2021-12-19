@@ -5,8 +5,9 @@ import io.jsonwebtoken.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
-import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
 
 import java.util.Date;
@@ -27,7 +28,7 @@ public class JwtUtils {
     @Value("${jwtRefreshExpirationMs}")
     private Long refreshTokenExpirationMs;
 
-    public String generateAccessToken(UserDetails userPrincipal) {
+    public String generateAccessToken(UserDetailsImpl userPrincipal) {
         String authorities = userPrincipal.getAuthorities().stream()
                 .map(GrantedAuthority::getAuthority)
                 .collect(Collectors.joining(","));
@@ -60,6 +61,12 @@ public class JwtUtils {
                 .parseClaimsJws(token)
                 .getBody()
                 .getSubject();
+    }
+
+    public Long getLoggedUserId() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        UserDetailsImpl loggedUser  = (UserDetailsImpl) authentication.getPrincipal();
+        return loggedUser.getUserId();
     }
 
     public boolean validateJwtToken(String authToken) {

@@ -1,8 +1,10 @@
 package com.server.springboot.domain.mapper;
 
 import com.server.springboot.domain.dto.response.*;
+import com.server.springboot.domain.entity.Image;
 import com.server.springboot.domain.entity.Post;
 import com.server.springboot.domain.entity.UserProfile;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import java.time.format.DateTimeFormatter;
@@ -13,9 +15,16 @@ import java.util.stream.Collectors;
 @Component
 public class PostDtoListMapper implements Converter<List<PostDto>, List<Post>> {
 
+    private final Converter<ImageDto, Image> imageDtoMapper;
+
+    @Autowired
+    public PostDtoListMapper(Converter<ImageDto, Image> imageDtoMapper) {
+        this.imageDtoMapper = imageDtoMapper;
+    }
+
     @Override
     public List<PostDto> convert(List<Post> from) {
-        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd-MM-yyyy HH:mm:ss");
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd.MM.yyyy HH:mm:ss");
         List<PostDto> postsDto = new ArrayList<>();
 
         for (Post post : from) {
@@ -25,18 +34,14 @@ public class PostDtoListMapper implements Converter<List<PostDto>, List<Post>> {
                     .postAuthorId(post.getPostAuthor().getUserId())
                     .postAuthor(userProfile.getFirstName() + " " + userProfile.getLastName())
                     .text(post.getText())
-                    .images(
-                            post.getImages().stream()
-                                    .map(image -> ImageDto.builder()
-                                            .filename(image.getFilename())
-                                            .url("localhost:8080/api/images/" + image.getImageId())
-                                            .type(image.getType())
-                                            .build())
-                                    .collect(Collectors.toList())
+                    .images(post.getImages().stream()
+                            .map(imageDtoMapper::convert)
+                            .collect(Collectors.toList())
                     )
                     .createdAt(post.getCreatedAt().format(formatter))
                     .editedAt(post.getEditedAt() != null ? post.getEditedAt().format(formatter) : null)
                     .isPublic(post.isPublic())
+                    .isCommentingBlocked(post.isCommentingBlocked())
                     .isEdited(post.isEdited())
                     .likes(
                             post.getLikedPosts().stream()

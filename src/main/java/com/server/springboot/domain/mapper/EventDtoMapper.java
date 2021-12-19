@@ -12,7 +12,7 @@ public class EventDtoMapper implements Converter<EventDto, Event> {
 
     @Override
     public EventDto convert(Event from) {
-        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd-MM-yyyy HH:mm:ss");
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd.MM.yyyy HH:mm:ss");
 
         return EventDto.builder()
                 .eventId(from.getEventId())

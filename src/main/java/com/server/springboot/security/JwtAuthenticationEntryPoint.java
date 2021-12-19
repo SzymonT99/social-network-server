@@ -33,7 +33,7 @@ public class JwtAuthenticationEntryPoint implements AuthenticationEntryPoint {
         response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
         Map<String, Object> body = new HashMap<>();
 
-        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd.MM.yyy HH:mm:ss");
         body.put("timestamp", LocalDateTime.now().format(formatter));
         body.put("status", HttpServletResponse.SC_UNAUTHORIZED);
         body.put("error", HttpStatus.UNAUTHORIZED);
