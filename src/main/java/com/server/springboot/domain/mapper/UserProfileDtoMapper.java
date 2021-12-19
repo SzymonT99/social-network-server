@@ -1,22 +1,32 @@
 package com.server.springboot.domain.mapper;
 
+import com.google.common.collect.Lists;
 import com.server.springboot.domain.dto.response.*;
-import com.server.springboot.domain.entity.Image;
-import com.server.springboot.domain.entity.UserProfile;
+import com.server.springboot.domain.entity.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import java.time.format.DateTimeFormatter;
+import java.util.List;
 import java.util.stream.Collectors;
 
 @Component
 public class UserProfileDtoMapper implements Converter<UserProfileDto, UserProfile> {
 
     private final Converter<ImageDto, Image> imageDtoMapper;
+    private final Converter<AddressDto, Address> addressDtoMapper;
+    private final Converter<List<SchoolDto>, List<School>> schoolDtoMapper;
+    private final Converter<List<WorkPlaceDto>, List<WorkPlace>> workPlaceDtoListMapper;
 
     @Autowired
-    public UserProfileDtoMapper(Converter<ImageDto, Image> imageDtoMapper) {
+    public UserProfileDtoMapper(Converter<ImageDto, Image> imageDtoMapper,
+                                Converter<AddressDto, Address> addressDtoMapper,
+                                Converter<List<SchoolDto>, List<School>> schoolDtoMapper,
+                                Converter<List<WorkPlaceDto>, List<WorkPlace>> workPlaceDtoListMapper) {
         this.imageDtoMapper = imageDtoMapper;
+        this.addressDtoMapper = addressDtoMapper;
+        this.schoolDtoMapper = schoolDtoMapper;
+        this.workPlaceDtoListMapper = workPlaceDtoListMapper;
     }
 
     @Override
@@ -34,40 +44,10 @@ public class UserProfileDtoMapper implements Converter<UserProfileDto, UserProfi
                 .job(from.getJob())
                 .relationshipStatus(from.getRelationshipStatus())
                 .skills(from.getSkills())
-                .profilePhoto(imageDtoMapper.convert(from.getProfilePhoto()))
-                .address(AddressDto.builder()
-                        .addressId(from.getAddress().getAddressId())
-                        .country(from.getAddress().getCountry())
-                        .city(from.getAddress().getCity())
-                        .street(from.getAddress().getStreet())
-                        .zipCode(from.getAddress().getZipCode())
-                        .build())
-                .schools(
-                        from.getSchools().stream()
-                                .map(school -> SchoolDto.builder()
-                                        .schoolId(school.getSchoolId())
-                                        .schoolType(school.getSchoolType())
-                                        .name(school.getName())
-                                        .startDate(school.getStartDate().format(formatterWithoutTime))
-                                        .graduationDate(school.getGraduationDate() != null
-                                                ? school.getGraduationDate().format(formatterWithoutTime)
-                                                : null)
-                                        .build())
-                                .collect(Collectors.toList())
-                )
-                .workPlaces(
-                        from.getWorkPlaces().stream()
-                                .map(workPlace -> WorkPlaceDto.builder()
-                                        .workPlaceId(workPlace.getWorkPlaceId())
-                                        .company(workPlace.getCompany())
-                                        .position(workPlace.getPosition())
-                                        .startDate(workPlace.getStartDate().format(formatterWithoutTime))
-                                        .endDate(workPlace.getEndDate() != null
-                                                ? workPlace.getEndDate().format(formatterWithoutTime)
-                                                : null)
-                                        .build())
-                                .collect(Collectors.toList())
-                )
+                .profilePhoto(from.getProfilePhoto() != null ? imageDtoMapper.convert(from.getProfilePhoto()) : null)
+                .address(from.getAddress() != null ? addressDtoMapper.convert(from.getAddress()) : null)
+                .schools(schoolDtoMapper.convert(Lists.newArrayList(from.getSchools())))
+                .workPlaces(workPlaceDtoListMapper.convert(Lists.newArrayList(from.getWorkPlaces())))
                 .build();
     }
 }

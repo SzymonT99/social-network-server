@@ -19,6 +19,7 @@ import com.server.springboot.service.FileService;
 import com.server.springboot.service.ProfileService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.time.LocalDate;
@@ -49,6 +50,7 @@ public class ProfileServiceImpl implements ProfileService {
     private final Converter<UserFavourite, RequestUserFavouriteDto> userFavouriteMapper;
     private final Converter<School, RequestSchoolDto> schoolMapper;
     private final Converter<WorkPlace, RequestWorkPlaceDto> workPlaceMapper;
+    private final Converter<Address, RequestAddressDto> addressMapper;
 
     @Autowired
     public ProfileServiceImpl(UserRepository userRepository, UserFavouriteRepository userFavouriteRepository,
@@ -62,7 +64,8 @@ public class ProfileServiceImpl implements ProfileService {
                               Converter<List<ImageDto>, List<Image>> imageDtoListMapper,
                               Converter<UserFavourite, RequestUserFavouriteDto> userFavouriteMapper,
                               Converter<School, RequestSchoolDto> schoolMapper,
-                              Converter<WorkPlace, RequestWorkPlaceDto> workPlaceMapper) {
+                              Converter<WorkPlace, RequestWorkPlaceDto> workPlaceMapper,
+                              Converter<Address, RequestAddressDto> addressMapper) {
         this.userRepository = userRepository;
         this.userFavouriteRepository = userFavouriteRepository;
         this.interestRepository = interestRepository;
@@ -81,6 +84,7 @@ public class ProfileServiceImpl implements ProfileService {
         this.userFavouriteMapper = userFavouriteMapper;
         this.schoolMapper = schoolMapper;
         this.workPlaceMapper = workPlaceMapper;
+        this.addressMapper = addressMapper;
     }
 
     @Override
@@ -140,7 +144,7 @@ public class ProfileServiceImpl implements ProfileService {
         userProfile.setAboutUser(updateUserProfileDto.getAboutUser());
         userProfile.setGender(Gender.valueOf(updateUserProfileDto.getGender()));
 
-        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd-MM-yyyy");
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd.MM.yyyy");
         userProfile.setDateOfBirth(LocalDate.parse(updateUserProfileDto.getDateOfBirth(), formatter));
 
         userProfile.setJob(updateUserProfileDto.getJob());
@@ -231,6 +235,9 @@ public class ProfileServiceImpl implements ProfileService {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new NotFoundException("Not found user with id: " + userId));
         Image profilePhoto = user.getUserProfile().getProfilePhoto();
+        if (profilePhoto == null) {
+            throw new NotFoundException("Not found any profile photo for user with id: " + userId);
+        }
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd.MM.yyyy HH:mm:ss");
 
         return ProfilePhotoDto.builder()
@@ -243,19 +250,22 @@ public class ProfileServiceImpl implements ProfileService {
     }
 
     @Override
-    public void addUserProfilePhoto(MultipartFile photo, String caption) {
+    public void updateUserProfilePhoto(MultipartFile photo, String caption) {
+        if (photo.isEmpty()) {
+            throw new BadRequestException("Profile photo not sent");
+        }
         Long userId = jwtUtils.getLoggedUserId();
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new NotFoundException("Not found user with id: " + userId));
         UserProfile userProfile = user.getUserProfile();
-        if (!photo.isEmpty()) {
-            Image image = fileService.storageOneImage(photo, user, true);
-            image.setCaption(caption);
-            userProfile.setProfilePhoto(image);
-            userProfileRepository.save(userProfile);
-        } else {
-            throw new BadRequestException("Profile photo not sent");
+        if (userProfile.getProfilePhoto() != null) {
+            imageRepository.delete(userProfile.getProfilePhoto());
         }
+        Image image = fileService.storageOneImage(photo, user, true);
+        image.setCaption(caption);
+        userProfile.setProfilePhoto(image);
+        userProfileRepository.save(userProfile);
+
     }
 
     @Override
@@ -263,7 +273,12 @@ public class ProfileServiceImpl implements ProfileService {
         Long userId = jwtUtils.getLoggedUserId();
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new NotFoundException("Not found user with id: " + userId));
-        Image userProfilePhoto = user.getUserProfile().getProfilePhoto();
+        UserProfile userProfile = userProfileRepository.findByUser(user)
+                .orElseThrow(() -> new NotFoundException("Not found user profile with user id: " + userId));
+
+        Image userProfilePhoto = userProfile.getProfilePhoto();
+        userProfile.setProfilePhoto(null);
+        userProfileRepository.save(userProfile);
         if (!userProfilePhoto.getUserProfile().getUser().getUserId().equals(userId)) {
             throw new ForbiddenException("Invalid logged user id - profile photo deleting access forbidden");
         }
@@ -271,17 +286,27 @@ public class ProfileServiceImpl implements ProfileService {
     }
 
     @Override
-    public void editUserAddress(Long addressId, UpdateAddressDto updateAddressDto) {
+    public void editUserAddress(Long addressId, RequestAddressDto requestAddressDto) {
         Long userId = jwtUtils.getLoggedUserId();
         Address address = addressRepository.findById(addressId)
                 .orElseThrow(() -> new NotFoundException("Not found address with id: " + addressId));
         if (!address.getUserProfile().getUser().getUserId().equals(userId)) {
             throw new ForbiddenException("Invalid logged user id - address editing access forbidden");
         }
-        address.setCountry(updateAddressDto.getCountry());
-        address.setCity(updateAddressDto.getCity());
-        address.setStreet(updateAddressDto.getStreet());
-        address.setZipCode(updateAddressDto.getZipCode());
+        address.setCountry(requestAddressDto.getCountry());
+        address.setCity(requestAddressDto.getCity());
+        address.setStreet(requestAddressDto.getStreet());
+        address.setZipCode(requestAddressDto.getZipCode());
+        addressRepository.save(address);
+    }
+
+    @Override
+    public void addUserAddress(RequestAddressDto requestAddressDto) {
+        Long userId = jwtUtils.getLoggedUserId();
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new NotFoundException("Not found user with id: " + userId));
+        Address address = addressMapper.convert(requestAddressDto);
+        address.setUserProfile(user.getUserProfile());
         addressRepository.save(address);
     }
 

@@ -5,6 +5,7 @@ import com.server.springboot.domain.dto.response.*;
 import com.server.springboot.domain.enumeration.FavouriteType;
 import com.server.springboot.domain.enumeration.RelationshipStatus;
 import com.server.springboot.domain.enumeration.SchoolType;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
@@ -41,11 +42,14 @@ public interface ProfileService {
 
     ProfilePhotoDto findProfilePhotoByUserId(Long userId);
 
-    void addUserProfilePhoto(MultipartFile photo, String caption);
+    @Transactional
+    void updateUserProfilePhoto(MultipartFile photo, String caption);
 
     void deleteUserProfilePhoto();
 
-    void editUserAddress(Long addressId, UpdateAddressDto updateAddressDto);
+    void editUserAddress(Long addressId, RequestAddressDto requestAddressDto);
+
+    void addUserAddress(RequestAddressDto requestAddressDto);
 
     void createSchoolInformation(RequestSchoolDto requestSchoolDto);
 
@@ -60,4 +64,5 @@ public interface ProfileService {
     void editUserWorkPlace(Long workId, RequestWorkPlaceDto requestWorkPlaceDto);
 
     void deleteUserWorkPlace(Long workId);
+
 }

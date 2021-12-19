@@ -17,7 +17,7 @@ public class UserMapper implements Converter<User, CreateUserDto>{
     @Override
     public User convert(CreateUserDto from) {
 
-        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd-MM-yyyy");
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd.MM.yyyy");
 
         UserProfile userProfile = UserProfile.builder()
                 .isPublic(true)

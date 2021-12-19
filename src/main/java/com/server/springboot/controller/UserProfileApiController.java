@@ -145,11 +145,11 @@ public class UserProfileApiController {
     }
 
     @ApiOperation(value = "Add user profile photo")
-    @PostMapping(value = "/profile/photo", consumes = {MediaType.APPLICATION_JSON_VALUE, MediaType.MULTIPART_FORM_DATA_VALUE})
+    @PutMapping(value = "/profile/photo", consumes = {MediaType.APPLICATION_JSON_VALUE, MediaType.MULTIPART_FORM_DATA_VALUE})
     public ResponseEntity<?> addProfilePhoto(@RequestParam(value = "photo") MultipartFile photo,
                                              @RequestParam(value = "caption") String caption) {
-        LOGGER.info("---- Create user's profile photo");
-        profileService.addUserProfilePhoto(photo, caption);
+        LOGGER.info("---- Update user's profile photo");
+        profileService.updateUserProfilePhoto(photo, caption);
         return new ResponseEntity<>(HttpStatus.CREATED);
     }
 
@@ -161,12 +161,20 @@ public class UserProfileApiController {
         return new ResponseEntity<>(HttpStatus.OK);
     }
 
+    @ApiOperation(value = "Add user address")
+    @PostMapping(value = "/profile/address")
+    public ResponseEntity<?> addAddress(@Valid @RequestBody RequestAddressDto requestAddressDto) {
+        LOGGER.info("---- User updates address");
+        profileService.addUserAddress(requestAddressDto);
+        return new ResponseEntity<>(HttpStatus.CREATED);
+    }
+
     @ApiOperation(value = "Update user address")
     @PutMapping(value = "/profile/address/{addressId}")
     public ResponseEntity<?> updateAddress(@PathVariable(value = "addressId") Long addressId,
-                                           @Valid @RequestBody UpdateAddressDto updateAddressDto) {
+                                           @Valid @RequestBody RequestAddressDto requestAddressDto) {
         LOGGER.info("---- User updates address");
-        profileService.editUserAddress(addressId, updateAddressDto);
+        profileService.editUserAddress(addressId, requestAddressDto);
         return new ResponseEntity<>(HttpStatus.OK);
     }
 
