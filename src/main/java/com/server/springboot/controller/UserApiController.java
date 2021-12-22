@@ -42,12 +42,19 @@ public class UserApiController {
     }
 
     @ApiOperation(value = "Activate account")
-    @GetMapping(value = "/account-activation")
+    @GetMapping(value = "/auth/account-activation")
     public ResponseEntity<?> confirmUserAccount(@RequestParam("token") String token) {
         LOGGER.info("---- Activate account by token: {}", token);
         userService.activateAccount(token);
-
         return new ResponseEntity<>(HttpStatus.OK);
+    }
+
+    @ApiOperation(value = "Resend activation account link")
+    @PostMapping(value = "/auth/resend-activation")
+    public ResponseEntity<?> resendActivationAccountLink(@RequestParam("userEmail") String userEmail) {
+        LOGGER.info("---- Resend account user email: {}", userEmail);
+        userService.resendActivationLink(userEmail);
+        return new ResponseEntity<>(HttpStatus.CREATED);
     }
 
     @ApiOperation(value = "Authenticate user")
@@ -70,9 +77,8 @@ public class UserApiController {
     @ApiOperation(value = "Log out user")
     @PostMapping(value = "/auth/logout")
     public ResponseEntity<?> logoutUser() {
-        Long userId =1L;
-        LOGGER.info("---- Logout user with id: {}", userId);
-        userService.logoutUser(userId);
+        LOGGER.info("---- Logout user:");
+        userService.logoutUser();
         return new ResponseEntity<>(HttpStatus.OK);
     }
 

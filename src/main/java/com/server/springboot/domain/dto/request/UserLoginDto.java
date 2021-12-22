@@ -14,8 +14,10 @@ import javax.validation.constraints.*;
 public class UserLoginDto {
 
     @NotEmpty
+    @Size(min = 6, max = 20)
     private String login;
 
     @NotEmpty
+    @Size(min = 10, max = 100)
     private String password;
 }

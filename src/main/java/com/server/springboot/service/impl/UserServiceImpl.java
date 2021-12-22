@@ -200,10 +200,27 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public void logoutUser(Long userId) {
+    public void logoutUser() {
+        Long userId = jwtUtils.getLoggedUserId();
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new NotFoundException("Not found user with given id: " + userId));
         refreshTokenService.deleteByUser(user);
+    }
+
+    @Override
+    public void resendActivationLink(String userEmail) {
+        User user = userRepository.findByEmail(userEmail)
+                .orElseThrow(() -> new NotFoundException("Not found user with given email: " + userEmail));
+        String activationCode = UUID.randomUUID().toString();
+        AccountVerification accountVerification = new AccountVerification(user, activationCode, VERIFICATION_TOKEN_EXPIRATION_TIME);
+        accountVerificationRepository.save(accountVerification);
+
+        String activationLink = "CLIENT_URL?token=" + activationCode;
+        Context context = new Context();
+        context.setVariable("link", activationLink);
+        context.setVariable("name", user.getUserProfile().getFirstName() + " " + user.getUserProfile().getLastName());
+        String html = templateEngine.process("ActivationAccount", context);
+        emailService.sendEmail(userEmail, "Serwis społecznościowy - aktywacja konta", html);
     }
 
 }
