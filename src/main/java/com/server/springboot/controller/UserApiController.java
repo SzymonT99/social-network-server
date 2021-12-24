@@ -15,6 +15,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import javax.validation.Valid;
+import javax.validation.constraints.Email;
 import java.util.List;
 
 @CrossOrigin
@@ -49,7 +50,7 @@ public class UserApiController {
 
     @ApiOperation(value = "Resend activation account link")
     @PostMapping(value = "/auth/resend-activation")
-    public ResponseEntity<?> resendActivationAccountLink(@RequestParam("userEmail") String userEmail) {
+    public ResponseEntity<?> resendActivationAccountLink(@Email @RequestParam("userEmail") String userEmail) {
         LOGGER.info("---- Resend account user email: {}", userEmail);
         userService.resendActivationLink(userEmail);
         return new ResponseEntity<>(HttpStatus.CREATED);
@@ -103,6 +104,23 @@ public class UserApiController {
         LOGGER.info("---- User changes email - current email: {} , new email: {}",
                 changeEmailDto.getOldEmail(), changeEmailDto.getNewEmail());
         return new ResponseEntity<>(userService.changeEmail(userId, changeEmailDto), HttpStatus.OK);
+    }
+
+    @ApiOperation(value = "Send reset user password link")
+    @PostMapping(value = "/users/reset-password/step1")
+    public ResponseEntity<?> sendResetPasswordLink(@Email @RequestParam(value = "userEmail") String userEmail) {
+        LOGGER.info("---- Send reset password link for user with email: {}", userEmail);
+        userService.sendResetPasswordLink(userEmail);
+        return new ResponseEntity<>(HttpStatus.CREATED);
+    }
+
+    @ApiOperation(value = "Reset not logged user password")
+    @PutMapping(value = "/users/reset-password/step2")
+    public ResponseEntity<?> resetPasswordNotLoggedUser(@RequestParam("token") String token,
+                                                        @Valid @RequestBody ResetPasswordDto resetPasswordDto) {
+        LOGGER.info("---- Reset password user with login: {}", resetPasswordDto.getLogin());
+        userService.resetPasswordNotLoggedUser(token, resetPasswordDto);
+        return new ResponseEntity<>(HttpStatus.OK);
     }
 
     @ApiOperation(value = "Change user password")

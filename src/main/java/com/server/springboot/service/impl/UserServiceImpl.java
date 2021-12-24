@@ -8,10 +8,7 @@ import com.server.springboot.domain.entity.*;
 import com.server.springboot.domain.enumeration.ActivityStatus;
 import com.server.springboot.domain.enumeration.AppRole;
 import com.server.springboot.domain.mapper.Converter;
-import com.server.springboot.domain.repository.AccountVerificationRepository;
-import com.server.springboot.domain.repository.ReportRepository;
-import com.server.springboot.domain.repository.RoleRepository;
-import com.server.springboot.domain.repository.UserRepository;
+import com.server.springboot.domain.repository.*;
 import com.server.springboot.exception.*;
 import com.server.springboot.security.JwtUtils;
 import com.server.springboot.service.EmailService;
@@ -39,6 +36,7 @@ import java.util.stream.Collectors;
 public class UserServiceImpl implements UserService {
 
     private static final int VERIFICATION_TOKEN_EXPIRATION_TIME = 7200000;
+    private static final int RESET_PASSWORD_TOKEN_EXPIRATION_TIME = 3600000;
     private final Integer MAX_LOGIN_ATTEMPTS = 5;
 
     @Value("${jwtAccessExpirationMs}")
@@ -48,6 +46,7 @@ public class UserServiceImpl implements UserService {
     private final UserRepository userRepository;
     private final RoleRepository roleRepository;
     private final ReportRepository reportRepository;
+    private final PasswordResetRepository passwordResetRepository;
     private final AccountVerificationRepository accountVerificationRepository;
     private final Converter<User, CreateUserDto> userMapper;
     private final EmailService emailService;
@@ -61,7 +60,7 @@ public class UserServiceImpl implements UserService {
 
     @Autowired
     public UserServiceImpl(UserRepository userRepository, RoleRepository roleRepository,
-                           ReportRepository reportRepository, AccountVerificationRepository accountVerificationRepository,
+                           ReportRepository reportRepository, PasswordResetRepository passwordResetRepository, AccountVerificationRepository accountVerificationRepository,
                            Converter<User, CreateUserDto> userMapper, EmailService emailService, TemplateEngine templateEngine,
                            AuthenticationManager authenticationManager, JwtUtils jwtUtils,
                            RefreshTokenService refreshTokenService, UserDetailsServiceImpl userDetailsService,
@@ -70,6 +69,7 @@ public class UserServiceImpl implements UserService {
         this.userRepository = userRepository;
         this.roleRepository = roleRepository;
         this.reportRepository = reportRepository;
+        this.passwordResetRepository = passwordResetRepository;
         this.accountVerificationRepository = accountVerificationRepository;
         this.userMapper = userMapper;
         this.emailService = emailService;
@@ -109,11 +109,11 @@ public class UserServiceImpl implements UserService {
         AccountVerification accountVerification = new AccountVerification(newUser, activationCode, VERIFICATION_TOKEN_EXPIRATION_TIME);
         accountVerificationRepository.save(accountVerification);
 
-        String activationLink = "CLIENT_URL?token=" + activationCode;
+        String activationLink = "http://localhost:3000/auth/activate-account/" + activationCode;
         Context context = new Context();
         context.setVariable("link", activationLink);
         context.setVariable("name", createUserDto.getFirstName() + " " + createUserDto.getLastName());
-        String html = templateEngine.process("ActivationAccount", context);
+        String html = templateEngine.process("EmailActivationTemplate", context);
         emailService.sendEmail(createUserDto.getEmail(), "Serwis społecznościowy - aktywacja konta", html);
     }
 
@@ -224,7 +224,7 @@ public class UserServiceImpl implements UserService {
         AccountVerification accountVerification = new AccountVerification(user, activationCode, VERIFICATION_TOKEN_EXPIRATION_TIME);
         accountVerificationRepository.save(accountVerification);
 
-        String activationLink = "CLIENT_URL?token=" + activationCode;
+        String activationLink = "http://localhost:3000/auth/activate-account/" + activationCode;
         Context context = new Context();
         context.setVariable("link", activationLink);
         context.setVariable("name", user.getUserProfile().getFirstName() + " " + user.getUserProfile().getLastName());
@@ -379,7 +379,7 @@ public class UserServiceImpl implements UserService {
         Report report = reportRepository.findById(reportId)
                 .orElseThrow(() -> new NotFoundException("Not found report with given id: " + reportId));
         report.setConfirmation(confirmation);
-        User punishedUser =  report.getSuspect();
+        User punishedUser = report.getSuspect();
         punishedUser.setBanned(true);
 
         reportRepository.save(report);
@@ -390,6 +390,40 @@ public class UserServiceImpl implements UserService {
     public List<ReportDto> getAllUserReports() {
         List<Report> reports = reportRepository.findByOrderByCreatedAtDesc();
         return reportDtoListMapper.convert(reports);
+    }
+
+    @Override
+    public void sendResetPasswordLink(String userEmail) {
+        User user = userRepository.findByEmail(userEmail)
+                .orElseThrow(() -> new NotFoundException("Not found user with given email: " + userEmail));
+        String resetCode = UUID.randomUUID().toString();
+        PasswordReset passwordReset = new PasswordReset(resetCode, user, RESET_PASSWORD_TOKEN_EXPIRATION_TIME);
+        passwordResetRepository.save(passwordReset);
+
+        String activationLink = "http://localhost:3000/auth/reset-password/" + resetCode;
+        Context context = new Context();
+        context.setVariable("link", activationLink);
+        context.setVariable("name", user.getUserProfile().getFirstName() + " " + user.getUserProfile().getLastName());
+        String html = templateEngine.process("EmailResetPasswordTemplate", context);
+        emailService.sendEmail(userEmail, "Serwis społecznościowy - resetowanie hasła", html);
+    }
+
+    @Override
+    public void resetPasswordNotLoggedUser(String token, ResetPasswordDto resetPasswordDto) {
+        User user = userRepository.findByUsernameOrEmail(resetPasswordDto.getLogin(), resetPasswordDto.getLogin())
+                .orElseThrow(() -> new NotFoundException("Not found user with given login: " + resetPasswordDto.getLogin()));
+        if (!resetPasswordDto.getNewPassword().equals(resetPasswordDto.getRepeatedNewPassword())) {
+            throw new BadRequestException("Re-entered new password is not correct");
+        }
+
+        PasswordReset passwordReset = passwordResetRepository.findByUserAndResetCode(user, token)
+                .orElseThrow(() -> new NotFoundException("Not found reset code for user id: " + user.getUserId()));
+        if (passwordReset.getExpiredAt().isBefore(LocalDateTime.now())) {
+            throw new ResourceGoneException("The reset password link has expired on " + passwordReset.getExpiredAt());
+        } else {
+            user.setPassword(resetPasswordDto.getNewPassword());
+            userRepository.save(user);
+        }
     }
 
 }

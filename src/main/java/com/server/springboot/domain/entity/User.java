@@ -81,6 +81,10 @@ public class User {
             cascade = CascadeType.ALL, orphanRemoval = true)
     private Set<AccountVerification> verificationCodes;
 
+    @OneToMany(mappedBy = "user", fetch = FetchType.LAZY,
+            cascade = CascadeType.ALL, orphanRemoval = true)
+    private Set<PasswordReset> passwordResets;
+
     @OneToMany(mappedBy = "postAuthor", fetch = FetchType.LAZY,
             cascade = CascadeType.ALL, orphanRemoval = true)
     private Set<Post> posts;

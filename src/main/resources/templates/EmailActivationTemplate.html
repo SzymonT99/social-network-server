@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+</head>
+<body>
+<div class="container">
+    <h2>Witaj <span th:text="${name}">NAME</span></h2>
+    <h4>Dziękujemy za założenie konta!</h4>
+    <p>W celu aktywacji konta, klinij w podany link
+        <a th:href="${link}">
+            <span th:text="${link}">LINK</span>
+        </a>
+    </p>
+</div>
+</body>
+</html>

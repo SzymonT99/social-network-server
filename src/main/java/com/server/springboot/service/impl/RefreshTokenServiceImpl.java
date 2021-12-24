@@ -10,6 +10,7 @@ import com.server.springboot.domain.repository.RefreshTokenRepository;
 import com.server.springboot.domain.repository.UserRepository;
 import com.server.springboot.exception.ForbiddenException;
 import com.server.springboot.exception.NotFoundException;
+import com.server.springboot.exception.ResourceGoneException;
 import com.server.springboot.security.JwtUtils;
 import com.server.springboot.service.RefreshTokenService;
 import org.slf4j.Logger;
@@ -62,7 +63,7 @@ public class RefreshTokenServiceImpl implements RefreshTokenService {
     public boolean checkExpirationDate(RefreshToken token) {
         if (token.getExpiryDate().isBefore(LocalDateTime.now())) {
             refreshTokenRepository.delete(token);
-            throw new ForbiddenException("RefreshToken has expired on " + token.getExpiryDate());
+            throw new ResourceGoneException("RefreshToken has expired on " + token.getExpiryDate());
         }
         return true;
     }

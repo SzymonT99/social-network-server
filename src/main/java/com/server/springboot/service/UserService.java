@@ -36,4 +36,8 @@ public interface UserService {
     void decideAboutReport(Long reportId, boolean confirmation);
 
     List<ReportDto> getAllUserReports();
+
+    void sendResetPasswordLink(String userEmail);
+
+    void resetPasswordNotLoggedUser(String token, ResetPasswordDto resetPasswordDto);
 }
