@@ -2,6 +2,8 @@ package com.server.springboot.domain.dto.request;
 
 import lombok.*;
 
+import javax.validation.constraints.NotEmpty;
+
 @AllArgsConstructor
 @NoArgsConstructor
 @EqualsAndHashCode
@@ -9,8 +11,14 @@ import lombok.*;
 @Setter
 @Builder
 @ToString
-public class ChangeUserLoginDto {
-    private String oldLogin;
-    private String newLogin;
+public class ChangeEmailDto {
+
+    @NotEmpty
+    private String oldEmail;
+
+    @NotEmpty
+    private String newEmail;
+
+    @NotEmpty
     private String password;
 }

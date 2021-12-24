@@ -2,6 +2,8 @@ package com.server.springboot.domain.dto.request;
 
 import lombok.*;
 
+import javax.validation.constraints.NotEmpty;
+
 @AllArgsConstructor
 @NoArgsConstructor
 @EqualsAndHashCode
@@ -9,8 +11,11 @@ import lombok.*;
 @Setter
 @Builder
 @ToString
-public class RequestReportDto {
-    private Long suspectId;
-    private String reportType;
-    private String description;
+public class DeleteUserDto {
+
+    @NotEmpty
+    private String login;
+
+    @NotEmpty
+    private String password;
 }

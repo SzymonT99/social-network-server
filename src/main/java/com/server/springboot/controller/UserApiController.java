@@ -15,7 +15,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import javax.validation.Valid;
-import java.util.ArrayList;
+import javax.validation.constraints.Email;
 import java.util.List;
 
 @CrossOrigin
@@ -37,26 +37,30 @@ public class UserApiController {
     public ResponseEntity<?> createUser(@Valid @RequestBody CreateUserDto createUserDto) {
         LOGGER.info("---- Create user: {}", createUserDto.getUsername());
         userService.addUser(createUserDto);
-
         return new ResponseEntity<>(HttpStatus.CREATED);
     }
 
     @ApiOperation(value = "Activate account")
-    @GetMapping(value = "/account-activation")
+    @GetMapping(value = "/auth/account-activation")
     public ResponseEntity<?> confirmUserAccount(@RequestParam("token") String token) {
         LOGGER.info("---- Activate account by token: {}", token);
         userService.activateAccount(token);
-
         return new ResponseEntity<>(HttpStatus.OK);
+    }
+
+    @ApiOperation(value = "Resend activation account link")
+    @PostMapping(value = "/auth/resend-activation")
+    public ResponseEntity<?> resendActivationAccountLink(@Email @RequestParam("userEmail") String userEmail) {
+        LOGGER.info("---- Resend account user email: {}", userEmail);
+        userService.resendActivationLink(userEmail);
+        return new ResponseEntity<>(HttpStatus.CREATED);
     }
 
     @ApiOperation(value = "Authenticate user")
     @PostMapping(value = "/auth/login")
-    public ResponseEntity<?> authenticateUser(@Valid @RequestBody UserLoginDto userLoginDto) {
+    public ResponseEntity<JwtResponse> authenticateUser(@Valid @RequestBody UserLoginDto userLoginDto) {
         LOGGER.info("---- Authenticate user: {}", userLoginDto.getLogin());
-        JwtResponse jwtResponse = userService.loginUser(userLoginDto);
-
-        return new ResponseEntity<>(jwtResponse, HttpStatus.OK);
+        return new ResponseEntity<>(userService.loginUser(userLoginDto), HttpStatus.OK);
     }
 
     @ApiOperation(value = "Refresh user token")
@@ -70,39 +74,79 @@ public class UserApiController {
     @ApiOperation(value = "Log out user")
     @PostMapping(value = "/auth/logout")
     public ResponseEntity<?> logoutUser() {
-        Long userId =1L;
-        LOGGER.info("---- Logout user with id: {}", userId);
-        userService.logoutUser(userId);
+        LOGGER.info("---- Logout user:");
+        userService.logoutUser();
         return new ResponseEntity<>(HttpStatus.OK);
     }
 
     @ApiOperation(value = "Delete user by id")
-    @PostMapping(value = "/users/{userId}")
-    public ResponseEntity<?> deleteUser(@PathVariable(value = "userId") Long userId) {
+    @DeleteMapping(value = "/users")
+    public ResponseEntity<?> deleteUser(@RequestParam(value = "archive") boolean archive,
+                                        @Valid @RequestBody DeleteUserDto deleteUserDto) {
+        LOGGER.info("---- Delete user account - archive: {}", archive);
+        userService.deleteUser(deleteUserDto, archive);
         return new ResponseEntity<>(HttpStatus.OK);
     }
 
     @ApiOperation(value = "Change username")
-    @PutMapping(value = "/users/username")
-    public ResponseEntity<JwtResponse> changeUsername(@Valid @RequestBody ChangeUserLoginDto changeUserLoginDto) {
-        return new ResponseEntity<>(new JwtResponse(), HttpStatus.OK);
+    @PutMapping(value = "/users/{userId}/username")
+    public ResponseEntity<JwtResponse> changeUsername(@PathVariable(value = "userId") Long userId,
+                                                      @Valid @RequestBody ChangeUsernameDto changeUsernameDto) {
+        LOGGER.info("---- User changes username - current username: {} , new username: {}",
+                changeUsernameDto.getOldUsername(), changeUsernameDto.getNewUsername());
+        return new ResponseEntity<>(userService.changeUsername(userId, changeUsernameDto), HttpStatus.OK);
+    }
+
+    @ApiOperation(value = "Change email")
+    @PutMapping(value = "/users/{userId}/email")
+    public ResponseEntity<JwtResponse> changeEmail(@PathVariable(value = "userId") Long userId,
+                                                   @Valid @RequestBody ChangeEmailDto changeEmailDto) {
+        LOGGER.info("---- User changes email - current email: {} , new email: {}",
+                changeEmailDto.getOldEmail(), changeEmailDto.getNewEmail());
+        return new ResponseEntity<>(userService.changeEmail(userId, changeEmailDto), HttpStatus.OK);
+    }
+
+    @ApiOperation(value = "Send reset user password link")
+    @PostMapping(value = "/users/reset-password/step1")
+    public ResponseEntity<?> sendResetPasswordLink(@Email @RequestParam(value = "userEmail") String userEmail) {
+        LOGGER.info("---- Send reset password link for user with email: {}", userEmail);
+        userService.sendResetPasswordLink(userEmail);
+        return new ResponseEntity<>(HttpStatus.CREATED);
+    }
+
+    @ApiOperation(value = "Reset not logged user password")
+    @PutMapping(value = "/users/reset-password/step2")
+    public ResponseEntity<?> resetPasswordNotLoggedUser(@RequestParam("token") String token,
+                                                        @Valid @RequestBody ResetPasswordDto resetPasswordDto) {
+        LOGGER.info("---- Reset password user with login: {}", resetPasswordDto.getLogin());
+        userService.resetPasswordNotLoggedUser(token, resetPasswordDto);
+        return new ResponseEntity<>(HttpStatus.OK);
     }
 
     @ApiOperation(value = "Change user password")
-    @PutMapping(value = "/users/password")
-    public ResponseEntity<JwtResponse> changePassword(@Valid @RequestBody ChangeUserPasswordDto changeUserPasswordDto) {
-        return new ResponseEntity<>(new JwtResponse(), HttpStatus.OK);
+    @PutMapping(value = "/users/{userId}/password")
+    public ResponseEntity<JwtResponse> changePassword(@PathVariable(value = "userId") Long userId,
+                                                      @Valid @RequestBody ChangeUserPasswordDto changeUserPasswordDto) {
+        LOGGER.info("---- User changes password");
+        return new ResponseEntity<>(userService.changePassword(userId, changeUserPasswordDto), HttpStatus.OK);
     }
 
     @ApiOperation(value = "Change user phone number")
-    @PutMapping(value = "/users/phoneNumber")
-    public ResponseEntity<?> changePhoneNumber(@Valid @RequestBody ChangePhoneNumberDto changePhoneNumberDto) {
+    @PutMapping(value = "/users/{userId}/phoneNumber")
+    public ResponseEntity<?> changePhoneNumber(@PathVariable(value = "userId") Long userId,
+                                               @Valid @RequestBody ChangePhoneNumberDto changePhoneNumberDto) {
+        LOGGER.info("---- User changes phone number - current phone number: {} , new phone number: {}",
+                changePhoneNumberDto.getOldPhoneNumber(), changePhoneNumberDto.getNewPhoneNumber());
+        userService.changePhoneNumber(userId, changePhoneNumberDto);
         return new ResponseEntity<>(HttpStatus.OK);
     }
 
     @ApiOperation(value = "Report user by id")
     @PostMapping(value = "/users/reports")
     public ResponseEntity<?> reportUser(@Valid @RequestBody RequestReportDto requestReportDto) {
+        LOGGER.info("---- User reports user with id: {}, for: {}",
+                requestReportDto.getSuspectId(), requestReportDto.getReportType());
+        userService.reportUserBySuspectId(requestReportDto);
         return new ResponseEntity<>(HttpStatus.CREATED);
     }
 
@@ -110,13 +154,15 @@ public class UserApiController {
     @PostMapping(value = "/users/reports/{reportId}")
     public ResponseEntity<?> decideAboutReport(@PathVariable(value = "reportId") Long reportId,
                                                @RequestParam(value = "confirmation") boolean confirmation) {
+        LOGGER.info("---- Admin decides about user report id: {}, confirmation: {}", reportId, confirmation);
+        userService.decideAboutReport(reportId, confirmation);
         return new ResponseEntity<>(HttpStatus.OK);
     }
 
     @ApiOperation(value = "Get all reports")
     @GetMapping(value = "/users/reports")
     public ResponseEntity<List<ReportDto>> getReports() {
-        List<ReportDto> reportDtoList = new ArrayList<>();
-        return new ResponseEntity<>(reportDtoList, HttpStatus.OK);
+        LOGGER.info("---- Admin gets all user reports");
+        return new ResponseEntity<>(userService.getAllUserReports(), HttpStatus.OK);
     }
 }

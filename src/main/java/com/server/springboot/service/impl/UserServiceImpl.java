@@ -1,19 +1,14 @@
 package com.server.springboot.service.impl;
 
-import com.server.springboot.domain.dto.request.CreateUserDto;
-import com.server.springboot.domain.dto.request.UserLoginDto;
+import com.server.springboot.domain.dto.request.*;
 import com.server.springboot.domain.dto.response.JwtResponse;
 import com.server.springboot.domain.dto.response.RefreshTokenResponse;
-import com.server.springboot.domain.entity.AccountVerification;
-import com.server.springboot.domain.entity.RefreshToken;
-import com.server.springboot.domain.entity.Role;
-import com.server.springboot.domain.entity.User;
+import com.server.springboot.domain.dto.response.ReportDto;
+import com.server.springboot.domain.entity.*;
 import com.server.springboot.domain.enumeration.ActivityStatus;
 import com.server.springboot.domain.enumeration.AppRole;
 import com.server.springboot.domain.mapper.Converter;
-import com.server.springboot.domain.repository.AccountVerificationRepository;
-import com.server.springboot.domain.repository.RoleRepository;
-import com.server.springboot.domain.repository.UserRepository;
+import com.server.springboot.domain.repository.*;
 import com.server.springboot.exception.*;
 import com.server.springboot.security.JwtUtils;
 import com.server.springboot.service.EmailService;
@@ -28,7 +23,6 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
-import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.thymeleaf.TemplateEngine;
 import org.thymeleaf.context.Context;
@@ -42,6 +36,7 @@ import java.util.stream.Collectors;
 public class UserServiceImpl implements UserService {
 
     private static final int VERIFICATION_TOKEN_EXPIRATION_TIME = 7200000;
+    private static final int RESET_PASSWORD_TOKEN_EXPIRATION_TIME = 3600000;
     private final Integer MAX_LOGIN_ATTEMPTS = 5;
 
     @Value("${jwtAccessExpirationMs}")
@@ -50,33 +45,41 @@ public class UserServiceImpl implements UserService {
     private static final Logger LOGGER = LoggerFactory.getLogger(UserServiceImpl.class);
     private final UserRepository userRepository;
     private final RoleRepository roleRepository;
+    private final ReportRepository reportRepository;
+    private final PasswordResetRepository passwordResetRepository;
     private final AccountVerificationRepository accountVerificationRepository;
     private final Converter<User, CreateUserDto> userMapper;
     private final EmailService emailService;
     private final TemplateEngine templateEngine;
     private final AuthenticationManager authenticationManager;
-    private final PasswordEncoder encoder;
     private final JwtUtils jwtUtils;
     private final RefreshTokenService refreshTokenService;
     private final UserDetailsServiceImpl userDetailsService;
+    private final Converter<Report, RequestReportDto> reportMapper;
+    private final Converter<List<ReportDto>, List<Report>> reportDtoListMapper;
 
     @Autowired
     public UserServiceImpl(UserRepository userRepository, RoleRepository roleRepository,
-                           AccountVerificationRepository accountVerificationRepository,
+                           ReportRepository reportRepository, PasswordResetRepository passwordResetRepository, AccountVerificationRepository accountVerificationRepository,
                            Converter<User, CreateUserDto> userMapper, EmailService emailService, TemplateEngine templateEngine,
-                           AuthenticationManager authenticationManager, PasswordEncoder encoder, JwtUtils jwtUtils,
-                           RefreshTokenService refreshTokenService, UserDetailsServiceImpl userDetailsService) {
+                           AuthenticationManager authenticationManager, JwtUtils jwtUtils,
+                           RefreshTokenService refreshTokenService, UserDetailsServiceImpl userDetailsService,
+                           Converter<Report, RequestReportDto> reportMapper,
+                           Converter<List<ReportDto>, List<Report>> reportDtoListMapper) {
         this.userRepository = userRepository;
         this.roleRepository = roleRepository;
+        this.reportRepository = reportRepository;
+        this.passwordResetRepository = passwordResetRepository;
         this.accountVerificationRepository = accountVerificationRepository;
         this.userMapper = userMapper;
         this.emailService = emailService;
         this.templateEngine = templateEngine;
         this.authenticationManager = authenticationManager;
-        this.encoder = encoder;
         this.jwtUtils = jwtUtils;
         this.refreshTokenService = refreshTokenService;
         this.userDetailsService = userDetailsService;
+        this.reportMapper = reportMapper;
+        this.reportDtoListMapper = reportDtoListMapper;
     }
 
     @Override
@@ -106,11 +109,11 @@ public class UserServiceImpl implements UserService {
         AccountVerification accountVerification = new AccountVerification(newUser, activationCode, VERIFICATION_TOKEN_EXPIRATION_TIME);
         accountVerificationRepository.save(accountVerification);
 
-        String activationLink = "CLIENT_URL?token=" + activationCode;
+        String activationLink = "http://localhost:3000/auth/activate-account/" + activationCode;
         Context context = new Context();
         context.setVariable("link", activationLink);
         context.setVariable("name", createUserDto.getFirstName() + " " + createUserDto.getLastName());
-        String html = templateEngine.process("ActivationAccount", context);
+        String html = templateEngine.process("EmailActivationTemplate", context);
         emailService.sendEmail(createUserDto.getEmail(), "Serwis społecznościowy - aktywacja konta", html);
     }
 
@@ -156,6 +159,11 @@ public class UserServiceImpl implements UserService {
         authorizedUser.setActivityStatus(ActivityStatus.ONLINE);
         userRepository.save(authorizedUser);
 
+        if (authorizedUser.isBanned()) {
+            throw new ForbiddenException(String.format("User account with login: %s has been banned. " +
+                    "In order to unblock the account, please contact the admin", userLoginDto.getLogin()));
+        }
+
         if (!authorizedUser.isVerifiedAccount()) {
             throw new ForbiddenException(String.format("User account with login: %s has not been activated", userLoginDto.getLogin()));
         }
@@ -200,10 +208,222 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public void logoutUser(Long userId) {
+    public void logoutUser() {
+        Long userId = jwtUtils.getLoggedUserId();
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new NotFoundException("Not found user with given id: " + userId));
+        user.setActivityStatus(ActivityStatus.OFFLINE);
         refreshTokenService.deleteByUser(user);
+    }
+
+    @Override
+    public void resendActivationLink(String userEmail) {
+        User user = userRepository.findByEmail(userEmail)
+                .orElseThrow(() -> new NotFoundException("Not found user with given email: " + userEmail));
+        String activationCode = UUID.randomUUID().toString();
+        AccountVerification accountVerification = new AccountVerification(user, activationCode, VERIFICATION_TOKEN_EXPIRATION_TIME);
+        accountVerificationRepository.save(accountVerification);
+
+        String activationLink = "http://localhost:3000/auth/activate-account/" + activationCode;
+        Context context = new Context();
+        context.setVariable("link", activationLink);
+        context.setVariable("name", user.getUserProfile().getFirstName() + " " + user.getUserProfile().getLastName());
+        String html = templateEngine.process("ActivationAccount", context);
+        emailService.sendEmail(userEmail, "Serwis społecznościowy - aktywacja konta", html);
+    }
+
+    @Override
+    public void deleteUser(DeleteUserDto deleteUserDto, boolean archive) {
+        Authentication authentication = authenticationManager.authenticate(
+                new UsernamePasswordAuthenticationToken(deleteUserDto.getLogin(), deleteUserDto.getPassword()));
+        SecurityContextHolder.getContext().setAuthentication(authentication);
+        User user = userRepository.findByUsernameOrEmail(deleteUserDto.getLogin(), deleteUserDto.getLogin())
+                .orElseThrow(() -> new NotFoundException("Not found user with given login: " + deleteUserDto.getLogin()));
+        if (archive) {
+            user.setDeleted(true);
+            userRepository.save(user);
+        } else {
+            userRepository.delete(user);
+        }
+    }
+
+    @Override
+    public JwtResponse changeUsername(Long userId, ChangeUsernameDto changeUsernameDto) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new NotFoundException("Not found user with given id: " + userId));
+        if (!user.getUsername().equals(changeUsernameDto.getOldUsername())) {
+            throw new ForbiddenException("The current username is not correct");
+        }
+
+        Authentication authentication = authenticationManager.authenticate(
+                new UsernamePasswordAuthenticationToken(changeUsernameDto.getOldUsername(), changeUsernameDto.getPassword()));
+
+        user.setUsername(changeUsernameDto.getNewUsername());
+        userRepository.save(user);
+
+        SecurityContextHolder.getContext().setAuthentication(authentication);
+        UserDetailsImpl userDetails = (UserDetailsImpl) authentication.getPrincipal();
+        userDetails.setUsername(changeUsernameDto.getNewUsername());
+        String accessToken = jwtUtils.generateAccessToken(userDetails);
+
+        List<String> roles = userDetails.getAuthorities().stream()
+                .map(GrantedAuthority::getAuthority)
+                .collect(Collectors.toList());
+
+        RefreshToken refreshToken = refreshTokenService.createRefreshToken(userDetails.getUsername());
+
+        return new JwtResponse(
+                userDetails.getUserId(),
+                roles,
+                accessToken,
+                "Bearer",
+                accessTokenExpirationMs,
+                refreshToken.getToken());
+    }
+
+    @Override
+    public JwtResponse changeEmail(Long userId, ChangeEmailDto changeEmailDto) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new NotFoundException("Not found user with given id: " + userId));
+        if (!user.getEmail().equals(changeEmailDto.getOldEmail())) {
+            throw new ForbiddenException("The current email provided is not correct");
+        }
+
+        Authentication authentication = authenticationManager.authenticate(
+                new UsernamePasswordAuthenticationToken(changeEmailDto.getOldEmail(), changeEmailDto.getPassword()));
+
+        user.setEmail(changeEmailDto.getNewEmail());
+        userRepository.save(user);
+
+        SecurityContextHolder.getContext().setAuthentication(authentication);
+        UserDetailsImpl userDetails = (UserDetailsImpl) authentication.getPrincipal();
+        userDetails.setEmail(changeEmailDto.getNewEmail());
+        String accessToken = jwtUtils.generateAccessToken(userDetails);
+
+        List<String> roles = userDetails.getAuthorities().stream()
+                .map(GrantedAuthority::getAuthority)
+                .collect(Collectors.toList());
+
+        RefreshToken refreshToken = refreshTokenService.createRefreshToken(userDetails.getUsername());
+
+        return new JwtResponse(
+                userDetails.getUserId(),
+                roles,
+                accessToken,
+                "Bearer",
+                accessTokenExpirationMs,
+                refreshToken.getToken());
+    }
+
+    @Override
+    public JwtResponse changePassword(Long userId, ChangeUserPasswordDto changeUserPasswordDto) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new NotFoundException("Not found user with given id: " + userId));
+        Authentication authentication = authenticationManager.authenticate(
+                new UsernamePasswordAuthenticationToken(user.getUsername(), changeUserPasswordDto.getOldPassword()));
+        SecurityContextHolder.getContext().setAuthentication(authentication);
+
+        if (!changeUserPasswordDto.getNewPassword().equals(changeUserPasswordDto.getRepeatedNewPassword())) {
+            throw new BadRequestException("Re-entered new password is not correct");
+        }
+
+        BCryptPasswordEncoder bCryptPasswordEncoder = new BCryptPasswordEncoder();
+        user.setPassword(bCryptPasswordEncoder.encode(changeUserPasswordDto.getNewPassword()));
+        userRepository.save(user);
+
+        UserDetailsImpl userDetails = (UserDetailsImpl) authentication.getPrincipal();
+        String accessToken = jwtUtils.generateAccessToken(userDetails);
+
+        List<String> roles = userDetails.getAuthorities().stream()
+                .map(GrantedAuthority::getAuthority)
+                .collect(Collectors.toList());
+
+        RefreshToken refreshToken = refreshTokenService.createRefreshToken(userDetails.getUsername());
+
+        return new JwtResponse(
+                userDetails.getUserId(),
+                roles,
+                accessToken,
+                "Bearer",
+                accessTokenExpirationMs,
+                refreshToken.getToken());
+    }
+
+    @Override
+    public void changePhoneNumber(Long userId, ChangePhoneNumberDto changePhoneNumberDto) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new NotFoundException("Not found user with given id: " + userId));
+        if (!user.getPhoneNumber().equals(changePhoneNumberDto.getOldPhoneNumber())) {
+            throw new ForbiddenException("The current phone number provided is not correct");
+        }
+
+        Authentication authentication = authenticationManager.authenticate(
+                new UsernamePasswordAuthenticationToken(user.getUsername(), changePhoneNumberDto.getPassword()));
+        SecurityContextHolder.getContext().setAuthentication(authentication);
+
+        user.setPhoneNumber(changePhoneNumberDto.getNewPhoneNumber());
+        userRepository.save(user);
+    }
+
+    @Override
+    public void reportUserBySuspectId(RequestReportDto requestReportDto) {
+        User suspectUser = userRepository.findById(requestReportDto.getSuspectId())
+                .orElseThrow(() -> new NotFoundException("Not found user with given id: " + requestReportDto.getSuspectId()));
+        Report report = reportMapper.convert(requestReportDto);
+        report.setSuspect(suspectUser);
+        reportRepository.save(report);
+    }
+
+    @Override
+    public void decideAboutReport(Long reportId, boolean confirmation) {
+        Report report = reportRepository.findById(reportId)
+                .orElseThrow(() -> new NotFoundException("Not found report with given id: " + reportId));
+        report.setConfirmation(confirmation);
+        User punishedUser = report.getSuspect();
+        punishedUser.setBanned(true);
+
+        reportRepository.save(report);
+        userRepository.save(punishedUser);
+    }
+
+    @Override
+    public List<ReportDto> getAllUserReports() {
+        List<Report> reports = reportRepository.findByOrderByCreatedAtDesc();
+        return reportDtoListMapper.convert(reports);
+    }
+
+    @Override
+    public void sendResetPasswordLink(String userEmail) {
+        User user = userRepository.findByEmail(userEmail)
+                .orElseThrow(() -> new NotFoundException("Not found user with given email: " + userEmail));
+        String resetCode = UUID.randomUUID().toString();
+        PasswordReset passwordReset = new PasswordReset(resetCode, user, RESET_PASSWORD_TOKEN_EXPIRATION_TIME);
+        passwordResetRepository.save(passwordReset);
+
+        String activationLink = "http://localhost:3000/auth/reset-password/" + resetCode;
+        Context context = new Context();
+        context.setVariable("link", activationLink);
+        context.setVariable("name", user.getUserProfile().getFirstName() + " " + user.getUserProfile().getLastName());
+        String html = templateEngine.process("EmailResetPasswordTemplate", context);
+        emailService.sendEmail(userEmail, "Serwis społecznościowy - resetowanie hasła", html);
+    }
+
+    @Override
+    public void resetPasswordNotLoggedUser(String token, ResetPasswordDto resetPasswordDto) {
+        User user = userRepository.findByUsernameOrEmail(resetPasswordDto.getLogin(), resetPasswordDto.getLogin())
+                .orElseThrow(() -> new NotFoundException("Not found user with given login: " + resetPasswordDto.getLogin()));
+        if (!resetPasswordDto.getNewPassword().equals(resetPasswordDto.getRepeatedNewPassword())) {
+            throw new BadRequestException("Re-entered new password is not correct");
+        }
+
+        PasswordReset passwordReset = passwordResetRepository.findByUserAndResetCode(user, token)
+                .orElseThrow(() -> new NotFoundException("Not found reset code for user id: " + user.getUserId()));
+        if (passwordReset.getExpiredAt().isBefore(LocalDateTime.now())) {
+            throw new ResourceGoneException("The reset password link has expired on " + passwordReset.getExpiredAt());
+        } else {
+            user.setPassword(resetPasswordDto.getNewPassword());
+            userRepository.save(user);
+        }
     }
 
 }

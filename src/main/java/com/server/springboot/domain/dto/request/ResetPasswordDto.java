@@ -12,10 +12,10 @@ import javax.validation.constraints.Size;
 @Setter
 @Builder
 @ToString
-public class ChangeUserPasswordDto {
+public class ResetPasswordDto {
 
     @NotEmpty
-    private String oldPassword;
+    private String login;
 
     @NotEmpty
     @Size(min = 10, max = 100)
@@ -23,4 +23,5 @@ public class ChangeUserPasswordDto {
 
     @NotEmpty
     private String repeatedNewPassword;
+
 }

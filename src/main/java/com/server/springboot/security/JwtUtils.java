@@ -65,7 +65,7 @@ public class JwtUtils {
 
     public Long getLoggedUserId() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        UserDetailsImpl loggedUser  = (UserDetailsImpl) authentication.getPrincipal();
+        UserDetailsImpl loggedUser = (UserDetailsImpl) authentication.getPrincipal();
         return loggedUser.getUserId();
     }
 

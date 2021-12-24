@@ -15,6 +15,6 @@ public class ReportDto {
     private ReportType reportType;
     private String description;
     private String createdAt;
-    private boolean isConfirmed;
-    private UserDetailsDto userDetailsDto;
+    private boolean confirmed;
+    private UserDetailsDto suspectDetails;
 }

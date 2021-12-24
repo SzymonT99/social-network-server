@@ -32,7 +32,7 @@ public class User {
 
     @NotNull
     @Column(name = "password", nullable = false, length = 100)
-    @Size(max = 100)
+    @Size(min = 10, max = 100)
     private String password;
 
     @NotNull
@@ -63,6 +63,10 @@ public class User {
     private boolean isBlocked;
 
     @NotNull
+    @Column(name = "is_banned", nullable = false)
+    private boolean isBanned;
+
+    @NotNull
     @Column(name = "is_deleted", nullable = false)
     private boolean isDeleted;
 
@@ -76,6 +80,10 @@ public class User {
     @OneToMany(mappedBy = "user", fetch = FetchType.LAZY,
             cascade = CascadeType.ALL, orphanRemoval = true)
     private Set<AccountVerification> verificationCodes;
+
+    @OneToMany(mappedBy = "user", fetch = FetchType.LAZY,
+            cascade = CascadeType.ALL, orphanRemoval = true)
+    private Set<PasswordReset> passwordResets;
 
     @OneToMany(mappedBy = "postAuthor", fetch = FetchType.LAZY,
             cascade = CascadeType.ALL, orphanRemoval = true)
