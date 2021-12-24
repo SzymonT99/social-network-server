@@ -1,5 +1,6 @@
 package com.server.springboot.security;
 
+import com.server.springboot.domain.repository.UserRepository;
 import com.server.springboot.service.RefreshTokenService;
 import com.server.springboot.service.impl.UserDetailsServiceImpl;
 import org.slf4j.Logger;
@@ -23,13 +24,16 @@ public class JwtRequestFilter extends OncePerRequestFilter {
 
     private final JwtUtils jwtUtils;
     private final UserDetailsServiceImpl userDetailsService;
+    private final UserRepository userRepository;
     private final RefreshTokenService refreshTokenService;
     private static final Logger LOGGER = LoggerFactory.getLogger(JwtRequestFilter.class);
 
     @Autowired
-    public JwtRequestFilter(JwtUtils jwtUtils, UserDetailsServiceImpl userDetailsService, RefreshTokenService refreshTokenService) {
+    public JwtRequestFilter(JwtUtils jwtUtils, UserDetailsServiceImpl userDetailsService, UserRepository userRepository,
+                            RefreshTokenService refreshTokenService) {
         this.jwtUtils = jwtUtils;
         this.userDetailsService = userDetailsService;
+        this.userRepository = userRepository;
         this.refreshTokenService = refreshTokenService;
     }
 
@@ -46,17 +50,20 @@ public class JwtRequestFilter extends OncePerRequestFilter {
             if (accessJwtToken != null && jwtUtils.validateJwtToken(accessJwtToken)) {
                 String login = jwtUtils.geLoginFromJwtToken(accessJwtToken);
 
-                UserDetails userDetails = userDetailsService.loadUserByUsername(login);
-                if (!refreshTokenService.existByUsername(userDetails.getUsername())) {
-                    response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "User is logged out");
+                if (userRepository.existsByUsernameOrEmail(login, login)) {
+                    UserDetails userDetails = userDetailsService.loadUserByUsername(login);
+
+                    if (!refreshTokenService.existByUsername(userDetails.getUsername())) {
+                        response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "User is logged out");
+                    }
+
+                    UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(
+                            userDetails, userDetails.getPassword(), userDetails.getAuthorities());
+                    authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+
+                    SecurityContextHolder.getContext().setAuthentication(authentication);
+                    LOGGER.info("---- Token is correct");
                 }
-
-                UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(
-                        userDetails, userDetails.getPassword(), userDetails.getAuthorities());
-                authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
-
-                SecurityContextHolder.getContext().setAuthentication(authentication);
-                LOGGER.info("---- Token is correct");
             }
         } catch (Exception e) {
             LOGGER.warn("---- User authentication error: {}", e);

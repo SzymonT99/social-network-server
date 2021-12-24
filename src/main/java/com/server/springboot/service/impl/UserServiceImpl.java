@@ -1,7 +1,6 @@
 package com.server.springboot.service.impl;
 
-import com.server.springboot.domain.dto.request.CreateUserDto;
-import com.server.springboot.domain.dto.request.UserLoginDto;
+import com.server.springboot.domain.dto.request.*;
 import com.server.springboot.domain.dto.response.JwtResponse;
 import com.server.springboot.domain.dto.response.RefreshTokenResponse;
 import com.server.springboot.domain.entity.AccountVerification;
@@ -204,6 +203,7 @@ public class UserServiceImpl implements UserService {
         Long userId = jwtUtils.getLoggedUserId();
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new NotFoundException("Not found user with given id: " + userId));
+        user.setActivityStatus(ActivityStatus.OFFLINE);
         refreshTokenService.deleteByUser(user);
     }
 
@@ -221,6 +221,109 @@ public class UserServiceImpl implements UserService {
         context.setVariable("name", user.getUserProfile().getFirstName() + " " + user.getUserProfile().getLastName());
         String html = templateEngine.process("ActivationAccount", context);
         emailService.sendEmail(userEmail, "Serwis społecznościowy - aktywacja konta", html);
+    }
+
+    @Override
+    public void deleteUser(DeleteUserDto deleteUserDto, boolean archive) {
+        Authentication authentication = authenticationManager.authenticate(
+                new UsernamePasswordAuthenticationToken(deleteUserDto.getLogin(), deleteUserDto.getPassword()));
+        SecurityContextHolder.getContext().setAuthentication(authentication);
+        User user = userRepository.findByUsernameOrEmail(deleteUserDto.getLogin(), deleteUserDto.getLogin())
+                .orElseThrow(() -> new NotFoundException("Not found user with given login: " + deleteUserDto.getLogin()));
+        if (archive) {
+            user.setDeleted(true);
+            userRepository.save(user);
+        } else {
+            userRepository.delete(user);
+        }
+    }
+
+    @Override
+    public JwtResponse changeUsername(ChangeUsernameDto changeUsernameDto) {
+        Long userId = jwtUtils.getLoggedUserId();
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new NotFoundException("Not found user with given id: " + userId));
+        if (!user.getUsername().equals(changeUsernameDto.getOldUsername())) {
+            throw new ForbiddenException("The current username is not correct");
+        }
+
+        Authentication authentication = authenticationManager.authenticate(
+                new UsernamePasswordAuthenticationToken(changeUsernameDto.getOldUsername(), changeUsernameDto.getPassword()));
+
+        user.setUsername(changeUsernameDto.getNewUsername());
+        userRepository.save(user);
+
+        SecurityContextHolder.getContext().setAuthentication(authentication);
+        UserDetailsImpl userDetails = (UserDetailsImpl) authentication.getPrincipal();
+        userDetails.setUsername(changeUsernameDto.getNewUsername());
+        String accessToken = jwtUtils.generateAccessToken(userDetails);
+
+        List<String> roles = userDetails.getAuthorities().stream()
+                .map(GrantedAuthority::getAuthority)
+                .collect(Collectors.toList());
+
+        RefreshToken refreshToken = refreshTokenService.createRefreshToken(userDetails.getUsername());
+
+        return new JwtResponse(
+                userDetails.getUserId(),
+                roles,
+                accessToken,
+                "Bearer",
+                accessTokenExpirationMs,
+                refreshToken.getToken());
+    }
+
+    @Override
+    public JwtResponse changeEmail(ChangeEmailDto changeEmailDto) {
+        Long userId = jwtUtils.getLoggedUserId();
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new NotFoundException("Not found user with given id: " + userId));
+        if (!user.getEmail().equals(changeEmailDto.getOldEmail())) {
+            throw new ForbiddenException("The current email is not correct");
+        }
+
+        Authentication authentication = authenticationManager.authenticate(
+                new UsernamePasswordAuthenticationToken(changeEmailDto.getOldEmail(), changeEmailDto.getPassword()));
+
+        user.setEmail(changeEmailDto.getNewEmail());
+        userRepository.save(user);
+
+        SecurityContextHolder.getContext().setAuthentication(authentication);
+        UserDetailsImpl userDetails = (UserDetailsImpl) authentication.getPrincipal();
+        userDetails.setEmail(changeEmailDto.getNewEmail());
+        String accessToken = jwtUtils.generateAccessToken(userDetails);
+
+        List<String> roles = userDetails.getAuthorities().stream()
+                .map(GrantedAuthority::getAuthority)
+                .collect(Collectors.toList());
+
+        RefreshToken refreshToken = refreshTokenService.createRefreshToken(userDetails.getUsername());
+
+        return new JwtResponse(
+                userDetails.getUserId(),
+                roles,
+                accessToken,
+                "Bearer",
+                accessTokenExpirationMs,
+                refreshToken.getToken());
+    }
+
+    @Override
+    public void changePassword(ChangeUserPasswordDto changeUserPasswordDto) {
+        Long userId = jwtUtils.getLoggedUserId();
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new NotFoundException("Not found user with given id: " + userId));
+        Authentication authentication = authenticationManager.authenticate(
+                new UsernamePasswordAuthenticationToken(user.getUsername(), changeUserPasswordDto.getOldPassword()));
+        SecurityContextHolder.getContext().setAuthentication(authentication);
+
+        if (!changeUserPasswordDto.getNewPassword().equals(changeUserPasswordDto.getRepeatedNewPassword())) {
+            throw new BadRequestException("Re-entered new password is not correct");
+        }
+
+        BCryptPasswordEncoder bCryptPasswordEncoder = new BCryptPasswordEncoder();
+        user.setPassword(bCryptPasswordEncoder.encode(changeUserPasswordDto.getNewPassword()));
+        userRepository.save(user);
     }
 
 }

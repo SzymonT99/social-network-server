@@ -1,7 +1,6 @@
 package com.server.springboot.service;
 
-import com.server.springboot.domain.dto.request.CreateUserDto;
-import com.server.springboot.domain.dto.request.UserLoginDto;
+import com.server.springboot.domain.dto.request.*;
 import com.server.springboot.domain.dto.response.JwtResponse;
 import com.server.springboot.domain.dto.response.RefreshTokenResponse;
 
@@ -18,4 +17,12 @@ public interface UserService {
     void logoutUser();
 
     void resendActivationLink(String userEmail);
+
+    void deleteUser(DeleteUserDto deleteUserDto, boolean archive);
+
+    JwtResponse changeUsername(ChangeUsernameDto changeUsernameDto);
+
+    JwtResponse changeEmail(ChangeEmailDto changeEmailDto);
+
+    void changePassword(ChangeUserPasswordDto changeUserPasswordDto);
 }

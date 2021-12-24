@@ -3,7 +3,6 @@ package com.server.springboot.domain.dto.request;
 import lombok.*;
 
 import javax.validation.constraints.NotEmpty;
-import javax.validation.constraints.Size;
 
 @AllArgsConstructor
 @NoArgsConstructor
@@ -12,15 +11,11 @@ import javax.validation.constraints.Size;
 @Setter
 @Builder
 @ToString
-public class ChangeUserPasswordDto {
+public class DeleteUserDto {
 
     @NotEmpty
-    private String oldPassword;
+    private String login;
 
     @NotEmpty
-    @Size(min = 10, max = 100)
-    private String newPassword;
-
-    @NotEmpty
-    private String repeatedNewPassword;
+    private String password;
 }

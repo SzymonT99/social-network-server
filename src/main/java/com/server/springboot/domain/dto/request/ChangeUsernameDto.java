@@ -12,15 +12,15 @@ import javax.validation.constraints.Size;
 @Setter
 @Builder
 @ToString
-public class ChangeUserPasswordDto {
+public class ChangeUsernameDto {
 
     @NotEmpty
-    private String oldPassword;
+    private String oldUsername;
 
     @NotEmpty
-    @Size(min = 10, max = 100)
-    private String newPassword;
+    @Size(min = 6, max = 20)
+    private String newUsername;
 
     @NotEmpty
-    private String repeatedNewPassword;
+    private String password;
 }

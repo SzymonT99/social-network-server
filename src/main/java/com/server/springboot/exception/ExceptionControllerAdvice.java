@@ -1,6 +1,7 @@
 package com.server.springboot.exception;
 
 import org.springframework.http.HttpStatus;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -58,9 +59,10 @@ public class ExceptionControllerAdvice {
                 request.getDescription(false).substring(4));
     }
 
+
     @ExceptionHandler(value = ResourceGoneException.class)
     @ResponseStatus(HttpStatus.GONE)
-    public ErrorMessage handleNotFoundException(ResourceGoneException ex, WebRequest request) {
+    public ErrorMessage handleResourceGoneException(ResourceGoneException ex, WebRequest request) {
         return new ErrorMessage(
                 HttpStatus.GONE,
                 HttpStatus.GONE.value(),

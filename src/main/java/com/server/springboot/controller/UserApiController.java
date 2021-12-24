@@ -83,21 +83,34 @@ public class UserApiController {
     }
 
     @ApiOperation(value = "Delete user by id")
-    @PostMapping(value = "/users/{userId}")
-    public ResponseEntity<?> deleteUser(@PathVariable(value = "userId") Long userId) {
+    @DeleteMapping(value = "/users")
+    public ResponseEntity<?> deleteUser(@RequestParam(value = "archive") boolean archive,
+                                        @Valid @RequestBody DeleteUserDto deleteUserDto) {
+        LOGGER.info("---- Delete user account - archive: {}", archive);
+        userService.deleteUser(deleteUserDto, archive);
         return new ResponseEntity<>(HttpStatus.OK);
     }
 
     @ApiOperation(value = "Change username")
     @PutMapping(value = "/users/username")
-    public ResponseEntity<JwtResponse> changeUsername(@Valid @RequestBody ChangeUserLoginDto changeUserLoginDto) {
-        return new ResponseEntity<>(new JwtResponse(), HttpStatus.OK);
+    public ResponseEntity<JwtResponse> changeUsername(@Valid @RequestBody ChangeUsernameDto changeUsernameDto) {
+        LOGGER.info("---- User changes username");
+        return new ResponseEntity<>(userService.changeUsername(changeUsernameDto), HttpStatus.OK);
+    }
+
+    @ApiOperation(value = "Change email")
+    @PutMapping(value = "/users/email")
+    public ResponseEntity<JwtResponse> changeEmail(@Valid @RequestBody ChangeEmailDto changeEmailDto) {
+        LOGGER.info("---- User changes email");
+        return new ResponseEntity<>(userService.changeEmail(changeEmailDto), HttpStatus.OK);
     }
 
     @ApiOperation(value = "Change user password")
     @PutMapping(value = "/users/password")
-    public ResponseEntity<JwtResponse> changePassword(@Valid @RequestBody ChangeUserPasswordDto changeUserPasswordDto) {
-        return new ResponseEntity<>(new JwtResponse(), HttpStatus.OK);
+    public ResponseEntity<?> changePassword(@Valid @RequestBody ChangeUserPasswordDto changeUserPasswordDto) {
+        LOGGER.info("---- User changes password");
+        userService.changePassword(changeUserPasswordDto);
+        return new ResponseEntity<>(HttpStatus.OK);
     }
 
     @ApiOperation(value = "Change user phone number")
