@@ -14,11 +14,11 @@ import javax.validation.constraints.NotEmpty;
 public class ChangePhoneNumberDto {
 
     @NotEmpty
-    private String login;
-
-    @NotEmpty
-    private String password;
+    private String oldPhoneNumber;
 
     @NotEmpty
     private String newPhoneNumber;
+
+    @NotEmpty
+    private String password;
 }

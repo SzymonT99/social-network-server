@@ -15,7 +15,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import javax.validation.Valid;
-import java.util.ArrayList;
 import java.util.List;
 
 @CrossOrigin
@@ -37,7 +36,6 @@ public class UserApiController {
     public ResponseEntity<?> createUser(@Valid @RequestBody CreateUserDto createUserDto) {
         LOGGER.info("---- Create user: {}", createUserDto.getUsername());
         userService.addUser(createUserDto);
-
         return new ResponseEntity<>(HttpStatus.CREATED);
     }
 
@@ -59,11 +57,9 @@ public class UserApiController {
 
     @ApiOperation(value = "Authenticate user")
     @PostMapping(value = "/auth/login")
-    public ResponseEntity<?> authenticateUser(@Valid @RequestBody UserLoginDto userLoginDto) {
+    public ResponseEntity<JwtResponse> authenticateUser(@Valid @RequestBody UserLoginDto userLoginDto) {
         LOGGER.info("---- Authenticate user: {}", userLoginDto.getLogin());
-        JwtResponse jwtResponse = userService.loginUser(userLoginDto);
-
-        return new ResponseEntity<>(jwtResponse, HttpStatus.OK);
+        return new ResponseEntity<>(userService.loginUser(userLoginDto), HttpStatus.OK);
     }
 
     @ApiOperation(value = "Refresh user token")
@@ -92,36 +88,47 @@ public class UserApiController {
     }
 
     @ApiOperation(value = "Change username")
-    @PutMapping(value = "/users/username")
-    public ResponseEntity<JwtResponse> changeUsername(@Valid @RequestBody ChangeUsernameDto changeUsernameDto) {
-        LOGGER.info("---- User changes username");
-        return new ResponseEntity<>(userService.changeUsername(changeUsernameDto), HttpStatus.OK);
+    @PutMapping(value = "/users/{userId}/username")
+    public ResponseEntity<JwtResponse> changeUsername(@PathVariable(value = "userId") Long userId,
+                                                      @Valid @RequestBody ChangeUsernameDto changeUsernameDto) {
+        LOGGER.info("---- User changes username - current username: {} , new username: {}",
+                changeUsernameDto.getOldUsername(), changeUsernameDto.getNewUsername());
+        return new ResponseEntity<>(userService.changeUsername(userId, changeUsernameDto), HttpStatus.OK);
     }
 
     @ApiOperation(value = "Change email")
-    @PutMapping(value = "/users/email")
-    public ResponseEntity<JwtResponse> changeEmail(@Valid @RequestBody ChangeEmailDto changeEmailDto) {
-        LOGGER.info("---- User changes email");
-        return new ResponseEntity<>(userService.changeEmail(changeEmailDto), HttpStatus.OK);
+    @PutMapping(value = "/users/{userId}/email")
+    public ResponseEntity<JwtResponse> changeEmail(@PathVariable(value = "userId") Long userId,
+                                                   @Valid @RequestBody ChangeEmailDto changeEmailDto) {
+        LOGGER.info("---- User changes email - current email: {} , new email: {}",
+                changeEmailDto.getOldEmail(), changeEmailDto.getNewEmail());
+        return new ResponseEntity<>(userService.changeEmail(userId, changeEmailDto), HttpStatus.OK);
     }
 
     @ApiOperation(value = "Change user password")
-    @PutMapping(value = "/users/password")
-    public ResponseEntity<?> changePassword(@Valid @RequestBody ChangeUserPasswordDto changeUserPasswordDto) {
+    @PutMapping(value = "/users/{userId}/password")
+    public ResponseEntity<JwtResponse> changePassword(@PathVariable(value = "userId") Long userId,
+                                                      @Valid @RequestBody ChangeUserPasswordDto changeUserPasswordDto) {
         LOGGER.info("---- User changes password");
-        userService.changePassword(changeUserPasswordDto);
-        return new ResponseEntity<>(HttpStatus.OK);
+        return new ResponseEntity<>(userService.changePassword(userId, changeUserPasswordDto), HttpStatus.OK);
     }
 
     @ApiOperation(value = "Change user phone number")
-    @PutMapping(value = "/users/phoneNumber")
-    public ResponseEntity<?> changePhoneNumber(@Valid @RequestBody ChangePhoneNumberDto changePhoneNumberDto) {
+    @PutMapping(value = "/users/{userId}/phoneNumber")
+    public ResponseEntity<?> changePhoneNumber(@PathVariable(value = "userId") Long userId,
+                                               @Valid @RequestBody ChangePhoneNumberDto changePhoneNumberDto) {
+        LOGGER.info("---- User changes phone number - current phone number: {} , new phone number: {}",
+                changePhoneNumberDto.getOldPhoneNumber(), changePhoneNumberDto.getNewPhoneNumber());
+        userService.changePhoneNumber(userId, changePhoneNumberDto);
         return new ResponseEntity<>(HttpStatus.OK);
     }
 
     @ApiOperation(value = "Report user by id")
     @PostMapping(value = "/users/reports")
     public ResponseEntity<?> reportUser(@Valid @RequestBody RequestReportDto requestReportDto) {
+        LOGGER.info("---- User reports user with id: {}, for: {}",
+                requestReportDto.getSuspectId(), requestReportDto.getReportType());
+        userService.reportUserBySuspectId(requestReportDto);
         return new ResponseEntity<>(HttpStatus.CREATED);
     }
 
@@ -129,13 +136,15 @@ public class UserApiController {
     @PostMapping(value = "/users/reports/{reportId}")
     public ResponseEntity<?> decideAboutReport(@PathVariable(value = "reportId") Long reportId,
                                                @RequestParam(value = "confirmation") boolean confirmation) {
+        LOGGER.info("---- Admin decides about user report id: {}, confirmation: {}", reportId, confirmation);
+        userService.decideAboutReport(reportId, confirmation);
         return new ResponseEntity<>(HttpStatus.OK);
     }
 
     @ApiOperation(value = "Get all reports")
     @GetMapping(value = "/users/reports")
     public ResponseEntity<List<ReportDto>> getReports() {
-        List<ReportDto> reportDtoList = new ArrayList<>();
-        return new ResponseEntity<>(reportDtoList, HttpStatus.OK);
+        LOGGER.info("---- Admin gets all user reports");
+        return new ResponseEntity<>(userService.getAllUserReports(), HttpStatus.OK);
     }
 }

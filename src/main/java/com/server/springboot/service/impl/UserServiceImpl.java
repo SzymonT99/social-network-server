@@ -3,14 +3,13 @@ package com.server.springboot.service.impl;
 import com.server.springboot.domain.dto.request.*;
 import com.server.springboot.domain.dto.response.JwtResponse;
 import com.server.springboot.domain.dto.response.RefreshTokenResponse;
-import com.server.springboot.domain.entity.AccountVerification;
-import com.server.springboot.domain.entity.RefreshToken;
-import com.server.springboot.domain.entity.Role;
-import com.server.springboot.domain.entity.User;
+import com.server.springboot.domain.dto.response.ReportDto;
+import com.server.springboot.domain.entity.*;
 import com.server.springboot.domain.enumeration.ActivityStatus;
 import com.server.springboot.domain.enumeration.AppRole;
 import com.server.springboot.domain.mapper.Converter;
 import com.server.springboot.domain.repository.AccountVerificationRepository;
+import com.server.springboot.domain.repository.ReportRepository;
 import com.server.springboot.domain.repository.RoleRepository;
 import com.server.springboot.domain.repository.UserRepository;
 import com.server.springboot.exception.*;
@@ -27,7 +26,6 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
-import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.thymeleaf.TemplateEngine;
 import org.thymeleaf.context.Context;
@@ -49,33 +47,39 @@ public class UserServiceImpl implements UserService {
     private static final Logger LOGGER = LoggerFactory.getLogger(UserServiceImpl.class);
     private final UserRepository userRepository;
     private final RoleRepository roleRepository;
+    private final ReportRepository reportRepository;
     private final AccountVerificationRepository accountVerificationRepository;
     private final Converter<User, CreateUserDto> userMapper;
     private final EmailService emailService;
     private final TemplateEngine templateEngine;
     private final AuthenticationManager authenticationManager;
-    private final PasswordEncoder encoder;
     private final JwtUtils jwtUtils;
     private final RefreshTokenService refreshTokenService;
     private final UserDetailsServiceImpl userDetailsService;
+    private final Converter<Report, RequestReportDto> reportMapper;
+    private final Converter<List<ReportDto>, List<Report>> reportDtoListMapper;
 
     @Autowired
     public UserServiceImpl(UserRepository userRepository, RoleRepository roleRepository,
-                           AccountVerificationRepository accountVerificationRepository,
+                           ReportRepository reportRepository, AccountVerificationRepository accountVerificationRepository,
                            Converter<User, CreateUserDto> userMapper, EmailService emailService, TemplateEngine templateEngine,
-                           AuthenticationManager authenticationManager, PasswordEncoder encoder, JwtUtils jwtUtils,
-                           RefreshTokenService refreshTokenService, UserDetailsServiceImpl userDetailsService) {
+                           AuthenticationManager authenticationManager, JwtUtils jwtUtils,
+                           RefreshTokenService refreshTokenService, UserDetailsServiceImpl userDetailsService,
+                           Converter<Report, RequestReportDto> reportMapper,
+                           Converter<List<ReportDto>, List<Report>> reportDtoListMapper) {
         this.userRepository = userRepository;
         this.roleRepository = roleRepository;
+        this.reportRepository = reportRepository;
         this.accountVerificationRepository = accountVerificationRepository;
         this.userMapper = userMapper;
         this.emailService = emailService;
         this.templateEngine = templateEngine;
         this.authenticationManager = authenticationManager;
-        this.encoder = encoder;
         this.jwtUtils = jwtUtils;
         this.refreshTokenService = refreshTokenService;
         this.userDetailsService = userDetailsService;
+        this.reportMapper = reportMapper;
+        this.reportDtoListMapper = reportDtoListMapper;
     }
 
     @Override
@@ -154,6 +158,11 @@ public class UserServiceImpl implements UserService {
         authorizedUser.setIncorrectLoginCounter(0);
         authorizedUser.setActivityStatus(ActivityStatus.ONLINE);
         userRepository.save(authorizedUser);
+
+        if (authorizedUser.isBanned()) {
+            throw new ForbiddenException(String.format("User account with login: %s has been banned. " +
+                    "In order to unblock the account, please contact the admin", userLoginDto.getLogin()));
+        }
 
         if (!authorizedUser.isVerifiedAccount()) {
             throw new ForbiddenException(String.format("User account with login: %s has not been activated", userLoginDto.getLogin()));
@@ -239,8 +248,7 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public JwtResponse changeUsername(ChangeUsernameDto changeUsernameDto) {
-        Long userId = jwtUtils.getLoggedUserId();
+    public JwtResponse changeUsername(Long userId, ChangeUsernameDto changeUsernameDto) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new NotFoundException("Not found user with given id: " + userId));
         if (!user.getUsername().equals(changeUsernameDto.getOldUsername())) {
@@ -274,12 +282,11 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public JwtResponse changeEmail(ChangeEmailDto changeEmailDto) {
-        Long userId = jwtUtils.getLoggedUserId();
+    public JwtResponse changeEmail(Long userId, ChangeEmailDto changeEmailDto) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new NotFoundException("Not found user with given id: " + userId));
         if (!user.getEmail().equals(changeEmailDto.getOldEmail())) {
-            throw new ForbiddenException("The current email is not correct");
+            throw new ForbiddenException("The current email provided is not correct");
         }
 
         Authentication authentication = authenticationManager.authenticate(
@@ -309,8 +316,7 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public void changePassword(ChangeUserPasswordDto changeUserPasswordDto) {
-        Long userId = jwtUtils.getLoggedUserId();
+    public JwtResponse changePassword(Long userId, ChangeUserPasswordDto changeUserPasswordDto) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new NotFoundException("Not found user with given id: " + userId));
         Authentication authentication = authenticationManager.authenticate(
@@ -324,6 +330,66 @@ public class UserServiceImpl implements UserService {
         BCryptPasswordEncoder bCryptPasswordEncoder = new BCryptPasswordEncoder();
         user.setPassword(bCryptPasswordEncoder.encode(changeUserPasswordDto.getNewPassword()));
         userRepository.save(user);
+
+        UserDetailsImpl userDetails = (UserDetailsImpl) authentication.getPrincipal();
+        String accessToken = jwtUtils.generateAccessToken(userDetails);
+
+        List<String> roles = userDetails.getAuthorities().stream()
+                .map(GrantedAuthority::getAuthority)
+                .collect(Collectors.toList());
+
+        RefreshToken refreshToken = refreshTokenService.createRefreshToken(userDetails.getUsername());
+
+        return new JwtResponse(
+                userDetails.getUserId(),
+                roles,
+                accessToken,
+                "Bearer",
+                accessTokenExpirationMs,
+                refreshToken.getToken());
+    }
+
+    @Override
+    public void changePhoneNumber(Long userId, ChangePhoneNumberDto changePhoneNumberDto) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new NotFoundException("Not found user with given id: " + userId));
+        if (!user.getPhoneNumber().equals(changePhoneNumberDto.getOldPhoneNumber())) {
+            throw new ForbiddenException("The current phone number provided is not correct");
+        }
+
+        Authentication authentication = authenticationManager.authenticate(
+                new UsernamePasswordAuthenticationToken(user.getUsername(), changePhoneNumberDto.getPassword()));
+        SecurityContextHolder.getContext().setAuthentication(authentication);
+
+        user.setPhoneNumber(changePhoneNumberDto.getNewPhoneNumber());
+        userRepository.save(user);
+    }
+
+    @Override
+    public void reportUserBySuspectId(RequestReportDto requestReportDto) {
+        User suspectUser = userRepository.findById(requestReportDto.getSuspectId())
+                .orElseThrow(() -> new NotFoundException("Not found user with given id: " + requestReportDto.getSuspectId()));
+        Report report = reportMapper.convert(requestReportDto);
+        report.setSuspect(suspectUser);
+        reportRepository.save(report);
+    }
+
+    @Override
+    public void decideAboutReport(Long reportId, boolean confirmation) {
+        Report report = reportRepository.findById(reportId)
+                .orElseThrow(() -> new NotFoundException("Not found report with given id: " + reportId));
+        report.setConfirmation(confirmation);
+        User punishedUser =  report.getSuspect();
+        punishedUser.setBanned(true);
+
+        reportRepository.save(report);
+        userRepository.save(punishedUser);
+    }
+
+    @Override
+    public List<ReportDto> getAllUserReports() {
+        List<Report> reports = reportRepository.findByOrderByCreatedAtDesc();
+        return reportDtoListMapper.convert(reports);
     }
 
 }

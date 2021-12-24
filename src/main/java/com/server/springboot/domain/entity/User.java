@@ -63,6 +63,10 @@ public class User {
     private boolean isBlocked;
 
     @NotNull
+    @Column(name = "is_banned", nullable = false)
+    private boolean isBanned;
+
+    @NotNull
     @Column(name = "is_deleted", nullable = false)
     private boolean isDeleted;
 

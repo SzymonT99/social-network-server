@@ -1,6 +1,5 @@
 package com.server.springboot.domain.dto.request;
 
-import com.server.springboot.domain.enumeration.ReportType;
 import lombok.*;
 
 @AllArgsConstructor
@@ -12,6 +11,6 @@ import lombok.*;
 @ToString
 public class RequestReportDto {
     private Long suspectId;
-    private ReportType reportType;
+    private String reportType;
     private String description;
 }

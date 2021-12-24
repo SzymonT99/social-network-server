@@ -34,9 +34,8 @@ public class Report {
     @Column(name = "created_at", nullable = false)
     private LocalDateTime createdAt;
 
-    @NotNull
-    @Column(name = "is_confirmed", nullable = false)
-    private boolean isConfirmed;
+    @Column(name = "confirmation")
+    private boolean confirmation;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "suspect_id", nullable = false)

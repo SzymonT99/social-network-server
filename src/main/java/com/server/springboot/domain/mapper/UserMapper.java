@@ -38,6 +38,7 @@ public class UserMapper implements Converter<User, CreateUserDto>{
                 .activityStatus(ActivityStatus.OFFLINE)
                 .incorrectLoginCounter(0)
                 .isBlocked(false)
+                .isBanned(false)
                 .isDeleted(false)
                 .userProfile(userProfile)
                 .build();
