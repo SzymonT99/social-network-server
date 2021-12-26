@@ -8,6 +8,7 @@ import java.time.format.DateTimeFormatter;
 
 @Component
 public class ProfilePhotoDtoMapper implements Converter<ProfilePhotoDto, Image> {
+
     @Override
     public ProfilePhotoDto convert(Image from) {
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd.MM.yyyy HH:mm:ss");

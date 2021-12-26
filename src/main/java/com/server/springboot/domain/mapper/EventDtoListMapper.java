@@ -1,7 +1,9 @@
 package com.server.springboot.domain.mapper;
 
+import com.google.common.collect.Lists;
 import com.server.springboot.domain.dto.response.*;
-import com.server.springboot.domain.entity.Event;
+import com.server.springboot.domain.entity.*;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import java.time.format.DateTimeFormatter;
@@ -11,6 +13,21 @@ import java.util.stream.Collectors;
 
 @Component
 public class EventDtoListMapper implements Converter<List<EventDto>, List<Event>> {
+
+    private final Converter<ImageDto, Image> imageDtoMapper;
+    private final Converter<AddressDto, Address> addressDtoMapper;
+    private final Converter<UserDto, User> userDtoMapper;
+    private final Converter<List<EventMemberDto>, List<EventMember>> eventMemberDtoListMapper;
+
+    @Autowired
+    public EventDtoListMapper(Converter<ImageDto, Image> imageDtoMapper, Converter<AddressDto, Address> addressDtoMapper,
+                              Converter<UserDto, User> userDtoMapper,
+                              Converter<List<EventMemberDto>, List<EventMember>> eventMemberDtoListMapper) {
+        this.imageDtoMapper = imageDtoMapper;
+        this.addressDtoMapper = addressDtoMapper;
+        this.userDtoMapper = userDtoMapper;
+        this.eventMemberDtoListMapper = eventMemberDtoListMapper;
+    }
 
     @Override
     public List<EventDto> convert(List<Event> from) {
@@ -22,41 +39,16 @@ public class EventDtoListMapper implements Converter<List<EventDto>, List<Event>
                     .eventId(event.getEventId())
                     .title(event.getTitle())
                     .description(event.getDescription())
-                    .image(ImageDto.builder()
-                            .filename(event.getImage().getFilename())
-                            .url("localhost:8080/api/images/" + event.getImage().getImageId())
-                            .type(event.getImage().getType())
-                            .build())
+                    .image(imageDtoMapper.convert(event.getImage()))
                     .eventDate(event.getEventDate().format(formatter))
                     .createdAt(event.getCreatedAt().format(formatter))
-                    .eventCreatorName(event.getEventCreator().getUserProfile().getFirstName()
-                            + " " + event.getEventCreator().getUserProfile().getLastName())
-                    .authorId(event.getEventCreator().getUserId())
-                    .eventAddress(AddressDto.builder()
-                            .country(event.getEventAddress().getCountry())
-                            .city(event.getEventAddress().getCity())
-                            .street(event.getEventAddress().getStreet())
-                            .zipCode(event.getEventAddress().getZipCode())
-                            .build())
-                    .members(
-                            event.getMembers().stream()
-                                    .map(member -> EventMemberDto.builder()
-                                            .userId(member.getEventMember().getUserId())
-                                            .eventMemberName(member.getEventMember().getUserProfile().getFirstName()
-                                                    + " " + member.getEventMember().getUserProfile().getLastName())
-                                            .participationStatus(member.getParticipationStatus())
-                                            .addedIn(member.getAddedIn().format(formatter))
-                                            .invitationDate(member.getInvitationDate().format(formatter))
-                                            .invitationDisplayed(member.isInvitationDisplayed())
-                                            .build())
-                                    .collect(Collectors.toList())
-                    )
+                    .eventAuthor(userDtoMapper.convert(event.getEventCreator()))
+                    .eventAddress(addressDtoMapper.convert(event.getEventAddress()))
+                    .members(eventMemberDtoListMapper.convert(Lists.newArrayList(event.getMembers())))
                     .sharing(
                             event.getSharing().stream()
                                     .map(sharedEvent -> SharedEventInfoDto.builder()
-                                            .userId(sharedEvent.getSharedEventUser().getUserId())
-                                            .authorOfSharing(sharedEvent.getSharedEventUser().getUserProfile().getFirstName()
-                                                    + " " + sharedEvent.getSharedEventUser().getUserProfile().getLastName())
+                                            .authorOfSharing(userDtoMapper.convert(sharedEvent.getSharedEventUser()))
                                             .sharingDate(sharedEvent.getDate().format(formatter))
                                             .build())
                                     .collect(Collectors.toList())

@@ -11,10 +11,9 @@ import lombok.*;
 @Builder
 @ToString
 public class SharedPostDto {
-    private Long userId;
-    private String authorOfSharing;
     private String sharingText;
     private String sharingDate;
+    private UserDto authorOfSharing;
     @JsonProperty(value = "isPublic")
     private boolean isPublic;
     @JsonProperty(value = "isCommentingBlocked")

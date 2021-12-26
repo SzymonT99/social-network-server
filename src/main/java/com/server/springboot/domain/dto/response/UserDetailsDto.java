@@ -13,6 +13,7 @@ import lombok.*;
 public class UserDetailsDto {
     private Long userId;
     private String email;
+    private String phoneNumber;
     private String createdAt;
     private ActivityStatus activityStatus;
     private UserProfileDto userProfile;

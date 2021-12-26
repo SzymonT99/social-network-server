@@ -10,7 +10,6 @@ import lombok.*;
 @Builder
 @ToString
 public class LikedPostDto {
-    private Long userId;
-    private String name;
+    private UserDto likedUser;
     private String date;
 }

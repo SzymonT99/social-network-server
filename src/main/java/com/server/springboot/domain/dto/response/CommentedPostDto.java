@@ -14,12 +14,11 @@ import java.util.List;
 @ToString
 public class CommentedPostDto {
     private Long commentId;
-    private String commentAuthor;
     private String commentText;
+    private UserDto commentAuthor;
     private Long postId;
-    private Long postAuthorId;
-    private String postAuthor;
     private String postText;
+    private UserDto postAuthor;
     private List<ImageDto> postImages;
     private String createdAt;
     private String editedAt;

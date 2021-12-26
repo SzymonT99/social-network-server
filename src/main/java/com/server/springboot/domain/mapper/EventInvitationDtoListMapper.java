@@ -1,17 +1,31 @@
 package com.server.springboot.domain.mapper;
 
 import com.server.springboot.domain.dto.response.*;
-import com.server.springboot.domain.entity.Event;
+import com.server.springboot.domain.entity.Address;
 import com.server.springboot.domain.entity.EventMember;
+import com.server.springboot.domain.entity.Image;
+import com.server.springboot.domain.entity.User;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.Collectors;
 
 @Component
 public class EventInvitationDtoListMapper implements Converter<List<EventInvitationDto>, List<EventMember>> {
+
+    private final Converter<ImageDto, Image> imageDtoMapper;
+    private final Converter<UserDto, User> userDtoMapper;
+    private final Converter<AddressDto, Address> addressDtoMapper;
+
+    @Autowired
+    public EventInvitationDtoListMapper(Converter<ImageDto, Image> imageDtoMapper, Converter<UserDto, User> userDtoMapper,
+                                        Converter<AddressDto, Address> addressDtoMapper) {
+        this.imageDtoMapper = imageDtoMapper;
+        this.userDtoMapper = userDtoMapper;
+        this.addressDtoMapper = addressDtoMapper;
+    }
 
     @Override
     public List<EventInvitationDto> convert(List<EventMember> from) {
@@ -25,22 +39,11 @@ public class EventInvitationDtoListMapper implements Converter<List<EventInvitat
                     .eventId(eventMember.getEvent().getEventId())
                     .title(eventMember.getEvent().getTitle())
                     .description(eventMember.getEvent().getDescription())
-                    .image(ImageDto.builder()
-                            .filename(eventMember.getEvent().getImage().getFilename())
-                            .url("localhost:8080/api/images/" + eventMember.getEvent().getImage().getImageId())
-                            .type(eventMember.getEvent().getImage().getType())
-                            .build())
+                    .image(imageDtoMapper.convert(eventMember.getEvent().getImage()))
                     .eventDate(eventMember.getEvent().getEventDate().format(formatter))
                     .createdAt(eventMember.getEvent().getCreatedAt().format(formatter))
-                    .eventCreatorName(eventMember.getEvent().getEventCreator().getUserProfile().getFirstName()
-                            + " " + eventMember.getEvent().getEventCreator().getUserProfile().getLastName())
-                    .authorId(eventMember.getEvent().getEventCreator().getUserId())
-                    .eventAddress(AddressDto.builder()
-                            .country(eventMember.getEvent().getEventAddress().getCountry())
-                            .city(eventMember.getEvent().getEventAddress().getCity())
-                            .street(eventMember.getEvent().getEventAddress().getStreet())
-                            .zipCode(eventMember.getEvent().getEventAddress().getZipCode())
-                            .build())
+                    .eventAuthor(userDtoMapper.convert(eventMember.getEvent().getEventCreator()))
+                    .eventAddress(addressDtoMapper.convert(eventMember.getEvent().getEventAddress()))
                     .build();
             eventInvitationDtoList.add(eventDto);
         }

@@ -18,8 +18,7 @@ public class EventDto {
     private ImageDto image;
     private String eventDate;
     private String createdAt;
-    private String eventCreatorName;
-    private Long authorId;
+    private UserDto eventAuthor;
     private AddressDto eventAddress;
     private List<EventMemberDto> members;
     private List<SharedEventInfoDto> sharing;
