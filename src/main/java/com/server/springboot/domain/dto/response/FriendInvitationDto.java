@@ -9,10 +9,9 @@ import lombok.*;
 @Setter
 @Builder
 @ToString
-public class FriendDto {
-    private Long friendId;
-    private boolean isInvitationAccepted;
+public class FriendInvitationDto {
+    private Boolean isInvitationAccepted;
+    private Boolean invitationDisplayed;
     private String invitationDate;
-    private String friendFromDate;
-    private UserDto user;
+    private UserDto invitingUser;
 }
