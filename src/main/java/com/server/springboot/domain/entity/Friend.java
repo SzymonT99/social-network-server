@@ -23,7 +23,7 @@ public class Friend {
     private Long friendId;
 
     @Column(name = "is_invitation_accepted")
-    private boolean isInvitationAccepted;
+    private Boolean isInvitationAccepted;
 
     @NotNull
     @Column(name = "invitation_displayed", nullable = false)

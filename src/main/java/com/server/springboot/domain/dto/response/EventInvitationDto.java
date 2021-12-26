@@ -18,7 +18,6 @@ public class EventInvitationDto {
     private ImageDto image;
     private String eventDate;
     private String createdAt;
-    private String eventCreatorName;
-    private Long authorId;
+    private UserDto eventAuthor;
     private AddressDto eventAddress;
 }

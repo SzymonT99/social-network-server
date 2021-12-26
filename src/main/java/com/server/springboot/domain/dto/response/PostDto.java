@@ -14,12 +14,11 @@ import java.util.List;
 @ToString
 public class PostDto {
     private Long postId;
-    private Long postAuthorId;
-    private String postAuthor;
     private String text;
     private List<ImageDto> images;
     private String createdAt;
     private String editedAt;
+    private UserDto postAuthor;
     @JsonProperty(value = "isPublic")
     private boolean isPublic;
     @JsonProperty(value = "isCommentingBlocked")

@@ -19,6 +19,6 @@ public class CommentDto {
     private String editedAt;
     @JsonProperty(value = "isEdited")
     private boolean isEdited;
-    private String authorName;
-    private List<LikedCommentDto> userLikes;
+    private UserDto commentAuthor;
+    private List<UserDto> userLikes;
 }

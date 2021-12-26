@@ -11,8 +11,7 @@ import lombok.*;
 @Builder
 @ToString
 public class EventMemberDto {
-    private Long userId;
-    private String eventMemberName;
+    private UserDto eventMember;
     private EventParticipationStatus participationStatus;
     private String addedIn;
     private String invitationDate;

@@ -10,7 +10,6 @@ import lombok.*;
 @Builder
 @ToString
 public class SharedEventInfoDto {
-    private Long userId;
-    private String authorOfSharing;
+    private UserDto authorOfSharing;
     private String sharingDate;
 }

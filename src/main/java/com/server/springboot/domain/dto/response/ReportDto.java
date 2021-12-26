@@ -16,5 +16,5 @@ public class ReportDto {
     private String description;
     private String createdAt;
     private boolean confirmed;
-    private UserDetailsDto suspectDetails;
+    private UserDto suspectUser;
 }

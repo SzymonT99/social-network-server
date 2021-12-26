@@ -3,6 +3,7 @@ package com.server.springboot.domain.mapper;
 import com.server.springboot.domain.dto.response.*;
 import com.server.springboot.domain.entity.Post;
 import com.server.springboot.domain.entity.SharedPost;
+import com.server.springboot.domain.entity.User;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -14,10 +15,12 @@ import java.util.List;
 public class SharedPostDtoListMapper implements Converter<List<SharedPostDto>, List<SharedPost>> {
 
     private final Converter<PostDto, Post> postDtoMapper;
+    private final Converter<UserDto, User> userDtoMapper;
 
     @Autowired
-    public SharedPostDtoListMapper(Converter<PostDto, Post> postDtoMapper) {
+    public SharedPostDtoListMapper(Converter<PostDto, Post> postDtoMapper, Converter<UserDto, User> userDtoMapper) {
         this.postDtoMapper = postDtoMapper;
+        this.userDtoMapper = userDtoMapper;
     }
 
     @Override
@@ -27,9 +30,7 @@ public class SharedPostDtoListMapper implements Converter<List<SharedPostDto>, L
 
         for (SharedPost sharedPost : from) {
             SharedPostDto sharedPostDto = SharedPostDto.builder()
-                    .userId(sharedPost.getSharedPostUser().getUserId())
-                    .authorOfSharing(sharedPost.getSharedPostUser().getUserProfile().getFirstName()
-                            + " " + sharedPost.getSharedPostUser().getUserProfile().getLastName())
+                    .authorOfSharing(userDtoMapper.convert(sharedPost.getSharedPostUser()))
                     .sharingText(sharedPost.getNewPost().getText())
                     .sharingDate(sharedPost.getDate().format(formatter))
                     .isPublic(sharedPost.getNewPost().isPublic())

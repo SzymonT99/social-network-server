@@ -156,6 +156,7 @@ public class EventServiceImpl implements EventService {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new NotFoundException("Not found user with id: " + userId));
         List<EventMember> eventMembers = eventMemberRepository.findByEventMemberAndParticipationStatus(user, EventParticipationStatus.INVITED);
+        eventMemberRepository.setEventInvitationDisplayed(true, user);
         return eventInvitationDtoListMapper.convert(eventMembers);
     }
 

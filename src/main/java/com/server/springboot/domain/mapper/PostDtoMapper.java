@@ -1,38 +1,42 @@
 package com.server.springboot.domain.mapper;
 
+import com.google.common.collect.Lists;
 import com.server.springboot.domain.dto.response.*;
+import com.server.springboot.domain.entity.Comment;
 import com.server.springboot.domain.entity.Image;
 import com.server.springboot.domain.entity.Post;
+import com.server.springboot.domain.entity.User;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import java.time.format.DateTimeFormatter;
+import java.util.List;
 import java.util.stream.Collectors;
 
 @Component
 public class PostDtoMapper implements Converter<PostDto, Post> {
 
-    private final Converter<ImageDto, Image> imageDtoMapper;
+    private final Converter<List<ImageDto>, List<Image>> imageDtoListMapper;
+    private final Converter<UserDto, User> userDtoMapper;
+    private final Converter<List<CommentDto>, List<Comment>> commentDtoListMapper;
 
     @Autowired
-    public PostDtoMapper(Converter<ImageDto, Image> imageDtoMapper) {
-        this.imageDtoMapper = imageDtoMapper;
+    public PostDtoMapper(Converter<List<ImageDto>, List<Image>> imageDtoListMapper, Converter<UserDto, User> userDtoMapper,
+                         Converter<List<CommentDto>, List<Comment>> commentDtoListMapper) {
+        this.imageDtoListMapper = imageDtoListMapper;
+        this.userDtoMapper = userDtoMapper;
+        this.commentDtoListMapper = commentDtoListMapper;
     }
 
     @Override
     public PostDto convert(Post from) {
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd.MM.yyyy HH:mm:ss");
+
         return PostDto.builder()
                 .postId(from.getPostId())
-                .postAuthorId(from.getPostAuthor().getUserId())
-                .postAuthor(from.getPostAuthor().getUserProfile().getFirstName()
-                        + " " + from.getPostAuthor().getUserProfile().getLastName())
+                .postAuthor(userDtoMapper.convert(from.getPostAuthor()))
                 .text(from.getText())
-                .images(
-                        from.getImages().stream()
-                                .map(imageDtoMapper::convert)
-                                .collect(Collectors.toList())
-                )
+                .images(imageDtoListMapper.convert(Lists.newArrayList(from.getImages())))
                 .createdAt(from.getCreatedAt().format(formatter))
                 .editedAt(from.getEditedAt() != null ? from.getEditedAt().format(formatter) : null)
                 .isPublic(from.isPublic())
@@ -41,40 +45,16 @@ public class PostDtoMapper implements Converter<PostDto, Post> {
                 .likes(
                         from.getLikedPosts().stream()
                                 .map(likedPost -> LikedPostDto.builder()
-                                        .userId(likedPost.getLikedPostUser().getUserId())
-                                        .name(likedPost.getLikedPostUser().getUserProfile().getFirstName()
-                                                + " " + likedPost.getLikedPostUser().getUserProfile().getLastName())
+                                        .likedUser(userDtoMapper.convert(likedPost.getLikedPostUser()))
                                         .date(likedPost.getDate().format(formatter))
                                         .build())
                                 .collect(Collectors.toList())
                 )
-                .comments(
-                        from.getComments().stream()
-                                .map(comment -> CommentDto.builder()
-                                        .commentId(comment.getCommentId())
-                                        .text(comment.getText())
-                                        .createdAt(comment.getCreatedAt().format(formatter))
-                                        .editedAt(comment.getEditedAt() != null ? comment.getEditedAt().format(formatter) : null)
-                                        .isEdited(comment.isEdited())
-                                        .authorName(comment.getCommentAuthor().getUserProfile().getFirstName()
-                                                + " " + comment.getCommentAuthor().getUserProfile().getLastName())
-                                        .userLikes(
-                                                comment.getLikes().stream()
-                                                        .map(user -> LikedCommentDto.builder()
-                                                                .userId(user.getUserId())
-                                                                .name(user.getUserProfile().getFirstName() +
-                                                                        " " + user.getUserProfile().getLastName())
-                                                                .build())
-                                                        .collect(Collectors.toList()))
-                                        .build())
-                                .collect(Collectors.toList())
-                )
+                .comments(commentDtoListMapper.convert(Lists.newArrayList(from.getComments())))
                 .sharing(
                         from.getSharedBasePosts().stream()
                                 .map(sharedPost -> SharedPostInfoDto.builder()
-                                        .userId(sharedPost.getSharedPostUser().getUserId())
-                                        .authorOfSharing(sharedPost.getSharedPostUser().getUserProfile().getFirstName() +
-                                                " " + sharedPost.getSharedPostUser().getUserProfile().getLastName())
+                                        .authorOfSharing(userDtoMapper.convert(sharedPost.getSharedPostUser()))
                                         .sharingText(sharedPost.getNewPost().getText())
                                         .isPublic(sharedPost.getNewPost().isPublic())
                                         .date(sharedPost.getDate().format(formatter))

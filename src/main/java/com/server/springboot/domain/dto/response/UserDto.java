@@ -1,6 +1,7 @@
 package com.server.springboot.domain.dto.response;
 
 import com.server.springboot.domain.enumeration.ActivityStatus;
+import com.server.springboot.domain.enumeration.Gender;
 import lombok.*;
 
 @AllArgsConstructor
@@ -10,11 +11,13 @@ import lombok.*;
 @Setter
 @Builder
 @ToString
-public class UserDetailsDto {
+public class UserDto {
     private Long userId;
-    private String email;
-    private String phoneNumber;
-    private String createdAt;
     private ActivityStatus activityStatus;
-    private UserProfileDto userProfile;
+    private String email;
+    private String firstName;
+    private String lastName;
+    private Gender gender;
+    private Integer age;
+    private ProfilePhotoDto profilePhoto;
 }
