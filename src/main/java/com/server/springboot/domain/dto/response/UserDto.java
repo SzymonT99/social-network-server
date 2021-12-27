@@ -17,7 +17,5 @@ public class UserDto {
     private String email;
     private String firstName;
     private String lastName;
-    private Gender gender;
-    private Integer age;
     private ProfilePhotoDto profilePhoto;
 }

@@ -1,16 +1,13 @@
 package com.server.springboot.domain.enumeration;
 
 public enum ActivityType {
-    ADD_FRIEND,
-    TYPE_POST,
+    CREATE_POST,
     LIKE_POST,
+    COMMENT_POST,
     SHARE_POST,
-    TYPE_COMMENT,
-    LIKE_COMMENT,
-    SHARE_COMMENT,
-    CREATE_EVENT,
     SHARE_EVENT,
-    CREATE_GROUP,
-    CREATE_CHAT,
-    UPDATE_PROFILE
+    CHANGE_PROFILE_PHOTO,
+    CREATE_GROUP_POST,
+    RESPOND_TO_EVENT,
+
 }

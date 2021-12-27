@@ -105,7 +105,7 @@ public class EventApiController {
         return new ResponseEntity<>(HttpStatus.CREATED);
     }
 
-    @ApiOperation(value = "Share event")
+    @ApiOperation(value = "Delete shared event")
     @DeleteMapping(value = "/events/{eventId}/shared")
     public ResponseEntity<?> deleteSharedEvent(@PathVariable(value = "eventId") Long eventId) {
         LOGGER.info("---- User deletes shared event with id: {}", eventId);
