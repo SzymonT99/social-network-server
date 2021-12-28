@@ -83,9 +83,9 @@ public class EventApiController {
 
     @ApiOperation(value = "Get user's event invitations")
     @GetMapping(value = "/events/invitations")
-    public ResponseEntity<List<EventInvitationDto>> getUserInvitationForEvent(@RequestParam(value = "userId") Long userId) {
-        LOGGER.info("---- Get all user with id: {} invitation to event", userId);
-        return new ResponseEntity<>(eventService.findAllUserEventInvitation(userId), HttpStatus.OK);
+    public ResponseEntity<List<EventInvitationDto>> getUserInvitationForEvent() {
+        LOGGER.info("---- Get all user invitations to event");
+        return new ResponseEntity<>(eventService.findAllUserEventInvitation(), HttpStatus.OK);
     }
 
     @ApiOperation(value = "Respond to event")

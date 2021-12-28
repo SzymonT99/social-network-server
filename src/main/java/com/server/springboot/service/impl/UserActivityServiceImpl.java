@@ -1,12 +1,16 @@
 package com.server.springboot.service.impl;
 
+import com.google.common.collect.Lists;
 import com.server.springboot.domain.dto.response.*;
 import com.server.springboot.domain.entity.*;
 import com.server.springboot.domain.enumeration.ActivityType;
+import com.server.springboot.domain.enumeration.NotificationType;
 import com.server.springboot.domain.mapper.Converter;
 import com.server.springboot.domain.repository.*;
 import com.server.springboot.exception.NotFoundException;
 import com.server.springboot.security.JwtUtils;
+import com.server.springboot.service.EventService;
+import com.server.springboot.service.FriendService;
 import com.server.springboot.service.UserActivityService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -20,6 +24,8 @@ import java.util.stream.Collectors;
 public class UserActivityServiceImpl implements UserActivityService {
 
     private final JwtUtils jwtUtils;
+    private final FriendService friendService;
+    private final EventService eventService;
     private final UserRepository userRepository;
     private final FriendRepository friendRepository;
     private final PostRepository postRepository;
@@ -36,9 +42,11 @@ public class UserActivityServiceImpl implements UserActivityService {
     private final Converter<SharedEventDto, SharedEvent> sharedEventDtoMapper;
     private final Converter<EventReactionDto, EventMember> eventReactionDtoMapper;
     private final Converter<ChangeProfilePhotoDto, Image> changeProfilePhotoDtoMapper;
+    private final Converter<UserDto, User> userDtoMapper;
 
     @Autowired
-    public UserActivityServiceImpl(JwtUtils jwtUtils, UserRepository userRepository, FriendRepository friendRepository,
+    public UserActivityServiceImpl(JwtUtils jwtUtils, FriendService friendService, EventService eventService,
+                                   UserRepository userRepository, FriendRepository friendRepository,
                                    PostRepository postRepository, LikedPostRepository likedPostRepository,
                                    CommentRepository commentRepository, SharedPostRepository sharedPostRepository,
                                    SharedEventRepository sharedEventRepository, EventMemberRepository eventMemberRepository,
@@ -48,8 +56,11 @@ public class UserActivityServiceImpl implements UserActivityService {
                                    Converter<SharedPostDto, SharedPost> sharedPostDtoMapper,
                                    Converter<SharedEventDto, SharedEvent> sharedEventDtoMapper,
                                    Converter<EventReactionDto, EventMember> eventReactionDtoMapper,
-                                   Converter<ChangeProfilePhotoDto, Image> changeProfilePhotoDtoMapper) {
+                                   Converter<ChangeProfilePhotoDto, Image> changeProfilePhotoDtoMapper,
+                                   Converter<UserDto, User> userDtoMapper) {
         this.jwtUtils = jwtUtils;
+        this.friendService = friendService;
+        this.eventService = eventService;
         this.userRepository = userRepository;
         this.friendRepository = friendRepository;
         this.postRepository = postRepository;
@@ -66,6 +77,7 @@ public class UserActivityServiceImpl implements UserActivityService {
         this.sharedEventDtoMapper = sharedEventDtoMapper;
         this.eventReactionDtoMapper = eventReactionDtoMapper;
         this.changeProfilePhotoDtoMapper = changeProfilePhotoDtoMapper;
+        this.userDtoMapper = userDtoMapper;
     }
 
     @Override
@@ -80,9 +92,10 @@ public class UserActivityServiceImpl implements UserActivityService {
 
         //TODO:: Posty z grup tematycznych
 
-        List<Post> createdPosts = postRepository.findAllByPostAuthorInAndCreatedAtIsGreaterThan(
+        List<Post> createdPosts = postRepository.findAllByPostAuthorInAndCreatedAtIsGreaterThanAndIsDeleted(
                 activeUsers,
-                LocalDateTime.now().minusWeeks(2));
+                LocalDateTime.now().minusWeeks(2),
+                false);
 
         List<LikedPost> likedPosts = likedPostRepository.findAllByLikedPostUserInAndDateIsGreaterThan(
                 activeUsers,
@@ -199,5 +212,104 @@ public class UserActivityServiceImpl implements UserActivityService {
         });
 
         return boardActivity;
+    }
+
+    @Override
+    public List<NotificationDto> findUserNotifications() {
+        Long loggedUserId = jwtUtils.getLoggedUserId();
+        User user = userRepository.findById(loggedUserId)
+                .orElseThrow(() -> new NotFoundException("Not found user with given id: " + loggedUserId));
+
+        List<Post> userPosts = Lists.newArrayList(user.getPosts());
+
+        List<FriendInvitationDto> friendInvitations = friendService.findAllUserInvitationsToFriends();
+
+        List<EventInvitationDto> eventInvitations = eventService.findAllUserEventInvitation();
+
+        List<LikedPost> likedPosts = likedPostRepository.findAllByPostIn(userPosts);
+        likedPostRepository.setPostAuthorNotificationDisplayed(true, userPosts);
+
+        List<Comment> comments = commentRepository.findAllByCommentedPostIn(userPosts);
+        commentRepository.setPostAuthorNotificationDisplayed(true, userPosts);
+
+        List<SharedPost> sharedPosts = sharedPostRepository.findAllByBasePostIn(userPosts);
+        sharedPostRepository.setPostAuthorNotificationDisplayed(true, userPosts);
+
+        List<Friend> acceptedFriends = friendRepository.findByUserAndIsInvitationAccepted(user, true);
+        friendRepository.setUserNotificationDisplayed(true, user);
+
+        List<NotificationDto> notificationList = new ArrayList<>();
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd.MM.yyyy HH:mm:ss");
+
+        friendInvitations.forEach(friendInvitationDto -> {
+            NotificationDto notificationDto = NotificationDto.builder()
+                    .notificationType(NotificationType.INVITATION_TO_FRIENDS)
+                    .notificationDate(friendInvitationDto.getInvitationDate())
+                    .isNotificationDisplayed(friendInvitationDto.getInvitationDisplayed())
+                    .activityInitiator(friendInvitationDto.getInvitingUser())
+                    .details(null)
+                    .build();
+            notificationList.add(notificationDto);
+        });
+
+        eventInvitations.forEach(eventInvitationDto -> {
+            NotificationDto notificationDto = NotificationDto.builder()
+                    .notificationType(NotificationType.INVITATION_TO_EVENT)
+                    .notificationDate(eventInvitationDto.getInvitationDate())
+                    .isNotificationDisplayed(eventInvitationDto.isInvitationDisplayed())
+                    .activityInitiator(null)
+                    .details(Collections.singletonMap("eventId", eventInvitationDto.getEventId()))
+                    .build();
+            notificationList.add(notificationDto);
+        });
+
+        likedPosts.forEach(likedPost -> {
+            NotificationDto notificationDto = NotificationDto.builder()
+                    .notificationType(NotificationType.LIKE_USER_POST)
+                    .notificationDate(likedPost.getDate().format(formatter))
+                    .isNotificationDisplayed(likedPost.isPostAuthorNotified())
+                    .activityInitiator(userDtoMapper.convert(likedPost.getLikedPostUser()))
+                    .details(Collections.singletonMap("postId", likedPost.getPost().getPostId()))
+                    .build();
+            notificationList.add(notificationDto);
+        });
+
+        comments.forEach(comment -> {
+            NotificationDto notificationDto = NotificationDto.builder()
+                    .notificationType(NotificationType.COMMENT_USER_POST)
+                    .notificationDate(comment.getCreatedAt().format(formatter))
+                    .isNotificationDisplayed(comment.isPostAuthorNotified())
+                    .activityInitiator(userDtoMapper.convert(comment.getCommentAuthor()))
+                    .details(Collections.singletonMap("postId", comment.getCommentedPost().getPostId()))
+                    .build();
+            notificationList.add(notificationDto);
+        });
+
+        sharedPosts.forEach(sharedPost -> {
+            NotificationDto notificationDto = NotificationDto.builder()
+                    .notificationType(NotificationType.SHARE_USER_POST)
+                    .notificationDate(sharedPost.getDate().format(formatter))
+                    .isNotificationDisplayed(sharedPost.isPostAuthorNotified())
+                    .activityInitiator(userDtoMapper.convert(sharedPost.getSharedPostUser()))
+                    .details(Collections.singletonMap("sharedPostId", sharedPost.getSharedPostId()))
+                    .build();
+            notificationList.add(notificationDto);
+        });
+
+        acceptedFriends.forEach(acceptedFriend -> {
+            NotificationDto notificationDto = NotificationDto.builder()
+                    .notificationType(NotificationType.ACCEPTANCE_INVITATION_TO_FRIENDS)
+                    .notificationDate(acceptedFriend.getFriendFromDate().format(formatter))
+                    .isNotificationDisplayed(acceptedFriend.isUserNotifiedAboutAccepting())
+                    .activityInitiator(userDtoMapper.convert(acceptedFriend.getUserFriend()))
+                    .details(null)
+                    .build();
+            notificationList.add(notificationDto);
+        });
+
+        notificationList.sort(Comparator.comparing(NotificationDto::getNotificationDate));
+        Collections.reverse(notificationList);
+
+        return notificationList;
     }
 }

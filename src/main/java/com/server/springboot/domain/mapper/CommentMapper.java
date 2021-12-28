@@ -15,6 +15,7 @@ public class CommentMapper implements Converter<Comment, RequestCommentDto> {
                 .text(from.getCommentText())
                 .createdAt(LocalDateTime.now())
                 .isEdited(false)
+                .isPostAuthorNotified(false)
                 .build();
     }
 }

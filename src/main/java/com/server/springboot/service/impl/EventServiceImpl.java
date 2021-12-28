@@ -146,6 +146,11 @@ public class EventServiceImpl implements EventService {
                 .orElseThrow(() -> new NotFoundException("Not found user with id: " + invitedUserId));
         Event event = eventRepository.findById(eventId)
                 .orElseThrow(() -> new NotFoundException("Not found event with id: " + eventId));
+
+        if (eventMemberRepository.existsByEventMemberAndEvent(user, event)) {
+            throw new ConflictRequestException("The user has already reacted to the event or an invitation has already been sent to him");
+        }
+
         EventMember eventMember = EventMember.builder()
                 .participationStatus(EventParticipationStatus.INVITED)
                 .invitationDisplayed(false)
@@ -157,9 +162,10 @@ public class EventServiceImpl implements EventService {
     }
 
     @Override
-    public List<EventInvitationDto> findAllUserEventInvitation(Long userId) {
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new NotFoundException("Not found user with id: " + userId));
+    public List<EventInvitationDto> findAllUserEventInvitation() {
+        Long loggedUserId = jwtUtils.getLoggedUserId();
+        User user = userRepository.findById(loggedUserId)
+                .orElseThrow(() -> new NotFoundException("Not found user with id: " + loggedUserId));
         List<EventMember> eventMembers = eventMemberRepository.findByEventMemberAndParticipationStatus(user, EventParticipationStatus.INVITED);
         eventMemberRepository.setEventInvitationDisplayed(true, user);
         return eventInvitationDtoListMapper.convert(eventMembers);

@@ -86,15 +86,16 @@ public class FriendServiceImpl implements FriendService {
 
         if (reactionToInvitation.equals("accept")) {
             friend.setIsInvitationAccepted(true);
-            friend.setFriendFromDate(LocalDate.now());
+            friend.setFriendFromDate(LocalDateTime.now());
 
             Friend acceptedFriend = Friend.builder()
                     .isInvitationAccepted(true)
                     .invitationDisplayed(true)
                     .invitationDate(LocalDateTime.now())
-                    .friendFromDate(LocalDate.now())
+                    .friendFromDate(LocalDateTime.now())
                     .user(currentUser)
                     .userFriend(inviter)
+                    .isUserNotifiedAboutAccepting(false)
                     .build();
             friendRepository.save(acceptedFriend);
 

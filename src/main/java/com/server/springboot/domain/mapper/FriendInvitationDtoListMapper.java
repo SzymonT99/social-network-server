@@ -28,6 +28,7 @@ public class FriendInvitationDtoListMapper implements Converter<List<FriendInvit
 
         for (Friend friend : from) {
             FriendInvitationDto friendInvitationDto = FriendInvitationDto.builder()
+                    .friendId(friend.getFriendId())
                     .isInvitationAccepted(friend.getIsInvitationAccepted())
                     .invitationDisplayed(friend.isInvitationDisplayed())
                     .invitationDate(friend.getInvitationDate().format(formatter))

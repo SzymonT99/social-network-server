@@ -34,7 +34,7 @@ public class Friend {
     private LocalDateTime invitationDate;
 
     @Column(name = "friend_from_date")
-    private LocalDate friendFromDate;
+    private LocalDateTime friendFromDate;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", nullable = false)
@@ -44,4 +44,6 @@ public class Friend {
     @JoinColumn(name = "user_friend_id", nullable = false)
     private User userFriend;
 
+    @Column(name = "is_user_notified_about_accepting")
+    private boolean isUserNotifiedAboutAccepting;
 }

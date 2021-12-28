@@ -33,4 +33,8 @@ public class LikedPost {
     @MapsId("postId")
     @JoinColumn(name = "post_id", nullable = false)
     private Post post;
+
+    @NotNull
+    @Column(name = "is_post_author_notified", nullable = false)
+    private boolean isPostAuthorNotified;
 }

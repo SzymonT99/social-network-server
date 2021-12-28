@@ -23,5 +23,5 @@ public interface PostRepository extends JpaRepository<Post, Long> {
 
     List<Post> findByPostAuthor(User user);
 
-    List<Post> findAllByPostAuthorInAndCreatedAtIsGreaterThan(List<User> users, LocalDateTime dateLimit);
+    List<Post> findAllByPostAuthorInAndCreatedAtIsGreaterThanAndIsDeleted(List<User> users, LocalDateTime dateLimit, boolean isDeleted);
 }

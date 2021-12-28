@@ -48,4 +48,7 @@ public class Comment {
     @ManyToMany(mappedBy = "likedComments")
     private Set<User> likes;
 
+    @NotNull
+    @Column(name = "is_post_author_notified", nullable = false)
+    private boolean isPostAuthorNotified;
 }

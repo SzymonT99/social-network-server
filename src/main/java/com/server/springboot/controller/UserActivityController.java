@@ -1,6 +1,7 @@
 package com.server.springboot.controller;
 
 import com.server.springboot.domain.dto.response.BoardActivityItemDto;
+import com.server.springboot.domain.dto.response.NotificationDto;
 import com.server.springboot.service.UserActivityService;
 import io.swagger.annotations.ApiOperation;
 import org.slf4j.Logger;
@@ -30,5 +31,12 @@ public class UserActivityController {
     public ResponseEntity<List<BoardActivityItemDto>> getUserActivityBoard() {
         LOGGER.info("---- User get own activity board");
         return new ResponseEntity<>(userActivityService.findUserActivityBoard(), HttpStatus.OK);
+    }
+
+    @ApiOperation(value = "Get logged user notifications")
+    @GetMapping(value = "/activity/notifications")
+    public ResponseEntity<List<NotificationDto>> getUserNotifications() {
+        LOGGER.info("---- User get own activity board");
+        return new ResponseEntity<>(userActivityService.findUserNotifications(), HttpStatus.OK);
     }
 }
