@@ -36,5 +36,9 @@ public class SharedPost {
     @OneToOne(fetch = FetchType.LAZY, cascade = CascadeType.ALL)
     @JoinColumn(name = "new_post_id", nullable = false)
     private Post newPost;
+
+    @NotNull
+    @Column(name = "is_post_author_notified", nullable = false)
+    private boolean isPostAuthorNotified;
 }
 

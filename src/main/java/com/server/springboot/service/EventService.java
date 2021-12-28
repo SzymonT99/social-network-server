@@ -22,7 +22,8 @@ public interface EventService {
 
     void inviteUser(Long eventId, Long invitedUserId);
 
-    List<EventInvitationDto> findAllUserEventInvitation(Long userId);
+    @Transactional
+    List<EventInvitationDto> findAllUserEventInvitation();
 
     void respondToEvent(Long eventId, String reactionToEvent);
 

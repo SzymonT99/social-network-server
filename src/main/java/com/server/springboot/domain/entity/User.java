@@ -137,10 +137,6 @@ public class User {
             cascade = CascadeType.ALL, orphanRemoval = true)
     private Set<Report> reports;
 
-    @OneToMany(mappedBy = "user", fetch = FetchType.LAZY,
-            cascade = CascadeType.ALL, orphanRemoval = true)
-    private Set<Activity> activities;
-
     @OneToMany(mappedBy = "groupCreator", fetch = FetchType.LAZY,
             cascade = CascadeType.ALL, orphanRemoval = true)
     private Set<Group> createdGroups;

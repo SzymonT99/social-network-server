@@ -151,6 +151,7 @@ public class PostServiceImpl implements PostService {
                 .post(post)
                 .likedPostUser(likedUser)
                 .date(LocalDateTime.now())
+                .isPostAuthorNotified(false)
                 .build();
         Set<LikedPost> likes = post.getLikedPosts();
         if (likedPostRepository.existsByPostAndLikedPostUser(post, likedUser)) {
@@ -189,6 +190,7 @@ public class PostServiceImpl implements PostService {
                 .basePost(basePost)
                 .newPost(newPost)
                 .date(LocalDateTime.now())
+                .isPostAuthorNotified(false)
                 .build();
         sharedPostRepository.save(sharedPost);
     }

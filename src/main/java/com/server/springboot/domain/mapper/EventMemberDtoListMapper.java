@@ -32,7 +32,8 @@ public class EventMemberDtoListMapper implements Converter<List<EventMemberDto>,
                     .participationStatus(eventMember.getParticipationStatus())
                     .addedIn(eventMember.getAddedIn() != null
                             ? eventMember.getAddedIn().format(formatter) : null)
-                    .invitationDate(eventMember.getInvitationDate().format(formatter))
+                    .invitationDate(eventMember.getInvitationDate() != null
+                            ? eventMember.getInvitationDate().format(formatter) : null)
                     .invitationDisplayed(eventMember.isInvitationDisplayed())
                     .build();
             eventMemberDtoList.add(eventMemberDto);

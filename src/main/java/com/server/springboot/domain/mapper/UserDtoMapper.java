@@ -25,8 +25,6 @@ public class UserDtoMapper implements Converter<UserDto, User> {
                 .email(from.getEmail())
                 .firstName(from.getUserProfile().getFirstName())
                 .lastName(from.getUserProfile().getLastName())
-                .gender(from.getUserProfile().getGender())
-                .age(from.getUserProfile().getAge())
                 .profilePhoto(from.getUserProfile().getProfilePhoto() != null ?
                         profilePhotoDtoMapper.convert(from.getUserProfile().getProfilePhoto()) : null)
                 .build();

@@ -13,6 +13,8 @@ import com.server.springboot.service.FriendService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import javax.persistence.*;
+import javax.validation.constraints.NotNull;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
@@ -24,7 +26,7 @@ public class FriendServiceImpl implements FriendService {
     private final FriendRepository friendRepository;
     private final JwtUtils jwtUtils;
     private final Converter<List<FriendInvitationDto>, List<Friend>> friendInvitationDtoListMapper;
-    private final  Converter<List<FriendDto>, List<Friend>> friendDtoListMapper;
+    private final Converter<List<FriendDto>, List<Friend>> friendDtoListMapper;
 
     @Autowired
     public FriendServiceImpl(UserRepository userRepository, FriendRepository friendRepository, JwtUtils jwtUtils,
@@ -84,7 +86,19 @@ public class FriendServiceImpl implements FriendService {
 
         if (reactionToInvitation.equals("accept")) {
             friend.setIsInvitationAccepted(true);
-            friend.setFriendFromDate(LocalDate.now());
+            friend.setFriendFromDate(LocalDateTime.now());
+
+            Friend acceptedFriend = Friend.builder()
+                    .isInvitationAccepted(true)
+                    .invitationDisplayed(true)
+                    .invitationDate(LocalDateTime.now())
+                    .friendFromDate(LocalDateTime.now())
+                    .user(currentUser)
+                    .userFriend(inviter)
+                    .isUserNotifiedAboutAccepting(false)
+                    .build();
+            friendRepository.save(acceptedFriend);
+
         } else if (reactionToInvitation.equals("reject")) {
             friend.setIsInvitationAccepted(false);
         } else {

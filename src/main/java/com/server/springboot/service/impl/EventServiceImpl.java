@@ -8,8 +8,11 @@ import com.server.springboot.domain.dto.response.SharedEventDto;
 import com.server.springboot.domain.entity.*;
 import com.server.springboot.domain.entity.key.UserEventKey;
 import com.server.springboot.domain.enumeration.EventParticipationStatus;
+import com.server.springboot.domain.enumeration.RelationshipStatus;
 import com.server.springboot.domain.mapper.Converter;
 import com.server.springboot.domain.repository.*;
+import com.server.springboot.exception.BadRequestException;
+import com.server.springboot.exception.ConflictRequestException;
 import com.server.springboot.exception.ForbiddenException;
 import com.server.springboot.exception.NotFoundException;
 import com.server.springboot.security.JwtUtils;
@@ -21,7 +24,9 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.Arrays;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 public class EventServiceImpl implements EventService {
@@ -141,6 +146,11 @@ public class EventServiceImpl implements EventService {
                 .orElseThrow(() -> new NotFoundException("Not found user with id: " + invitedUserId));
         Event event = eventRepository.findById(eventId)
                 .orElseThrow(() -> new NotFoundException("Not found event with id: " + eventId));
+
+        if (eventMemberRepository.existsByEventMemberAndEvent(user, event)) {
+            throw new ConflictRequestException("The user has already reacted to the event or an invitation has already been sent to him");
+        }
+
         EventMember eventMember = EventMember.builder()
                 .participationStatus(EventParticipationStatus.INVITED)
                 .invitationDisplayed(false)
@@ -152,9 +162,10 @@ public class EventServiceImpl implements EventService {
     }
 
     @Override
-    public List<EventInvitationDto> findAllUserEventInvitation(Long userId) {
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new NotFoundException("Not found user with id: " + userId));
+    public List<EventInvitationDto> findAllUserEventInvitation() {
+        Long loggedUserId = jwtUtils.getLoggedUserId();
+        User user = userRepository.findById(loggedUserId)
+                .orElseThrow(() -> new NotFoundException("Not found user with id: " + loggedUserId));
         List<EventMember> eventMembers = eventMemberRepository.findByEventMemberAndParticipationStatus(user, EventParticipationStatus.INVITED);
         eventMemberRepository.setEventInvitationDisplayed(true, user);
         return eventInvitationDtoListMapper.convert(eventMembers);
@@ -162,21 +173,48 @@ public class EventServiceImpl implements EventService {
 
     @Override
     public void respondToEvent(Long eventId, String reactionToEvent) {
+        List<String> eventParticipationStatusList = Arrays.stream(EventParticipationStatus.values())
+                .map(Enum::name)
+                .collect(Collectors.toList());
+
+        if (!eventParticipationStatusList.contains(reactionToEvent)) {
+            throw new BadRequestException("Unknown reaction to event");
+        }
+
         Long userId = jwtUtils.getLoggedUserId();
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new NotFoundException("Not found user with id: " + userId));
         Event event = eventRepository.findById(eventId)
                 .orElseThrow(() -> new NotFoundException("Not found event with id: " + eventId));
-        EventMember eventMember = EventMember.builder()
-                .eventMember(user)
-                .event(event)
-                .participationStatus(EventParticipationStatus.valueOf(reactionToEvent))
-                .addedIn(LocalDateTime.now())
-                .build();
-        if (EventParticipationStatus.valueOf(reactionToEvent) == EventParticipationStatus.TAKE_PART) {
-            eventMember.setAddedIn(LocalDateTime.now());
+
+        if (eventMemberRepository.existsByEventMemberAndEvent(user, event)) {
+            EventMember updatedEventMember = eventMemberRepository.findByEventMemberAndEvent(user, event).get();
+            if (updatedEventMember.getParticipationStatus() == EventParticipationStatus.valueOf(reactionToEvent)) {
+                throw new ConflictRequestException("The user has already sent the same reaction to this event");
+            }
+
+            updatedEventMember.setParticipationStatus(EventParticipationStatus.valueOf(reactionToEvent));
+            if (EventParticipationStatus.valueOf(reactionToEvent) != EventParticipationStatus.TAKE_PART
+                    && EventParticipationStatus.valueOf(reactionToEvent) != EventParticipationStatus.INTERESTED) {
+                updatedEventMember.setAddedIn(null);
+            } else {
+                updatedEventMember.setAddedIn(LocalDateTime.now());
+            }
+            eventMemberRepository.save(updatedEventMember);
+
+        } else {
+            EventMember mewEventMember = EventMember.builder()
+                    .eventMember(user)
+                    .event(event)
+                    .participationStatus(EventParticipationStatus.valueOf(reactionToEvent))
+                    .addedIn(LocalDateTime.now())
+                    .build();
+            if (EventParticipationStatus.valueOf(reactionToEvent) == EventParticipationStatus.TAKE_PART
+                    || EventParticipationStatus.valueOf(reactionToEvent) == EventParticipationStatus.INTERESTED) {
+                mewEventMember.setAddedIn(LocalDateTime.now());
+            }
+            eventMemberRepository.save(mewEventMember);
         }
-        eventMemberRepository.save(eventMember);
     }
 
     @Override

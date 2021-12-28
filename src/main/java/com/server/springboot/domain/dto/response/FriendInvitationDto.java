@@ -10,6 +10,7 @@ import lombok.*;
 @Builder
 @ToString
 public class FriendInvitationDto {
+    private Long friendId;
     private Boolean isInvitationAccepted;
     private Boolean invitationDisplayed;
     private String invitationDate;

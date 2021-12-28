@@ -83,9 +83,9 @@ public class EventApiController {
 
     @ApiOperation(value = "Get user's event invitations")
     @GetMapping(value = "/events/invitations")
-    public ResponseEntity<List<EventInvitationDto>> getUserInvitationForEvent(@RequestParam(value = "userId") Long userId) {
-        LOGGER.info("---- Get all user with id: {} invitation to event", userId);
-        return new ResponseEntity<>(eventService.findAllUserEventInvitation(userId), HttpStatus.OK);
+    public ResponseEntity<List<EventInvitationDto>> getUserInvitationForEvent() {
+        LOGGER.info("---- Get all user invitations to event");
+        return new ResponseEntity<>(eventService.findAllUserEventInvitation(), HttpStatus.OK);
     }
 
     @ApiOperation(value = "Respond to event")
@@ -105,7 +105,7 @@ public class EventApiController {
         return new ResponseEntity<>(HttpStatus.CREATED);
     }
 
-    @ApiOperation(value = "Share event")
+    @ApiOperation(value = "Delete shared event")
     @DeleteMapping(value = "/events/{eventId}/shared")
     public ResponseEntity<?> deleteSharedEvent(@PathVariable(value = "eventId") Long eventId) {
         LOGGER.info("---- User deletes shared event with id: {}", eventId);
