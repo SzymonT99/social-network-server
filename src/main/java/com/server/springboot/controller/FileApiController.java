@@ -8,6 +8,10 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.CrossOrigin;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.core.io.Resource;
 
 @CrossOrigin
 @RestController
@@ -22,11 +26,12 @@ public class FileApiController {
     }
 
     @ApiOperation(value = "Get image by id")
-    @GetMapping(value = "/images/{id}")
-    public ResponseEntity<byte[]> getImage(@PathVariable(value = "id") String imageId) {
+    @GetMapping("/images/{id}")
+    public ResponseEntity<Resource> getImage(@PathVariable(value = "id") String imageId) {
         Image image = fileService.findImageById(imageId);
+        Resource file = fileService.loadImage(image.getImageId(), image.getFilename());
         HttpHeaders headers = new HttpHeaders();
         headers.add(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + image.getFilename() + "\"");
-        return new ResponseEntity<>(image.getData(), headers, HttpStatus.OK);
+        return new ResponseEntity<>(file, headers, HttpStatus.OK);
     }
 }

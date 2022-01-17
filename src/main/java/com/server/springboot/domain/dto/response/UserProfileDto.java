@@ -18,6 +18,7 @@ public class UserProfileDto {
     private boolean isPublic;
     private String firstName;
     private String lastName;
+    private String email;
     private String aboutUser;
     private Gender gender;
     private String dateOfBirth;

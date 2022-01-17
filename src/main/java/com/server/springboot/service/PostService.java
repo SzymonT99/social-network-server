@@ -13,10 +13,10 @@ public interface PostService {
 
     List<PostDto> findAllPublicPosts();
 
-    void addPost(RequestPostDto requestPostDto, List<MultipartFile> imageFiles);
+    PostDto addPost(RequestPostDto requestPostDto, List<MultipartFile> imageFiles);
 
     @Transactional
-    void editPost(Long postId, RequestPostDto requestPostDto, List<MultipartFile> imageFiles);
+    PostDto editPost(Long postId, RequestPostDto requestPostDto, List<MultipartFile> imageFiles);
 
     void deleteUserPostById(Long postId, boolean archive);
 

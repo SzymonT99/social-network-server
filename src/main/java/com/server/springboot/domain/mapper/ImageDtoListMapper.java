@@ -16,7 +16,7 @@ public class ImageDtoListMapper implements Converter<List<ImageDto>, List<Image>
         for (Image image: from) {
             ImageDto imageDto = ImageDto.builder()
                     .filename(image.getFilename())
-                    .url("localhost:8080/api/images/" + image.getImageId())
+                    .url("http://localhost:8080/api/images/" + image.getImageId())
                     .type(image.getType())
                     .build();
             imageDtoList.add(imageDto);

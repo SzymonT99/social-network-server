@@ -14,7 +14,7 @@ public class ProfilePhotoDtoMapper implements Converter<ProfilePhotoDto, Image> 
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd.MM.yyyy HH:mm:ss");
         return ProfilePhotoDto.builder()
                 .filename(from.getFilename())
-                .url("localhost:8080/api/images/" + from.getImageId())
+                .url("http://localhost:8080/api/images/" + from.getImageId())
                 .type(from.getType())
                 .caption(from.getCaption())
                 .addedIn(from.getAddedIn().format(formatter))

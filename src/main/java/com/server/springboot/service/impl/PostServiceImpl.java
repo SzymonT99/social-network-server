@@ -86,19 +86,23 @@ public class PostServiceImpl implements PostService {
     }
 
     @Override
-    public void addPost(RequestPostDto requestPostDto, List<MultipartFile> imageFiles) {
+    public PostDto addPost(RequestPostDto requestPostDto, List<MultipartFile> imageFiles) {
         Long userId  = jwtUtils.getLoggedUserId();
         User author = userRepository.findById(userId)
                 .orElseThrow(() -> new NotFoundException("Not found user with id: " + userId));
-        Set<Image> postImages = fileService.storageImages(imageFiles, author);
         Post addedPost = postMapper.convert(requestPostDto);
         addedPost.setPostAuthor(author);
-        addedPost.setImages(postImages);
+        if (imageFiles != null) {
+            Set<Image> postImages = fileService.storageImages(imageFiles, author);
+            addedPost.setImages(postImages);
+        }
         postRepository.save(addedPost);
+
+        return postDtoMapper.convert(addedPost);
     }
 
     @Override
-    public void editPost(Long postId, RequestPostDto requestPostDto, List<MultipartFile> imageFiles) {
+    public PostDto editPost(Long postId, RequestPostDto requestPostDto, List<MultipartFile> imageFiles) {
         Long userId  = jwtUtils.getLoggedUserId();
         Post post = postRepository.findById(postId)
                 .orElseThrow(() -> new NotFoundException("Not found post with id: " + postId));
@@ -117,6 +121,8 @@ public class PostServiceImpl implements PostService {
         post.setEdited(true);
         postRepository.save(post);
         imageRepository.deleteAll(lastImages);
+
+        return postDtoMapper.convert(post);
     }
 
     @Override

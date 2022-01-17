@@ -98,11 +98,11 @@ public class UserActivityServiceImpl implements UserActivityService {
                 false);
 
         List<LikedPost> likedPosts = likedPostRepository.findAllByLikedPostUserInAndDateIsGreaterThan(
-                activeUsers,
+                activeUsers.stream().filter(activeUser -> !activeUser.getUserId().equals(loggedUserId)).collect(Collectors.toList()),
                 LocalDateTime.now().minusWeeks(2));
 
         List<Comment> comments = commentRepository.findAllByCommentAuthorInAndCreatedAtIsGreaterThan(
-                activeUsers,
+                activeUsers.stream().filter(activeUser -> !activeUser.getUserId().equals(loggedUserId)).collect(Collectors.toList()),
                 LocalDateTime.now().minusWeeks(2));
 
         List<SharedPost> sharedPosts = sharedPostRepository.findAllBySharedPostUserInAndDateIsGreaterThan(
@@ -163,8 +163,6 @@ public class UserActivityServiceImpl implements UserActivityService {
 
         List<BoardActivityItemDto> boardActivity = new ArrayList<>();
 
-        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd.MM.yyyy HH:mm:ss");
-
         sortedActivityMapByDate.forEach((k, v) -> {
             ActivityType activityType;
             UserDto activeUser;
@@ -202,7 +200,7 @@ public class UserActivityServiceImpl implements UserActivityService {
             }
 
             BoardActivityItemDto boardActivityItemDto = BoardActivityItemDto.builder()
-                    .activityDate(k.format(formatter))
+                    .activityDate(k.toString())
                     .activityType(activityType)
                     .activityAuthor(activeUser)
                     .activity(v)

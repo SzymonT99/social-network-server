@@ -1,6 +1,7 @@
 package com.server.springboot.service.impl;
 
 import com.server.springboot.domain.dto.request.RequestCommentDto;
+import com.server.springboot.domain.dto.response.CommentDto;
 import com.server.springboot.domain.entity.Comment;
 import com.server.springboot.domain.entity.Post;
 import com.server.springboot.domain.entity.User;
@@ -28,20 +29,22 @@ public class PostCommentServiceImpl implements PostCommentService {
     private final CommentRepository commentRepository;
     private final JwtUtils jwtUtils;
     private final Converter<Comment, RequestCommentDto> commentMapper;
+    private final Converter<CommentDto, Comment> commentDtoMapper;
 
     @Autowired
     public PostCommentServiceImpl(UserRepository userRepository, PostRepository postRepository,
                                   CommentRepository commentRepository, JwtUtils jwtUtils,
-                                  Converter<Comment, RequestCommentDto> commentMapper) {
+                                  Converter<Comment, RequestCommentDto> commentMapper, Converter<CommentDto, Comment> commentDtoMapper) {
         this.userRepository = userRepository;
         this.postRepository = postRepository;
         this.commentRepository = commentRepository;
         this.jwtUtils = jwtUtils;
         this.commentMapper = commentMapper;
+        this.commentDtoMapper = commentDtoMapper;
     }
 
     @Override
-    public void addComment(Long postId, RequestCommentDto requestCommentDto) {
+    public CommentDto addComment(Long postId, RequestCommentDto requestCommentDto) {
         Long userId = jwtUtils.getLoggedUserId();
         User commentAuthor = userRepository.findById(userId)
                 .orElseThrow(() -> new NotFoundException("Not found user with id: " + userId));
@@ -51,6 +54,8 @@ public class PostCommentServiceImpl implements PostCommentService {
         comment.setCommentAuthor(commentAuthor);
         comment.setCommentedPost(post);
         commentRepository.save(comment);
+
+        return commentDtoMapper.convert(comment);
     }
 
     @Override

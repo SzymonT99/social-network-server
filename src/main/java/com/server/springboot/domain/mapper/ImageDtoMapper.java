@@ -11,7 +11,7 @@ public class ImageDtoMapper implements Converter<ImageDto, Image>{
     public ImageDto convert(Image from) {
         return ImageDto.builder()
                 .filename(from.getFilename())
-                .url("localhost:8080/api/images/" + from.getImageId())
+                .url("http://localhost:8080/api/images/" + from.getImageId())
                 .type(from.getType())
                 .build();
     }

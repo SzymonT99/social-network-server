@@ -165,7 +165,7 @@ public class UserServiceImpl implements UserService {
         }
 
         if (!authorizedUser.isVerifiedAccount()) {
-            throw new ForbiddenException(String.format("User account with login: %s has not been activated", userLoginDto.getLogin()));
+            throw new ConflictRequestException(String.format("User account with login: %s has not been activated", userLoginDto.getLogin()));
         }
 
         SecurityContextHolder.getContext().setAuthentication(authentication);

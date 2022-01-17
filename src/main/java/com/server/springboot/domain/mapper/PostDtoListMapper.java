@@ -6,8 +6,10 @@ import com.server.springboot.domain.entity.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
+import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -46,7 +48,9 @@ public class PostDtoListMapper implements Converter<List<PostDto>, List<Post>> {
                     .isCommentingBlocked(post.isCommentingBlocked())
                     .isEdited(post.isEdited())
                     .likes(post.getLikedPosts().stream().map(likedPostDtoMapper::convert).collect(Collectors.toList()))
-                    .comments(commentDtoListMapper.convert(Lists.newArrayList(post.getComments())))
+                    .comments(commentDtoListMapper.convert(Lists.newArrayList(post.getComments()).stream()
+                            .sorted(Comparator.comparing(Comment::getCreatedAt))
+                            .collect(Collectors.toList())))
                     .sharing(
                             post.getSharedBasePosts().stream()
                                     .map(sharedPost -> SharedPostInfoDto.builder()
