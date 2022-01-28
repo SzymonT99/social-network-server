@@ -11,10 +11,11 @@ public interface FriendService {
     void inviteToFriendsByUserId(Long userId);
 
     @Transactional
-    List<FriendInvitationDto> findAllUserInvitationsToFriends();
+    List<FriendInvitationDto> findAllUserInvitationsToFriends(Long userId);
 
     void respondToFriendInvitation(Long inviterId, String reactionToInvitation);
 
+    @Transactional
     void deleteFriendById(Long friendId);
 
     List<FriendDto> findAllUserFriends(Long userId);

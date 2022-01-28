@@ -37,7 +37,6 @@ public class School {
     @Column(name = "start_date", nullable = false)
     private LocalDate startDate;
 
-    @NotNull
     @Column(name = "graduation_date")
     private LocalDate graduationDate;
 

@@ -12,10 +12,8 @@ import com.server.springboot.security.JwtUtils;
 import com.server.springboot.service.FriendService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
-import javax.persistence.*;
-import javax.validation.constraints.NotNull;
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -61,10 +59,9 @@ public class FriendServiceImpl implements FriendService {
     }
 
     @Override
-    public List<FriendInvitationDto> findAllUserInvitationsToFriends() {
-        Long loggedUserId = jwtUtils.getLoggedUserId();
-        User userFriend = userRepository.findById(loggedUserId)
-                .orElseThrow(() -> new NotFoundException("Not found user with id: " + loggedUserId));
+    public List<FriendInvitationDto> findAllUserInvitationsToFriends(Long userId) {
+        User userFriend = userRepository.findById(userId)
+                .orElseThrow(() -> new NotFoundException("Not found user with id: " + userId));
         List<Friend> friends = friendRepository.findByUserFriendAndIsInvitationAccepted(userFriend, null);
         friendRepository.setFriendInvitationDisplayed(true, userFriend);
         return friendInvitationDtoListMapper.convert(friends);
@@ -108,24 +105,27 @@ public class FriendServiceImpl implements FriendService {
     }
 
     @Override
+    @Transactional
     public void deleteFriendById(Long friendId) {
         Long loggedUserId = jwtUtils.getLoggedUserId();
         User currentUser = userRepository.findById(loggedUserId)
                 .orElseThrow(() -> new NotFoundException("Not found user with id: " + loggedUserId));
         Friend friend = friendRepository.findById(friendId)
                 .orElseThrow(() -> new NotFoundException("Not found friend with id: " + friendId));
-        if (friend.getUser() != currentUser) {
+        User userFriend = friend.getUserFriend();
+        if (friend.getUser() != currentUser && friend.getUserFriend() != currentUser ) {
             throw new ForbiddenException("Invalid user inviter - friend deleting access forbidden");
         }
 
-        friendRepository.delete(friend);
+        friendRepository.deleteAllByUserAndUserFriend(currentUser, userFriend);
+        friendRepository.deleteAllByUserAndUserFriend(userFriend, currentUser);
     }
 
     @Override
     public List<FriendDto> findAllUserFriends(Long userId) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new NotFoundException("Not found user with id: " + userId));
-        List<Friend> userFriends = friendRepository.findByUser(user);
+        List<Friend> userFriends = friendRepository.findByUserAndIsInvitationAccepted(user, true);
         return friendDtoListMapper.convert(userFriends);
     }
 }

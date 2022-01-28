@@ -2,16 +2,12 @@ package com.server.springboot.controller;
 
 import com.server.springboot.domain.dto.request.*;
 import com.server.springboot.domain.dto.response.*;
-import com.server.springboot.domain.enumeration.FavouriteType;
-import com.server.springboot.domain.enumeration.RelationshipStatus;
-import com.server.springboot.domain.enumeration.SchoolType;
 import com.server.springboot.service.ProfileService;
 import io.swagger.annotations.ApiOperation;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
@@ -39,17 +35,11 @@ public class UserProfileApiController {
         return new ResponseEntity<>(profileService.findProfileInformationByUserId(userId), HttpStatus.OK);
     }
 
-    @ApiOperation(value = "Get possible user relationship status")
-    @GetMapping(value = "/relationships-status")
-    public ResponseEntity<List<RelationshipStatus>> getRelationshipStatus() {
-        LOGGER.info("---- Get all possible relationship status");
-        return new ResponseEntity<>(profileService.findAllRelationshipStatus(), HttpStatus.OK);
-    }
-
     @ApiOperation(value = "Update user basic profile information")
     @PutMapping(value = "/profile/information")
     public ResponseEntity<?> updateProfileInformation(@Valid @RequestBody UpdateUserProfileDto updateUserProfileDto) {
         LOGGER.info("---- User edit profile information");
+        System.out.println(updateUserProfileDto);
         profileService.editUserProfileInformation(updateUserProfileDto);
         return new ResponseEntity<>(HttpStatus.OK);
     }
@@ -57,7 +47,7 @@ public class UserProfileApiController {
     @ApiOperation(value = "Get user activity")
     @GetMapping(value = "/profile/{userId}/activity")
     public ResponseEntity<UserActivityDto> getUserActivity(@PathVariable(value = "userId") Long userId) {
-        LOGGER.info("---- User get information about created posts");
+        LOGGER.info("---- User get information about activity");
         return new ResponseEntity<>(profileService.findUserActivityByUserId(userId), HttpStatus.OK);
     }
 
@@ -66,13 +56,6 @@ public class UserProfileApiController {
     public ResponseEntity<List<UserFavouriteDto>> getUserFavourites(@PathVariable(value = "userId") Long userId) {
         LOGGER.info("---- User get information about own favourites");
         return new ResponseEntity<>(profileService.findFavouritesByUserId(userId), HttpStatus.OK);
-    }
-
-    @ApiOperation(value = "Get possible user favourites")
-    @GetMapping(value = "/favourites")
-    public ResponseEntity<List<FavouriteType>> getFavourites() {
-        LOGGER.info("---- Get all possible favourites");
-        return new ResponseEntity<>(profileService.findAllFavourites(), HttpStatus.OK);
     }
 
     @ApiOperation(value = "Add info about user favourite")
@@ -145,12 +128,11 @@ public class UserProfileApiController {
     }
 
     @ApiOperation(value = "Add user profile photo")
-    @PutMapping(value = "/profile/photo", consumes = {MediaType.APPLICATION_JSON_VALUE, MediaType.MULTIPART_FORM_DATA_VALUE})
-    public ResponseEntity<?> addProfilePhoto(@RequestParam(value = "photo") MultipartFile photo,
-                                             @RequestParam(value = "caption") String caption) {
+    @PutMapping(value = "/profile/photo")
+    public ResponseEntity<?> addProfilePhoto(@RequestParam(value = "photo") MultipartFile photo) {
         LOGGER.info("---- Update user's profile photo");
-        profileService.updateUserProfilePhoto(photo, caption);
-        return new ResponseEntity<>(HttpStatus.CREATED);
+        profileService.updateUserProfilePhoto(photo);
+        return new ResponseEntity<>(HttpStatus.OK);
     }
 
     @ApiOperation(value = "Delete user profile photo")
@@ -164,7 +146,7 @@ public class UserProfileApiController {
     @ApiOperation(value = "Add user address")
     @PostMapping(value = "/profile/address")
     public ResponseEntity<?> addAddress(@Valid @RequestBody RequestAddressDto requestAddressDto) {
-        LOGGER.info("---- User updates address");
+        LOGGER.info("---- User add address");
         profileService.addUserAddress(requestAddressDto);
         return new ResponseEntity<>(HttpStatus.CREATED);
     }
@@ -176,13 +158,6 @@ public class UserProfileApiController {
         LOGGER.info("---- User updates address");
         profileService.editUserAddress(addressId, requestAddressDto);
         return new ResponseEntity<>(HttpStatus.OK);
-    }
-
-    @ApiOperation(value = "Get possible user schools")
-    @GetMapping(value = "/schools")
-    public ResponseEntity<List<SchoolType>> getSchools() {
-        LOGGER.info("---- Get all possible schools");
-        return new ResponseEntity<>(profileService.findAllSchools(), HttpStatus.OK);
     }
 
     @ApiOperation(value = "Add info about user school")

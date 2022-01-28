@@ -16,10 +16,8 @@ public class CommentedPostDto {
     private Long commentId;
     private String commentText;
     private UserDto commentAuthor;
-    private Long postId;
-    private String postText;
-    private UserDto postAuthor;
-    private List<ImageDto> postImages;
+    private PostDto commentedPost;
+    private SharedPostDto commentedSharedPost;
     private String createdAt;
     private String editedAt;
     @JsonProperty(value = "isEdited")

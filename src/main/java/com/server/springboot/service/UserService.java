@@ -4,6 +4,7 @@ import com.server.springboot.domain.dto.request.*;
 import com.server.springboot.domain.dto.response.JwtResponse;
 import com.server.springboot.domain.dto.response.RefreshTokenResponse;
 import com.server.springboot.domain.dto.response.ReportDto;
+import com.server.springboot.domain.dto.response.UserDto;
 
 import java.util.List;
 
@@ -40,4 +41,6 @@ public interface UserService {
     void sendResetPasswordLink(String userEmail);
 
     void resetPasswordNotLoggedUser(String token, ResetPasswordDto resetPasswordDto);
+
+    List<UserDto> getAllUses();
 }

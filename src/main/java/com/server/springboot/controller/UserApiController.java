@@ -4,6 +4,7 @@ import com.server.springboot.domain.dto.request.*;
 
 import com.server.springboot.domain.dto.response.JwtResponse;
 import com.server.springboot.domain.dto.response.ReportDto;
+import com.server.springboot.domain.dto.response.UserDto;
 import com.server.springboot.service.UserService;
 import io.swagger.annotations.ApiOperation;
 import org.slf4j.Logger;
@@ -164,5 +165,12 @@ public class UserApiController {
     public ResponseEntity<List<ReportDto>> getReports() {
         LOGGER.info("---- Admin gets all user reports");
         return new ResponseEntity<>(userService.getAllUserReports(), HttpStatus.OK);
+    }
+
+    @ApiOperation(value = "Get all users information")
+    @GetMapping(value = "/users")
+    public ResponseEntity<List<UserDto>> getUsers() {
+        LOGGER.info("---- Get all users information");
+        return new ResponseEntity<>(userService.getAllUses(), HttpStatus.OK);
     }
 }

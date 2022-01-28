@@ -7,6 +7,7 @@ import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Optional;
@@ -18,9 +19,12 @@ public interface FriendRepository extends JpaRepository<Friend, Long> {
 
     boolean existsByUserAndUserFriend(User user, User userFriend);
 
-    List<Friend> findByUser(User user);
+    List<Friend> findByUserAndIsInvitationAccepted(User user, Boolean isInvitationAccepted);
 
     Optional<Friend> findByUserAndUserFriend(User user, User userFriend);
+
+    @Transactional
+    void deleteAllByUserAndUserFriend(User user, User userFriend);
 
     @Modifying
     @Query("UPDATE Friend f SET f.invitationDisplayed = :invitationDisplayed where f.userFriend = :userFriend")

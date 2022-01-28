@@ -38,7 +38,7 @@ public class PostDtoMapper implements Converter<PostDto, Post> {
                 .postAuthor(userDtoMapper.convert(from.getPostAuthor()))
                 .text(from.getText())
                 .images(from.getImages() != null ? imageDtoListMapper.convert(Lists.newArrayList(from.getImages())) : new ArrayList<>())
-                .createdAt(from.getCreatedAt().format(formatter))
+                .createdAt(from.getCreatedAt().toString())
                 .editedAt(from.getEditedAt() != null ? from.getEditedAt().format(formatter) : null)
                 .isPublic(from.isPublic())
                 .isCommentingBlocked(from.isCommentingBlocked())
@@ -50,6 +50,7 @@ public class PostDtoMapper implements Converter<PostDto, Post> {
                 .sharing(from.getSharedBasePosts() != null ?
                         from.getSharedBasePosts().stream()
                                 .map(sharedPost -> SharedPostInfoDto.builder()
+                                        .shardPostId(sharedPost.getSharedPostId())
                                         .authorOfSharing(userDtoMapper.convert(sharedPost.getSharedPostUser()))
                                         .sharingText(sharedPost.getNewPost().getText())
                                         .isPublic(sharedPost.getNewPost().isPublic())

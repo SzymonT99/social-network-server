@@ -14,7 +14,7 @@ public class SchoolDtoListMapper implements Converter<List<SchoolDto>, List<Scho
     @Override
     public List<SchoolDto> convert(List<School> from) {
         List<SchoolDto> schoolDtoList = new ArrayList<>();
-        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd.MM.yyyy");
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
 
         for (School school : from) {
             SchoolDto schoolDto = SchoolDto.builder()

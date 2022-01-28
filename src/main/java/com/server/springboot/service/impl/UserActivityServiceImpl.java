@@ -86,7 +86,7 @@ public class UserActivityServiceImpl implements UserActivityService {
         User user = userRepository.findById(loggedUserId)
                 .orElseThrow(() -> new NotFoundException("Not found user with given id: " + loggedUserId));
 
-        List<Friend> friends = friendRepository.findByUser(user);
+        List<Friend> friends = friendRepository.findByUserAndIsInvitationAccepted(user, true);
         List<User> activeUsers = friends.stream().map(Friend::getUserFriend).collect(Collectors.toList());
         activeUsers.add(user);
 
@@ -220,7 +220,7 @@ public class UserActivityServiceImpl implements UserActivityService {
 
         List<Post> userPosts = Lists.newArrayList(user.getPosts());
 
-        List<FriendInvitationDto> friendInvitations = friendService.findAllUserInvitationsToFriends();
+        List<FriendInvitationDto> friendInvitations = friendService.findAllUserInvitationsToFriends(loggedUserId);
 
         List<EventInvitationDto> eventInvitations = eventService.findAllUserEventInvitation();
 

@@ -40,6 +40,7 @@ public class PostServiceImpl implements PostService {
     private final Converter<PostDto, Post> postDtoMapper;
     private final Converter<Post, RequestSharePostDto> sharedPostMapper;
     private final Converter<List<SharedPostDto>, List<SharedPost>> sharedPostDtoListMapper;
+    private final  Converter<SharedPostDto, SharedPost> sharedPostDtoMapper;
 
 
     @Autowired
@@ -48,7 +49,8 @@ public class PostServiceImpl implements PostService {
                            LikedPostRepository likedPostRepository, ImageRepository imageRepository,
                            JwtUtils jwtUtils, FileService fileService, Converter<List<PostDto>, List<Post>> postDtoListMapper,
                            Converter<PostDto, Post> postDtoMapper, Converter<Post, RequestSharePostDto> sharedPostMapper,
-                           Converter<List<SharedPostDto>, List<SharedPost>> sharedPostDtoListMapper) {
+                           Converter<List<SharedPostDto>, List<SharedPost>> sharedPostDtoListMapper,
+                           Converter<SharedPostDto, SharedPost> sharedPostDtoMapper) {
         this.postMapper = postMapper;
         this.userRepository = userRepository;
         this.postRepository = postRepository;
@@ -61,6 +63,7 @@ public class PostServiceImpl implements PostService {
         this.postDtoMapper = postDtoMapper;
         this.sharedPostMapper = sharedPostMapper;
         this.sharedPostDtoListMapper = sharedPostDtoListMapper;
+        this.sharedPostDtoMapper = sharedPostDtoMapper;
     }
 
     @Override
@@ -113,8 +116,12 @@ public class PostServiceImpl implements PostService {
         Set<Image> lastImages =  new HashSet<>(post.getImages());
         post.removeImages();    // Usuwanie zdjęć dodanych przed edycją
 
-        Set<Image> updatedImages = fileService.storageImages(imageFiles, post.getPostAuthor());
-        post.setImages(updatedImages);
+
+        if (imageFiles != null) {
+            Set<Image> updatedImages = fileService.storageImages(imageFiles, post.getPostAuthor());
+            post.setImages(updatedImages);
+        }
+
         post.setText(requestPostDto.getText());
         post.setPublic(Boolean.parseBoolean(requestPostDto.getIsPublic()));
         post.setEditedAt(LocalDateTime.now());
@@ -182,7 +189,7 @@ public class PostServiceImpl implements PostService {
     }
 
     @Override
-    public void sharePost(Long basePostId, RequestSharePostDto requestSharePostDto) {
+    public SharedPostDto sharePost(Long basePostId, RequestSharePostDto requestSharePostDto) {
         Long userId  = jwtUtils.getLoggedUserId();
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new NotFoundException("Not found user with id: " + userId));
@@ -199,6 +206,8 @@ public class PostServiceImpl implements PostService {
                 .isPostAuthorNotified(false)
                 .build();
         sharedPostRepository.save(sharedPost);
+
+        return sharedPostDtoMapper.convert(sharedPost);
     }
 
     @Override
@@ -270,4 +279,29 @@ public class PostServiceImpl implements PostService {
         return postDtoListMapper.convert(userPosts);
     }
 
+    @Override
+    public void setPostCommentsAvailability(Long postId, boolean isBlocked) {
+        Long userId  = jwtUtils.getLoggedUserId();
+        Post post = postRepository.findById(postId)
+                .orElseThrow(() -> new NotFoundException("Not found post with id: " + postId));
+        if (!post.getPostAuthor().getUserId().equals(userId)) {
+            throw new ForbiddenException("Invalid post author id - manage comment availability access forbidden");
+        }
+
+        post.setCommentingBlocked(isBlocked);
+        postRepository.save(post);
+    }
+
+    @Override
+    public void setPostAccess(Long postId, boolean isPublic) {
+        Long userId  = jwtUtils.getLoggedUserId();
+        Post post = postRepository.findById(postId)
+                .orElseThrow(() -> new NotFoundException("Not found post with id: " + postId));
+        if (!post.getPostAuthor().getUserId().equals(userId)) {
+            throw new ForbiddenException("Invalid post author id - manage comment availability access forbidden");
+        }
+
+        post.setPublic(isPublic);
+        postRepository.save(post);
+    }
 }

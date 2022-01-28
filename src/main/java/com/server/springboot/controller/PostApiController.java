@@ -48,7 +48,7 @@ public class PostApiController {
     @ApiOperation(value = "Update existing post by id")
     @PutMapping(value = "/posts/{postId}", consumes = {MediaType.APPLICATION_JSON_VALUE, MediaType.MULTIPART_FORM_DATA_VALUE})
     public ResponseEntity<PostDto> updatePost(@PathVariable(value = "postId") Long postId,
-                                        @RequestPart(value = "images") List<MultipartFile> imageFiles,
+                                        @RequestPart(value = "images", required = false) List<MultipartFile> imageFiles,
                                         @Valid @RequestPart(value = "post") RequestPostDto requestPostDto) {
         LOGGER.info("---- Update post with id: {}", postId);
         PostDto updatedPost = postService.editPost(postId, requestPostDto, imageFiles);
@@ -103,11 +103,11 @@ public class PostApiController {
 
     @ApiOperation(value = "Share post by id")
     @PostMapping(value = "/posts/{basePostId}/share")
-    public ResponseEntity<?> sharePost(@PathVariable(value = "basePostId") Long basePostId,
+    public ResponseEntity<SharedPostDto> sharePost(@PathVariable(value = "basePostId") Long basePostId,
                                        @Valid @RequestBody RequestSharePostDto requestSharePostDto) {
         LOGGER.info("---- User shares post with id: {}", basePostId);
-        postService.sharePost(basePostId, requestSharePostDto);
-        return new ResponseEntity<>(HttpStatus.CREATED);
+        SharedPostDto sharedPost = postService.sharePost(basePostId, requestSharePostDto);
+        return new ResponseEntity<>(sharedPost, HttpStatus.CREATED);
     }
 
     @ApiOperation(value = "Delete shared post by id")
@@ -187,6 +187,22 @@ public class PostApiController {
     public ResponseEntity<?> dislikeComment(@PathVariable(value = "commentId") Long commentId) {
         LOGGER.info("---- User dislikes post comment with id: {}", commentId);
         postCommentService.dislikeCommentById(commentId);
+        return new ResponseEntity<>(HttpStatus.OK);
+    }
+
+    @ApiOperation(value = "Set comments availability")
+    @PutMapping(value = "/posts/{postId}/comments")
+    public ResponseEntity<?> manageCommentsVisibility(@PathVariable(value = "postId") Long postId, @RequestParam(value = "blocked") boolean isBlocked) {
+        LOGGER.info("---- User sets comments availability for post with id: {} as: {}", postId, isBlocked);
+        postService.setPostCommentsAvailability(postId, isBlocked);
+        return new ResponseEntity<>(HttpStatus.OK);
+    }
+
+    @ApiOperation(value = "Set post access")
+    @PutMapping(value = "/posts/{postId}/access")
+    public ResponseEntity<?> managePostAccess(@PathVariable(value = "postId") Long postId, @RequestParam(value = "isPublic") boolean isPublic) {
+        LOGGER.info("---- User sets access for post with id: {} as: {}", postId, isPublic);
+        postService.setPostAccess(postId, isPublic);
         return new ResponseEntity<>(HttpStatus.OK);
     }
 }

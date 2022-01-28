@@ -11,6 +11,7 @@ import lombok.*;
 @Builder
 @ToString
 public class SharedPostInfoDto {
+    private Long shardPostId;
     private String sharingText;
     private UserDto authorOfSharing;
     private String date;

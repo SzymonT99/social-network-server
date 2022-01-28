@@ -13,12 +13,12 @@ public class SchoolMapper implements Converter<School, RequestSchoolDto> {
 
     @Override
     public School convert(RequestSchoolDto from) {
-        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd.MM.yyyy");
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
         return School.builder()
                 .schoolType(SchoolType.valueOf(from.getSchoolType()))
                 .name(from.getName())
                 .startDate(LocalDate.parse(from.getStartDate(), formatter))
-                .startDate(from.getGraduationDate() != null ? LocalDate.parse(from.getGraduationDate(), formatter) : null)
+                .graduationDate(from.getGraduationDate() != null ? LocalDate.parse(from.getGraduationDate(), formatter) : null)
                 .build();
     }
 }

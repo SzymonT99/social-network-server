@@ -3,6 +3,7 @@ package com.server.springboot.domain.mapper;
 import com.server.springboot.domain.dto.response.EventDto;
 import com.server.springboot.domain.dto.response.SharedEventDto;
 import com.server.springboot.domain.dto.response.UserDto;
+import com.server.springboot.domain.entity.Comment;
 import com.server.springboot.domain.entity.Event;
 import com.server.springboot.domain.entity.SharedEvent;
 import com.server.springboot.domain.entity.User;
@@ -11,7 +12,9 @@ import org.springframework.stereotype.Component;
 
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Component
 public class SharedEventDtoListMapper implements Converter<List<SharedEventDto>, List<SharedEvent>> {
@@ -29,6 +32,10 @@ public class SharedEventDtoListMapper implements Converter<List<SharedEventDto>,
     public List<SharedEventDto> convert(List<SharedEvent> from) {
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd.MM.yyyy HH:mm:ss");
         List<SharedEventDto> sharedEventDtoList = new ArrayList<>();
+
+        from = from.stream()
+                .sorted(Comparator.comparing(SharedEvent::getDate).reversed())
+                .collect(Collectors.toList());
 
         for (SharedEvent sharedEvent : from) {
             SharedEventDto sharedEventDto = SharedEventDto.builder()

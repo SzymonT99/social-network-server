@@ -32,10 +32,6 @@ public interface ProfileService {
 
     void deleteUserFavouriteById(Long favouriteId);
 
-    List<FavouriteType> findAllFavourites();
-
-    List<RelationshipStatus> findAllRelationshipStatus();
-
     void addUserInterestById(Long interestId);
 
     void deleteUserInterestById(Long interestId);
@@ -43,7 +39,7 @@ public interface ProfileService {
     ProfilePhotoDto findProfilePhotoByUserId(Long userId);
 
     @Transactional
-    void updateUserProfilePhoto(MultipartFile photo, String caption);
+    void updateUserProfilePhoto(MultipartFile photo);
 
     void deleteUserProfilePhoto();
 
@@ -56,8 +52,6 @@ public interface ProfileService {
     void editSchoolInformation(Long schoolId, RequestSchoolDto requestSchoolDto);
 
     void deleteSchoolInformation(Long schoolId);
-
-    List<SchoolType> findAllSchools();
 
     void addUserWorkPlace(RequestWorkPlaceDto requestWorkPlaceDto);
 
