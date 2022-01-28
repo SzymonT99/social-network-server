@@ -13,11 +13,12 @@ public class WorkPlaceDtoListMapper implements Converter<List<WorkPlaceDto>, Lis
 
     @Override
     public List<WorkPlaceDto> convert(List<WorkPlace> from) {
-        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd.MM.yyyy");
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
         List<WorkPlaceDto> workPlaceDtoList = new ArrayList<>();
 
         for (WorkPlace workPlace : from) {
             WorkPlaceDto workPlaceDto = WorkPlaceDto.builder()
+                    .workPlaceId(workPlace.getWorkPlaceId())
                     .company(workPlace.getCompany())
                     .position(workPlace.getPosition())
                     .startDate(workPlace.getStartDate().format(formatter))

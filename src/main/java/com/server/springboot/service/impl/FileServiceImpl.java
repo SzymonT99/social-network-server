@@ -4,31 +4,59 @@ import com.server.springboot.domain.entity.Image;
 import com.server.springboot.domain.entity.User;
 import com.server.springboot.domain.entity.UserProfile;
 import com.server.springboot.domain.repository.ImageRepository;
-import com.server.springboot.domain.repository.UserRepository;
 import com.server.springboot.exception.NotFoundException;
+import com.server.springboot.security.JwtUtils;
 import com.server.springboot.service.FileService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.io.Resource;
+import org.springframework.core.io.UrlResource;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
+import java.net.MalformedURLException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.time.LocalDateTime;
 import java.util.*;
 
 @Service
 public class FileServiceImpl implements FileService {
 
-    private final static Logger LOGGER = LoggerFactory.getLogger(EmailServiceImpl.class);
     private final ImageRepository imageRepository;
-    private final UserRepository userRepository;
+    private final Path rootFolder = Paths.get("uploads");
 
     @Autowired
-    public FileServiceImpl(ImageRepository imageRepository, UserRepository userRepository) {
+    public FileServiceImpl(ImageRepository imageRepository) {
         this.imageRepository = imageRepository;
-        this.userRepository = userRepository;
+    }
+
+    @Override
+    public void saveImage(Image image, MultipartFile file) {
+        try {
+            Files.copy(file.getInputStream(), this.rootFolder.resolve(image.getImageId() + "_" + file.getOriginalFilename()));
+        } catch (Exception e) {
+            throw new RuntimeException("Error with save image: " + e.getMessage());
+        }
+    }
+
+    @Override
+    public Resource loadImage(String imageId, String filename) {
+        try {
+            Path file = rootFolder.resolve(imageId + "_" + filename);
+            Resource resourceFile = new UrlResource(file.toUri());
+            if (resourceFile.exists() || resourceFile.isReadable()) {
+                return resourceFile;
+            } else {
+                throw new RuntimeException("Error with resource file");
+            }
+        } catch (MalformedURLException e) {
+            throw new RuntimeException("Error with Url resource creation: " + e.getMessage());
+        }
     }
 
     @Override
@@ -39,21 +67,18 @@ public class FileServiceImpl implements FileService {
 
         imageFiles.forEach(file -> {
             String fileName = StringUtils.cleanPath(Objects.requireNonNull(file.getOriginalFilename()));
-            try {
-                if (!file.isEmpty()) {
-                    Image newImage = Image.builder()
-                            .filename(fileName)
-                            .data(file.getBytes())
-                            .type(file.getContentType())
-                            .addedIn(LocalDateTime.now())
-                            .userProfile(userProfile)
-                            .build();
-                    imageRepository.save(newImage);
-                    postImages.add(newImage);
-                }
-            } catch (IOException e) {
-                LOGGER.error("Uploading file error - message: {}", e.getMessage());
-                e.printStackTrace();
+
+            if (!file.isEmpty()) {
+                Image image = Image.builder()
+                        .filename(fileName)
+                        .type(file.getContentType())
+                        .filePath("/uploads/" + fileName)
+                        .addedIn(LocalDateTime.now())
+                        .userProfile(userProfile)
+                        .build();
+                imageRepository.save(image);
+                postImages.add(image);
+                saveImage(image, file);
             }
         });
         return postImages;
@@ -65,20 +90,16 @@ public class FileServiceImpl implements FileService {
 
         String fileName = StringUtils.cleanPath(Objects.requireNonNull(imageFile.getOriginalFilename()));
         Image image = null;
-        try {
-            if (!imageFile.isEmpty()) {
-                image = Image.builder()
-                        .filename(fileName)
-                        .data(imageFile.getBytes())
-                        .type(imageFile.getContentType())
-                        .addedIn(LocalDateTime.now())
-                        .userProfile(assignToProfile ? userProfile : null)
-                        .build();
-                imageRepository.save(image);
-            }
-        } catch (IOException e) {
-            LOGGER.error("Uploading file error - message: {}", e.getMessage());
-            e.printStackTrace();
+        if (!imageFile.isEmpty()) {
+            image = Image.builder()
+                    .filename(fileName)
+                    .filePath("/uploads/" + creator.getUserId())
+                    .type(imageFile.getContentType())
+                    .addedIn(LocalDateTime.now())
+                    .userProfile(userProfile)
+                    .build();
+            imageRepository.save(image);
+            saveImage(image, imageFile);
         }
         return image;
     }

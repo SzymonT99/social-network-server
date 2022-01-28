@@ -133,6 +133,7 @@ public class ProfileServiceImpl implements ProfileService {
 
     @Override
     public void editUserProfileInformation(UpdateUserProfileDto updateUserProfileDto) {
+        System.out.println(updateUserProfileDto);
         Long userId = jwtUtils.getLoggedUserId();
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new NotFoundException("Not found user with id: " + userId));
@@ -144,7 +145,7 @@ public class ProfileServiceImpl implements ProfileService {
         userProfile.setAboutUser(updateUserProfileDto.getAboutUser());
         userProfile.setGender(Gender.valueOf(updateUserProfileDto.getGender()));
 
-        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd.MM.yyyy");
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
         userProfile.setDateOfBirth(LocalDate.parse(updateUserProfileDto.getDateOfBirth(), formatter));
 
         userProfile.setJob(updateUserProfileDto.getJob());
@@ -186,16 +187,6 @@ public class ProfileServiceImpl implements ProfileService {
             throw new ForbiddenException("Invalid favourite author id - favourite deleting access forbidden");
         }
         userFavouriteRepository.deleteById(favouriteId);
-    }
-
-    @Override
-    public List<FavouriteType> findAllFavourites() {
-        return new ArrayList<FavouriteType>(Arrays.asList(FavouriteType.values()));
-    }
-
-    @Override
-    public List<RelationshipStatus> findAllRelationshipStatus() {
-        return new ArrayList<RelationshipStatus>(Arrays.asList(RelationshipStatus.values()));
     }
 
     @Override
@@ -250,7 +241,7 @@ public class ProfileServiceImpl implements ProfileService {
     }
 
     @Override
-    public void updateUserProfilePhoto(MultipartFile photo, String caption) {
+    public void updateUserProfilePhoto(MultipartFile photo) {
         if (photo.isEmpty()) {
             throw new BadRequestException("Profile photo not sent");
         }
@@ -262,7 +253,6 @@ public class ProfileServiceImpl implements ProfileService {
             imageRepository.delete(userProfile.getProfilePhoto());
         }
         Image image = fileService.storageOneImage(photo, user, true);
-        image.setCaption(caption);
         userProfile.setProfilePhoto(image);
         userProfileRepository.save(userProfile);
 
@@ -306,7 +296,8 @@ public class ProfileServiceImpl implements ProfileService {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new NotFoundException("Not found user with id: " + userId));
         Address address = addressMapper.convert(requestAddressDto);
-        address.setUserProfile(user.getUserProfile());
+        UserProfile userProfile = user.getUserProfile();
+        userProfile.setAddress(address);
         addressRepository.save(address);
     }
 
@@ -331,7 +322,7 @@ public class ProfileServiceImpl implements ProfileService {
         school.setSchoolType(SchoolType.valueOf(requestSchoolDto.getSchoolType()));
         school.setName(requestSchoolDto.getName());
 
-        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd.MM.yyyy");
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
         school.setStartDate(LocalDate.parse(requestSchoolDto.getStartDate(), formatter));
         school.setGraduationDate(requestSchoolDto.getGraduationDate() != null
                 ? LocalDate.parse(requestSchoolDto.getGraduationDate(), formatter) : null);
@@ -347,11 +338,6 @@ public class ProfileServiceImpl implements ProfileService {
             throw new ForbiddenException("Invalid logged user id - school deleting access forbidden");
         }
         schoolRepository.deleteById(schoolId);
-    }
-
-    @Override
-    public List<SchoolType> findAllSchools() {
-        return new ArrayList<SchoolType>(Arrays.asList(SchoolType.values()));
     }
 
     @Override
@@ -375,7 +361,7 @@ public class ProfileServiceImpl implements ProfileService {
         workPlace.setCompany(requestWorkPlaceDto.getCompany());
         workPlace.setPosition(requestWorkPlaceDto.getPosition());
 
-        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd.MM.yyyy");
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
         workPlace.setStartDate(LocalDate.parse(requestWorkPlaceDto.getStartDate(), formatter));
         workPlace.setEndDate(requestWorkPlaceDto.getStartDate() != null
                 ? LocalDate.parse(requestWorkPlaceDto.getStartDate(), formatter) : null);

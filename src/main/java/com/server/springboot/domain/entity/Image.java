@@ -28,13 +28,12 @@ public class Image {
     private String filename;
 
     @NotNull
-    @Column(name = "data", nullable = false)
-    @Lob
-    private byte[] data;
-
-    @NotNull
     @Column(name = "type", nullable = false)
     private String type;
+
+    @NotNull
+    @Column(name = "filePath", nullable = false)
+    private String filePath;
 
     @Column(name = "caption")
     private String caption;
@@ -44,7 +43,7 @@ public class Image {
     private LocalDateTime addedIn;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "user_profile_id")
+    @JoinColumn(name = "user_profile_id", nullable = false)
     private UserProfile userProfile;
 
     @ManyToMany(mappedBy = "images")

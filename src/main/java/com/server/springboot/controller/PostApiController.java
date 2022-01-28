@@ -3,6 +3,7 @@ package com.server.springboot.controller;
 import com.server.springboot.domain.dto.request.RequestCommentDto;
 import com.server.springboot.domain.dto.request.RequestPostDto;
 import com.server.springboot.domain.dto.request.RequestSharePostDto;
+import com.server.springboot.domain.dto.response.CommentDto;
 import com.server.springboot.domain.dto.response.PostDto;
 import com.server.springboot.domain.dto.response.SharedPostDto;
 import com.server.springboot.service.PostCommentService;
@@ -37,21 +38,21 @@ public class PostApiController {
 
     @ApiOperation(value = "Create a post")
     @PostMapping(value = "/posts", consumes = {MediaType.APPLICATION_JSON_VALUE, MediaType.MULTIPART_FORM_DATA_VALUE})
-    public ResponseEntity<?> createPost(@RequestPart(value = "images") List<MultipartFile> imageFiles,
+    public ResponseEntity<PostDto> createPost(@RequestPart(value = "images", required = false) List<MultipartFile> imageFiles,
                                         @Valid @RequestPart(value = "post") RequestPostDto requestPostDto) {
         LOGGER.info("---- Create post");
-        postService.addPost(requestPostDto, imageFiles);
-        return new ResponseEntity<>(HttpStatus.CREATED);
+        PostDto post = postService.addPost(requestPostDto, imageFiles);
+        return new ResponseEntity<>(post, HttpStatus.CREATED);
     }
 
     @ApiOperation(value = "Update existing post by id")
     @PutMapping(value = "/posts/{postId}", consumes = {MediaType.APPLICATION_JSON_VALUE, MediaType.MULTIPART_FORM_DATA_VALUE})
-    public ResponseEntity<?> updatePost(@PathVariable(value = "postId") Long postId,
-                                        @RequestPart(value = "images") List<MultipartFile> imageFiles,
+    public ResponseEntity<PostDto> updatePost(@PathVariable(value = "postId") Long postId,
+                                        @RequestPart(value = "images", required = false) List<MultipartFile> imageFiles,
                                         @Valid @RequestPart(value = "post") RequestPostDto requestPostDto) {
         LOGGER.info("---- Update post with id: {}", postId);
-        postService.editPost(postId, requestPostDto, imageFiles);
-        return new ResponseEntity<>(HttpStatus.OK);
+        PostDto updatedPost = postService.editPost(postId, requestPostDto, imageFiles);
+        return new ResponseEntity<>(updatedPost, HttpStatus.OK);
     }
 
     @ApiOperation(value = "Delete a post by id")
@@ -102,11 +103,11 @@ public class PostApiController {
 
     @ApiOperation(value = "Share post by id")
     @PostMapping(value = "/posts/{basePostId}/share")
-    public ResponseEntity<?> sharePost(@PathVariable(value = "basePostId") Long basePostId,
+    public ResponseEntity<SharedPostDto> sharePost(@PathVariable(value = "basePostId") Long basePostId,
                                        @Valid @RequestBody RequestSharePostDto requestSharePostDto) {
         LOGGER.info("---- User shares post with id: {}", basePostId);
-        postService.sharePost(basePostId, requestSharePostDto);
-        return new ResponseEntity<>(HttpStatus.CREATED);
+        SharedPostDto sharedPost = postService.sharePost(basePostId, requestSharePostDto);
+        return new ResponseEntity<>(sharedPost, HttpStatus.CREATED);
     }
 
     @ApiOperation(value = "Delete shared post by id")
@@ -149,11 +150,11 @@ public class PostApiController {
 
     @ApiOperation(value = "Create comment on the post by id")
     @PostMapping(value = "/posts/{postId}/comments")
-    public ResponseEntity<?> addCommentToPost(@PathVariable(value = "postId") Long postId,
-                                              @Valid @RequestBody RequestCommentDto requestCommentDto) {
+    public ResponseEntity<CommentDto> addCommentToPost(@PathVariable(value = "postId") Long postId,
+                                                       @Valid @RequestBody RequestCommentDto requestCommentDto) {
         LOGGER.info("---- User adda comment to post with id: {}", postId);
-        postCommentService.addComment(postId, requestCommentDto);
-        return new ResponseEntity<>(HttpStatus.CREATED);
+        CommentDto comment = postCommentService.addComment(postId, requestCommentDto);
+        return new ResponseEntity<>(comment, HttpStatus.CREATED);
     }
 
     @ApiOperation(value = "Update existing post comment by id")
@@ -186,6 +187,22 @@ public class PostApiController {
     public ResponseEntity<?> dislikeComment(@PathVariable(value = "commentId") Long commentId) {
         LOGGER.info("---- User dislikes post comment with id: {}", commentId);
         postCommentService.dislikeCommentById(commentId);
+        return new ResponseEntity<>(HttpStatus.OK);
+    }
+
+    @ApiOperation(value = "Set comments availability")
+    @PutMapping(value = "/posts/{postId}/comments")
+    public ResponseEntity<?> manageCommentsVisibility(@PathVariable(value = "postId") Long postId, @RequestParam(value = "blocked") boolean isBlocked) {
+        LOGGER.info("---- User sets comments availability for post with id: {} as: {}", postId, isBlocked);
+        postService.setPostCommentsAvailability(postId, isBlocked);
+        return new ResponseEntity<>(HttpStatus.OK);
+    }
+
+    @ApiOperation(value = "Set post access")
+    @PutMapping(value = "/posts/{postId}/access")
+    public ResponseEntity<?> managePostAccess(@PathVariable(value = "postId") Long postId, @RequestParam(value = "isPublic") boolean isPublic) {
+        LOGGER.info("---- User sets access for post with id: {} as: {}", postId, isPublic);
+        postService.setPostAccess(postId, isPublic);
         return new ResponseEntity<>(HttpStatus.OK);
     }
 }

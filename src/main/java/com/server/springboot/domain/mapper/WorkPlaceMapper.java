@@ -12,7 +12,7 @@ public class WorkPlaceMapper implements Converter<WorkPlace, RequestWorkPlaceDto
 
     @Override
     public WorkPlace convert(RequestWorkPlaceDto from) {
-        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd.MM.yyyy HH:mm:ss");
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
         return WorkPlace.builder()
                 .company(from.getCompany())
                 .position(from.getPosition())

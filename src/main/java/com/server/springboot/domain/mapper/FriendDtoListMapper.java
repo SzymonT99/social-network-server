@@ -2,6 +2,7 @@ package com.server.springboot.domain.mapper;
 
 import com.server.springboot.domain.dto.response.FriendDto;
 import com.server.springboot.domain.dto.response.UserDto;
+import com.server.springboot.domain.entity.Comment;
 import com.server.springboot.domain.entity.Friend;
 import com.server.springboot.domain.entity.User;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -9,7 +10,9 @@ import org.springframework.stereotype.Component;
 
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Component
 public class FriendDtoListMapper implements Converter<List<FriendDto>, List<Friend>> {
@@ -26,14 +29,18 @@ public class FriendDtoListMapper implements Converter<List<FriendDto>, List<Frie
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd.MM.yyyy");
         List<FriendDto> friendDtoList = new ArrayList<>();
 
+        from = from.stream()
+                .sorted(Comparator.comparing(Friend::getInvitationDate).reversed())
+                .collect(Collectors.toList());
+
         for (Friend friend : from) {
             FriendDto friendDto = FriendDto.builder()
                     .friendId(friend.getFriendId())
-                    .isInvitationAccepted(friend.getIsInvitationAccepted())
+                    .isInvitationAccepted(friend.getIsInvitationAccepted() != null ? friend.getIsInvitationAccepted() : null)
                     .invitationDate(friend.getInvitationDate().format(formatter))
                     .friendFromDate(friend.getFriendFromDate() != null
                             ? friend.getFriendFromDate().format(formatter) : null)
-                    .user(userDtoMapper.convert(friend.getUser()))
+                    .user(userDtoMapper.convert(friend.getUserFriend()))
                     .build();
 
             friendDtoList.add(friendDto);

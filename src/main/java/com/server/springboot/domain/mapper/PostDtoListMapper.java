@@ -6,8 +6,10 @@ import com.server.springboot.domain.entity.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
+import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -34,22 +36,30 @@ public class PostDtoListMapper implements Converter<List<PostDto>, List<Post>> {
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd.MM.yyyy HH:mm:ss");
         List<PostDto> postsDto = new ArrayList<>();
 
+        from = from.stream()
+                .sorted(Comparator.comparing(Post::getCreatedAt).reversed())
+                .collect(Collectors.toList());
+
         for (Post post : from) {
+
             PostDto postDto = PostDto.builder()
                     .postId(post.getPostId())
                     .postAuthor(userDtoMapper.convert(post.getPostAuthor()))
                     .text(post.getText())
                     .images(imageDtoListMapper.convert(Lists.newArrayList(post.getImages())))
-                    .createdAt(post.getCreatedAt().format(formatter))
+                    .createdAt(post.getCreatedAt().toString())
                     .editedAt(post.getEditedAt() != null ? post.getEditedAt().format(formatter) : null)
                     .isPublic(post.isPublic())
                     .isCommentingBlocked(post.isCommentingBlocked())
                     .isEdited(post.isEdited())
                     .likes(post.getLikedPosts().stream().map(likedPostDtoMapper::convert).collect(Collectors.toList()))
-                    .comments(commentDtoListMapper.convert(Lists.newArrayList(post.getComments())))
+                    .comments(commentDtoListMapper.convert(Lists.newArrayList(post.getComments()).stream()
+                            .sorted(Comparator.comparing(Comment::getCreatedAt).reversed())
+                            .collect(Collectors.toList())))
                     .sharing(
                             post.getSharedBasePosts().stream()
                                     .map(sharedPost -> SharedPostInfoDto.builder()
+                                            .shardPostId(sharedPost.getSharedPostId())
                                             .authorOfSharing(userDtoMapper.convert(sharedPost.getSharedPostUser()))
                                             .sharingText(sharedPost.getNewPost().getText())
                                             .isPublic(sharedPost.getNewPost().isPublic())

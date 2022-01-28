@@ -4,6 +4,7 @@ import com.server.springboot.domain.dto.request.*;
 import com.server.springboot.domain.dto.response.JwtResponse;
 import com.server.springboot.domain.dto.response.RefreshTokenResponse;
 import com.server.springboot.domain.dto.response.ReportDto;
+import com.server.springboot.domain.dto.response.UserDto;
 import com.server.springboot.domain.entity.*;
 import com.server.springboot.domain.enumeration.ActivityStatus;
 import com.server.springboot.domain.enumeration.AppRole;
@@ -57,6 +58,7 @@ public class UserServiceImpl implements UserService {
     private final UserDetailsServiceImpl userDetailsService;
     private final Converter<Report, RequestReportDto> reportMapper;
     private final Converter<List<ReportDto>, List<Report>> reportDtoListMapper;
+    private final Converter<List<UserDto>, List<User>> userDtoListMapper;
 
     @Autowired
     public UserServiceImpl(UserRepository userRepository, RoleRepository roleRepository,
@@ -65,7 +67,8 @@ public class UserServiceImpl implements UserService {
                            AuthenticationManager authenticationManager, JwtUtils jwtUtils,
                            RefreshTokenService refreshTokenService, UserDetailsServiceImpl userDetailsService,
                            Converter<Report, RequestReportDto> reportMapper,
-                           Converter<List<ReportDto>, List<Report>> reportDtoListMapper) {
+                           Converter<List<ReportDto>, List<Report>> reportDtoListMapper,
+                           Converter<List<UserDto>, List<User>> userDtoListMapper) {
         this.userRepository = userRepository;
         this.roleRepository = roleRepository;
         this.reportRepository = reportRepository;
@@ -80,6 +83,7 @@ public class UserServiceImpl implements UserService {
         this.userDetailsService = userDetailsService;
         this.reportMapper = reportMapper;
         this.reportDtoListMapper = reportDtoListMapper;
+        this.userDtoListMapper = userDtoListMapper;
     }
 
     @Override
@@ -165,7 +169,7 @@ public class UserServiceImpl implements UserService {
         }
 
         if (!authorizedUser.isVerifiedAccount()) {
-            throw new ForbiddenException(String.format("User account with login: %s has not been activated", userLoginDto.getLogin()));
+            throw new ConflictRequestException(String.format("User account with login: %s has not been activated", userLoginDto.getLogin()));
         }
 
         SecurityContextHolder.getContext().setAuthentication(authentication);
@@ -424,6 +428,12 @@ public class UserServiceImpl implements UserService {
             user.setPassword(resetPasswordDto.getNewPassword());
             userRepository.save(user);
         }
+    }
+
+    @Override
+    public List<UserDto> getAllUses() {
+        List<User> users = userRepository.findAll();
+        return userDtoListMapper.convert(users);
     }
 
 }

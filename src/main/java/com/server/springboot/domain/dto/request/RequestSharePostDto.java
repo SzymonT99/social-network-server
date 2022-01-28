@@ -1,5 +1,6 @@
 package com.server.springboot.domain.dto.request;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.*;
 
 import javax.validation.constraints.NotEmpty;
@@ -17,9 +18,9 @@ public class RequestSharePostDto {
     @NotEmpty
     private String text;
 
-    @NotEmpty
-    private String isPublic;
+    @JsonProperty
+    private boolean isPublic;
 
-    @NotEmpty
-    private String isCommentingBlocked;
+    @JsonProperty
+    private boolean isCommentingBlocked;
 }

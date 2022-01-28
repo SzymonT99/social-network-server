@@ -13,10 +13,10 @@ public interface PostService {
 
     List<PostDto> findAllPublicPosts();
 
-    void addPost(RequestPostDto requestPostDto, List<MultipartFile> imageFiles);
+    PostDto addPost(RequestPostDto requestPostDto, List<MultipartFile> imageFiles);
 
     @Transactional
-    void editPost(Long postId, RequestPostDto requestPostDto, List<MultipartFile> imageFiles);
+    PostDto editPost(Long postId, RequestPostDto requestPostDto, List<MultipartFile> imageFiles);
 
     void deleteUserPostById(Long postId, boolean archive);
 
@@ -26,7 +26,7 @@ public interface PostService {
 
     void deleteLikeFromPost(Long postId);
 
-    void sharePost(Long basePostId, RequestSharePostDto requestSharePostDto);
+    SharedPostDto sharePost(Long basePostId, RequestSharePostDto requestSharePostDto);
 
     void deleteSharedPostById(Long sharedPostId);
 
@@ -39,4 +39,8 @@ public interface PostService {
     List<PostDto> findAllFavouritePostsByUserId(Long userId);
 
     List<PostDto> findPostsByUserId(Long userId);
+
+    void setPostCommentsAvailability(Long postId, boolean isBlocked);
+
+    void setPostAccess(Long postId, boolean isPublic);
 }

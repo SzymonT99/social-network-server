@@ -6,8 +6,13 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 import java.util.Set;
+import org.springframework.core.io.Resource;
 
 public interface FileService {
+
+    void saveImage(Image image, MultipartFile file);
+
+    Resource loadImage(String imageId, String filename);
 
     Set<Image> storageImages(List<MultipartFile> imageFiles, User creator);
 

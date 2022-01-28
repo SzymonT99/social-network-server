@@ -1,5 +1,6 @@
 package com.server.springboot.controller;
 
+import com.server.springboot.domain.dto.request.ChatMessage;
 import com.server.springboot.domain.dto.request.ReqestChatMessageDto;
 import com.server.springboot.domain.dto.request.RequestChatDto;
 import com.server.springboot.domain.dto.response.ChatDto;
@@ -7,6 +8,9 @@ import io.swagger.annotations.ApiOperation;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.messaging.handler.annotation.MessageMapping;
+import org.springframework.messaging.handler.annotation.Payload;
+import org.springframework.messaging.handler.annotation.SendTo;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -16,6 +20,12 @@ import javax.validation.Valid;
 @RestController
 @RequestMapping("/api")
 public class ChatApiController {
+
+    @MessageMapping("/chat")
+    @SendTo("/topic/messages")
+    public ChatMessage get(@Payload ChatMessage chatMessage) {
+        return chatMessage;
+    }
 
     @ApiOperation(value = "Create a chat")
     @PostMapping(value = "/chats")

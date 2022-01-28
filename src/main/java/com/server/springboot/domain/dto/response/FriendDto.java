@@ -11,7 +11,7 @@ import lombok.*;
 @ToString
 public class FriendDto {
     private Long friendId;
-    private boolean isInvitationAccepted;
+    private Boolean isInvitationAccepted;
     private String invitationDate;
     private String friendFromDate;
     private UserDto user;
