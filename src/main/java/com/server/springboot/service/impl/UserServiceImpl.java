@@ -214,6 +214,7 @@ public class UserServiceImpl implements UserService {
     @Override
     public void logoutUser() {
         Long userId = jwtUtils.getLoggedUserId();
+        LOGGER.info("---- Logout user with id: {}", userId);
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new NotFoundException("Not found user with given id: " + userId));
         user.setActivityStatus(ActivityStatus.OFFLINE);
@@ -436,4 +437,12 @@ public class UserServiceImpl implements UserService {
         return userDtoListMapper.convert(users);
     }
 
+    @Override
+    public void changeActivityStatus(String status) {
+        Long loggedUserId = jwtUtils.getLoggedUserId();
+        User user = userRepository.findById(loggedUserId)
+                .orElseThrow(() -> new NotFoundException("Not found user with id: " + loggedUserId));
+        user.setActivityStatus(ActivityStatus.valueOf(status));
+        userRepository.save(user);
+    }
 }

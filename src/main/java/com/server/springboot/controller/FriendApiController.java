@@ -37,7 +37,7 @@ public class FriendApiController {
     @ApiOperation(value = "Get all invitations to friends")
     @GetMapping(value = "/friends/invitations")
     public ResponseEntity<List<FriendInvitationDto>> getUserInvitationToFriends(@RequestParam(value = "userId") Long userId) {
-        LOGGER.info("---- Get all user invitation to event");
+        LOGGER.info("---- Get all user invitation to friends");
         return new ResponseEntity<>(friendService.findAllUserInvitationsToFriends(userId), HttpStatus.OK);
     }
 
@@ -53,9 +53,10 @@ public class FriendApiController {
 
     @ApiOperation(value = "Delete user from friends / Delete invitation to friends")
     @DeleteMapping(value = "/friends/{friendId}")
-    public ResponseEntity<?> deleteFriend(@PathVariable(value = "friendId") Long friendId) {
+    public ResponseEntity<?> deleteFriend(@PathVariable(value = "friendId") Long friendId,
+                                          @RequestParam(value = "isDeletedInvitation") boolean isDeletedInvitation) {
         LOGGER.info("---- User deletes friend | invitation to friends for friend id: {}", friendId);
-        friendService.deleteFriendById(friendId);
+        friendService.deleteFriendById(friendId, isDeletedInvitation);
         return new ResponseEntity<>(HttpStatus.OK);
     }
 

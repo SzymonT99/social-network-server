@@ -152,7 +152,7 @@ public class PostApiController {
     @PostMapping(value = "/posts/{postId}/comments")
     public ResponseEntity<CommentDto> addCommentToPost(@PathVariable(value = "postId") Long postId,
                                                        @Valid @RequestBody RequestCommentDto requestCommentDto) {
-        LOGGER.info("---- User adda comment to post with id: {}", postId);
+        LOGGER.info("---- User adds comment to post with id: {}", postId);
         CommentDto comment = postCommentService.addComment(postId, requestCommentDto);
         return new ResponseEntity<>(comment, HttpStatus.CREATED);
     }

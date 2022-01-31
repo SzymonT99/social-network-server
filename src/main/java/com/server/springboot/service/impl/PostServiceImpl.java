@@ -235,7 +235,7 @@ public class PostServiceImpl implements PostService {
     public void addPostToFavourite(Long postId) {
         Long userId  = jwtUtils.getLoggedUserId();
         Post post = postRepository.findById(postId)
-                .orElseThrow(() -> new NotFoundException("Not found shared post with id: " + postId));
+                .orElseThrow(() -> new NotFoundException("Not found post with id: " + postId));
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new NotFoundException("Not found user with id: " + userId));
         Set<Post> favouritePosts = user.getFavouritePosts();

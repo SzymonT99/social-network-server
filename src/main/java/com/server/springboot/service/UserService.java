@@ -43,4 +43,6 @@ public interface UserService {
     void resetPasswordNotLoggedUser(String token, ResetPasswordDto resetPasswordDto);
 
     List<UserDto> getAllUses();
+
+    void changeActivityStatus(String status);
 }

@@ -16,7 +16,7 @@ public interface FriendService {
     void respondToFriendInvitation(Long inviterId, String reactionToInvitation);
 
     @Transactional
-    void deleteFriendById(Long friendId);
+    void deleteFriendById(Long friendId, boolean isDeletedInvitation);
 
     List<FriendDto> findAllUserFriends(Long userId);
 }

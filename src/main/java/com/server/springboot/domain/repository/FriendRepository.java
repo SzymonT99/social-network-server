@@ -24,7 +24,7 @@ public interface FriendRepository extends JpaRepository<Friend, Long> {
     Optional<Friend> findByUserAndUserFriend(User user, User userFriend);
 
     @Transactional
-    void deleteAllByUserAndUserFriend(User user, User userFriend);
+    void deleteByUserAndUserFriend(User user, User userFriend);
 
     @Modifying
     @Query("UPDATE Friend f SET f.invitationDisplayed = :invitationDisplayed where f.userFriend = :userFriend")

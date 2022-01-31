@@ -1,5 +1,6 @@
 package com.server.springboot.service.impl;
 
+import com.google.common.collect.Lists;
 import com.server.springboot.domain.dto.request.RequestCommentDto;
 import com.server.springboot.domain.dto.response.CommentDto;
 import com.server.springboot.domain.entity.Comment;
@@ -17,8 +18,10 @@ import com.server.springboot.security.JwtUtils;
 import com.server.springboot.service.PostCommentService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Set;
 
 @Service
@@ -80,6 +83,13 @@ public class PostCommentServiceImpl implements PostCommentService {
         if (!comment.getCommentAuthor().getUserId().equals(userId)) {
             throw new ForbiddenException("Invalid comment author id - comment deleting access forbidden");
         }
+
+        List<User> likedPostUsers = Lists.newArrayList(comment.getLikes());
+        likedPostUsers.forEach((user -> {
+            user.dislikeComment(comment);
+            userRepository.save(user);
+        }));
+
         commentRepository.deleteByCommentId(commentId);
     }
 

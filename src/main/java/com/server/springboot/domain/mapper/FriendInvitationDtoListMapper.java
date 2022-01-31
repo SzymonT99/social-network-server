@@ -10,6 +10,7 @@ import org.springframework.stereotype.Component;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Component
 public class FriendInvitationDtoListMapper implements Converter<List<FriendInvitationDto>, List<Friend>> {
@@ -27,12 +28,18 @@ public class FriendInvitationDtoListMapper implements Converter<List<FriendInvit
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd.MM.yyyy HH:mm:ss");
 
         for (Friend friend : from) {
+
+            List<Friend> currentFriends = friend.getUser().getFriends().stream()
+                    .filter(el -> el.getIsInvitationAccepted() != null && el.getIsInvitationAccepted())
+                    .collect(Collectors.toList());
+
             FriendInvitationDto friendInvitationDto = FriendInvitationDto.builder()
                     .friendId(friend.getFriendId())
                     .isInvitationAccepted(friend.getIsInvitationAccepted())
                     .invitationDisplayed(friend.isInvitationDisplayed())
                     .invitationDate(friend.getInvitationDate().format(formatter))
                     .invitingUser(userDtoMapper.convert(friend.getUser()))
+                    .friendsNumber(currentFriends.isEmpty() ? 0 : currentFriends.size())
                     .build();
 
             friendInvitationDtoList.add(friendInvitationDto);

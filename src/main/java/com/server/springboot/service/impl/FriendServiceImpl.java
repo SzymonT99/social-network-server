@@ -106,19 +106,25 @@ public class FriendServiceImpl implements FriendService {
 
     @Override
     @Transactional
-    public void deleteFriendById(Long friendId) {
+    public void deleteFriendById(Long friendId, boolean isDeletedInvitation) {
         Long loggedUserId = jwtUtils.getLoggedUserId();
         User currentUser = userRepository.findById(loggedUserId)
                 .orElseThrow(() -> new NotFoundException("Not found user with id: " + loggedUserId));
         Friend friend = friendRepository.findById(friendId)
                 .orElseThrow(() -> new NotFoundException("Not found friend with id: " + friendId));
-        User userFriend = friend.getUserFriend();
+
+        User userFriend;
+        if (isDeletedInvitation) {
+            userFriend = friend.getUserFriend();
+        } else {
+            userFriend = friend.getUser();
+        }
         if (friend.getUser() != currentUser && friend.getUserFriend() != currentUser ) {
             throw new ForbiddenException("Invalid user inviter - friend deleting access forbidden");
         }
 
-        friendRepository.deleteAllByUserAndUserFriend(currentUser, userFriend);
-        friendRepository.deleteAllByUserAndUserFriend(userFriend, currentUser);
+        friendRepository.deleteByUserAndUserFriend(currentUser, userFriend);
+        friendRepository.deleteByUserAndUserFriend(userFriend, currentUser);
     }
 
     @Override

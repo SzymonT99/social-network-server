@@ -12,6 +12,7 @@ import java.util.Set;
 @Getter
 @Setter
 @Builder
+@ToString
 
 @Entity
 @Table(name = "post_comment")
