@@ -2,6 +2,7 @@ package com.server.springboot.domain.entity;
 
 import com.server.springboot.domain.enumeration.ActivityStatus;
 import lombok.*;
+import org.hibernate.annotations.Cascade;
 
 import javax.persistence.*;
 import javax.validation.constraints.Email;
@@ -90,7 +91,7 @@ public class User {
     private Set<Post> posts;
 
     @OneToMany(mappedBy = "commentAuthor", fetch = FetchType.LAZY,
-            cascade = CascadeType.ALL, orphanRemoval = true)
+          cascade = CascadeType.ALL,orphanRemoval = true)
     private Set<Comment> comments;
 
     @OneToMany(mappedBy = "sharedPostUser", fetch = FetchType.LAZY,
@@ -102,11 +103,11 @@ public class User {
     private Set<LikedPost> likedPosts;
 
     @OneToMany(mappedBy = "user", fetch = FetchType.LAZY,
-            cascade = CascadeType.ALL, orphanRemoval = true)
+            orphanRemoval = true)
     private Set<Friend> friends;
 
     @OneToMany(mappedBy = "userFriend", fetch = FetchType.LAZY,
-            cascade = CascadeType.ALL, orphanRemoval = true)
+            orphanRemoval = true)
     private Set<Friend> userFriends;
 
     @OneToMany(mappedBy = "chatCreator", fetch = FetchType.LAZY,
@@ -180,5 +181,4 @@ public class User {
     public void dislikeComment(Comment comment) {
         this.likedComments.remove(comment);
     }
-
 }

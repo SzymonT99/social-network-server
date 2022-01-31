@@ -15,4 +15,5 @@ public class FriendInvitationDto {
     private Boolean invitationDisplayed;
     private String invitationDate;
     private UserDto invitingUser;
+    private Integer friendsNumber;
 }

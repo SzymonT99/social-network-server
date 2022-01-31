@@ -24,15 +24,15 @@ public class UserDtoListMapper implements Converter<List<UserDto>, List<User>> {
     public List<UserDto> convert(List<User> from) {
 
         List<UserDto> userDtoList = new ArrayList<>();
-        for (User User : from) {
+        for (User user : from) {
             UserDto userDto = UserDto.builder()
-                    .userId(User.getUserId())
-                    .activityStatus(User.getActivityStatus())
-                    .email(User.getEmail())
-                    .firstName(User.getUserProfile().getFirstName())
-                    .lastName(User.getUserProfile().getLastName())
-                    .profilePhoto(User.getUserProfile().getProfilePhoto() != null ?
-                            profilePhotoDtoMapper.convert(User.getUserProfile().getProfilePhoto()) : null)
+                    .userId(user.getUserId())
+                    .activityStatus(user.getActivityStatus())
+                    .email(user.getEmail())
+                    .firstName(user.getUserProfile().getFirstName())
+                    .lastName(user.getUserProfile().getLastName())
+                    .profilePhoto(user.getUserProfile().getProfilePhoto() != null ?
+                            profilePhotoDtoMapper.convert(user.getUserProfile().getProfilePhoto()) : null)
                     .build();
             userDtoList.add(userDto);
         }

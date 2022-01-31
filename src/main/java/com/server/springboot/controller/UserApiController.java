@@ -73,9 +73,8 @@ public class UserApiController {
     }
 
     @ApiOperation(value = "Log out user")
-    @PostMapping(value = "/auth/logout")
+    @PutMapping(value = "/auth/logout")
     public ResponseEntity<?> logoutUser() {
-        LOGGER.info("---- Logout user:");
         userService.logoutUser();
         return new ResponseEntity<>(HttpStatus.OK);
     }
@@ -172,5 +171,13 @@ public class UserApiController {
     public ResponseEntity<List<UserDto>> getUsers() {
         LOGGER.info("---- Get all users information");
         return new ResponseEntity<>(userService.getAllUses(), HttpStatus.OK);
+    }
+
+    @ApiOperation(value = "Change user activity status")
+    @PutMapping(value = "/users")
+    public ResponseEntity<?> changeActivityStatus(@RequestParam(value = "activityStatus") String status) {
+        LOGGER.info("---- User changes status on: {}", status);
+        userService.changeActivityStatus(status);
+        return new ResponseEntity<>(HttpStatus.OK);
     }
 }

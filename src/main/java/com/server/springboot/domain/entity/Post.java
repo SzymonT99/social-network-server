@@ -65,7 +65,7 @@ public class Post {
     private Set<LikedPost> likedPosts;
 
     @OneToMany(mappedBy = "commentedPost", fetch = FetchType.LAZY,
-            cascade = CascadeType.ALL, orphanRemoval = true)
+            orphanRemoval = true)
     private Set<Comment> comments;
 
     @ManyToOne(fetch = FetchType.LAZY)
