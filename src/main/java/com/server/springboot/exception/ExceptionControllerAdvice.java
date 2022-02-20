@@ -1,7 +1,6 @@
 package com.server.springboot.exception;
 
 import org.springframework.http.HttpStatus;
-import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -86,6 +85,16 @@ public class ExceptionControllerAdvice {
         return new ErrorMessage(
                 HttpStatus.CONFLICT,
                 HttpStatus.CONFLICT.value(),
+                ex.getMessage(),
+                request.getDescription(false).substring(4));
+    }
+
+    @ExceptionHandler(LockedException.class )
+    @ResponseStatus(HttpStatus.LOCKED)
+    public ErrorMessage handLockedException(RuntimeException ex, WebRequest request) {
+        return new ErrorMessage(
+                HttpStatus.LOCKED,
+                HttpStatus.LOCKED.value(),
                 ex.getMessage(),
                 request.getDescription(false).substring(4));
     }

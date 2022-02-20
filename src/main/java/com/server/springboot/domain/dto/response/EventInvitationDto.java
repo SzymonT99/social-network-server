@@ -2,6 +2,8 @@ package com.server.springboot.domain.dto.response;
 
 import lombok.*;
 
+import java.util.List;
+
 @AllArgsConstructor
 @NoArgsConstructor
 @EqualsAndHashCode
@@ -20,4 +22,5 @@ public class EventInvitationDto {
     private String createdAt;
     private UserDto eventAuthor;
     private AddressDto eventAddress;
+    private List<EventMemberDto> eventMembers;
 }

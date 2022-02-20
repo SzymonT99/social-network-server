@@ -2,6 +2,7 @@ package com.server.springboot.controller;
 
 import com.server.springboot.domain.dto.request.*;
 
+import com.server.springboot.domain.dto.response.ActivatedAccountDto;
 import com.server.springboot.domain.dto.response.JwtResponse;
 import com.server.springboot.domain.dto.response.ReportDto;
 import com.server.springboot.domain.dto.response.UserDto;
@@ -42,11 +43,10 @@ public class UserApiController {
     }
 
     @ApiOperation(value = "Activate account")
-    @GetMapping(value = "/auth/account-activation")
-    public ResponseEntity<?> confirmUserAccount(@RequestParam("token") String token) {
+    @PutMapping(value = "/auth/account-activation")
+    public ResponseEntity<ActivatedAccountDto> confirmUserAccount(@RequestParam("token") String token) {
         LOGGER.info("---- Activate account by token: {}", token);
-        userService.activateAccount(token);
-        return new ResponseEntity<>(HttpStatus.OK);
+        return new ResponseEntity<>(userService.activateAccount(token), HttpStatus.OK);
     }
 
     @ApiOperation(value = "Resend activation account link")

@@ -213,49 +213,38 @@ public class UserActivityServiceImpl implements UserActivityService {
     }
 
     @Override
-    public List<NotificationDto> findUserNotifications() {
+    public List<NotificationDto> findUserNotifications(boolean isDisplayed) {
         Long loggedUserId = jwtUtils.getLoggedUserId();
         User user = userRepository.findById(loggedUserId)
                 .orElseThrow(() -> new NotFoundException("Not found user with given id: " + loggedUserId));
 
         List<Post> userPosts = Lists.newArrayList(user.getPosts());
 
-        List<FriendInvitationDto> friendInvitations = friendService.findAllUserInvitationsToFriends(loggedUserId);
+        if (isDisplayed) {
+            likedPostRepository.setPostAuthorNotificationDisplayed(true, userPosts);
+            commentRepository.setPostAuthorNotificationDisplayed(true, userPosts);
+            sharedPostRepository.setPostAuthorNotificationDisplayed(true, userPosts);
+            friendRepository.setUserNotificationDisplayed(true, user);
+        }
 
-        List<EventInvitationDto> eventInvitations = eventService.findAllUserEventInvitation();
+        List<EventInvitationDto> eventInvitations = eventService.findAllUserEventInvitation(isDisplayed);
 
         List<LikedPost> likedPosts = likedPostRepository.findAllByPostIn(userPosts);
-        likedPostRepository.setPostAuthorNotificationDisplayed(true, userPosts);
 
         List<Comment> comments = commentRepository.findAllByCommentedPostIn(userPosts);
-        commentRepository.setPostAuthorNotificationDisplayed(true, userPosts);
 
         List<SharedPost> sharedPosts = sharedPostRepository.findAllByBasePostIn(userPosts);
-        sharedPostRepository.setPostAuthorNotificationDisplayed(true, userPosts);
 
-        List<Friend> acceptedFriends = friendRepository.findByUserAndIsInvitationAccepted(user, true);
-        friendRepository.setUserNotificationDisplayed(true, user);
+        List<Friend> acceptedFriends = friendRepository.findByUserFriendAndIsInvitationAccepted(user, true);
 
         List<NotificationDto> notificationList = new ArrayList<>();
-        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd.MM.yyyy HH:mm:ss");
-
-        friendInvitations.forEach(friendInvitationDto -> {
-            NotificationDto notificationDto = NotificationDto.builder()
-                    .notificationType(NotificationType.INVITATION_TO_FRIENDS)
-                    .notificationDate(friendInvitationDto.getInvitationDate())
-                    .isNotificationDisplayed(friendInvitationDto.getInvitationDisplayed())
-                    .activityInitiator(friendInvitationDto.getInvitingUser())
-                    .details(null)
-                    .build();
-            notificationList.add(notificationDto);
-        });
 
         eventInvitations.forEach(eventInvitationDto -> {
             NotificationDto notificationDto = NotificationDto.builder()
                     .notificationType(NotificationType.INVITATION_TO_EVENT)
                     .notificationDate(eventInvitationDto.getInvitationDate())
                     .isNotificationDisplayed(eventInvitationDto.isInvitationDisplayed())
-                    .activityInitiator(null)
+                    .activityInitiator(eventInvitationDto.getEventAuthor())
                     .details(Collections.singletonMap("eventId", eventInvitationDto.getEventId()))
                     .build();
             notificationList.add(notificationDto);
@@ -264,7 +253,7 @@ public class UserActivityServiceImpl implements UserActivityService {
         likedPosts.forEach(likedPost -> {
             NotificationDto notificationDto = NotificationDto.builder()
                     .notificationType(NotificationType.LIKE_USER_POST)
-                    .notificationDate(likedPost.getDate().format(formatter))
+                    .notificationDate(likedPost.getDate().toString())
                     .isNotificationDisplayed(likedPost.isPostAuthorNotified())
                     .activityInitiator(userDtoMapper.convert(likedPost.getLikedPostUser()))
                     .details(Collections.singletonMap("postId", likedPost.getPost().getPostId()))
@@ -275,7 +264,7 @@ public class UserActivityServiceImpl implements UserActivityService {
         comments.forEach(comment -> {
             NotificationDto notificationDto = NotificationDto.builder()
                     .notificationType(NotificationType.COMMENT_USER_POST)
-                    .notificationDate(comment.getCreatedAt().format(formatter))
+                    .notificationDate(comment.getCreatedAt().toString())
                     .isNotificationDisplayed(comment.isPostAuthorNotified())
                     .activityInitiator(userDtoMapper.convert(comment.getCommentAuthor()))
                     .details(Collections.singletonMap("postId", comment.getCommentedPost().getPostId()))
@@ -286,7 +275,7 @@ public class UserActivityServiceImpl implements UserActivityService {
         sharedPosts.forEach(sharedPost -> {
             NotificationDto notificationDto = NotificationDto.builder()
                     .notificationType(NotificationType.SHARE_USER_POST)
-                    .notificationDate(sharedPost.getDate().format(formatter))
+                    .notificationDate(sharedPost.getDate().toString())
                     .isNotificationDisplayed(sharedPost.isPostAuthorNotified())
                     .activityInitiator(userDtoMapper.convert(sharedPost.getSharedPostUser()))
                     .details(Collections.singletonMap("sharedPostId", sharedPost.getSharedPostId()))
@@ -297,7 +286,7 @@ public class UserActivityServiceImpl implements UserActivityService {
         acceptedFriends.forEach(acceptedFriend -> {
             NotificationDto notificationDto = NotificationDto.builder()
                     .notificationType(NotificationType.ACCEPTANCE_INVITATION_TO_FRIENDS)
-                    .notificationDate(acceptedFriend.getFriendFromDate().format(formatter))
+                    .notificationDate(acceptedFriend.getFriendFromDate().toString())
                     .isNotificationDisplayed(acceptedFriend.isUserNotifiedAboutAccepting())
                     .activityInitiator(userDtoMapper.convert(acceptedFriend.getUserFriend()))
                     .details(null)
@@ -305,9 +294,12 @@ public class UserActivityServiceImpl implements UserActivityService {
             notificationList.add(notificationDto);
         });
 
-        notificationList.sort(Comparator.comparing(NotificationDto::getNotificationDate));
-        Collections.reverse(notificationList);
+        notificationList.sort(Comparator.comparing(NotificationDto::getNotificationDate).reversed());
 
-        return notificationList;
+        return notificationList
+                .stream()
+                .filter(n -> !n.getActivityInitiator().getUserId().equals(loggedUserId) &&
+                        LocalDateTime.parse(n.getNotificationDate()).isAfter(LocalDateTime.now().minusWeeks(2L)))
+                .collect(Collectors.toList());
     }
 }

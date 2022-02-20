@@ -2,6 +2,8 @@ package com.server.springboot.domain.dto.response;
 
 import lombok.*;
 
+import java.util.List;
+
 @AllArgsConstructor
 @NoArgsConstructor
 @EqualsAndHashCode
@@ -14,5 +16,7 @@ public class FriendDto {
     private Boolean isInvitationAccepted;
     private String invitationDate;
     private String friendFromDate;
+    private AddressDto address;
     private UserDto user;
+    private List<UserDto> userFriends;
 }

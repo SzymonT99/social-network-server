@@ -43,9 +43,12 @@ public class Image {
     private LocalDateTime addedIn;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "user_profile_id", nullable = false)
+    @JoinColumn(name = "user_profile_id")
     private UserProfile userProfile;
 
     @ManyToMany(mappedBy = "images")
     private Set<Post> posts;
+
+    @OneToOne(mappedBy = "image", fetch = FetchType.LAZY)
+    private Event event;
 }

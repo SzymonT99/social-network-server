@@ -1,10 +1,7 @@
 package com.server.springboot.service.impl;
 
 import com.server.springboot.domain.dto.request.*;
-import com.server.springboot.domain.dto.response.JwtResponse;
-import com.server.springboot.domain.dto.response.RefreshTokenResponse;
-import com.server.springboot.domain.dto.response.ReportDto;
-import com.server.springboot.domain.dto.response.UserDto;
+import com.server.springboot.domain.dto.response.*;
 import com.server.springboot.domain.entity.*;
 import com.server.springboot.domain.enumeration.ActivityStatus;
 import com.server.springboot.domain.enumeration.AppRole;
@@ -122,16 +119,16 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public void activateAccount(String token) {
+    public ActivatedAccountDto activateAccount(String token) {
         AccountVerification accountVerification = accountVerificationRepository.findByVerificationCode(token)
                 .orElseThrow(() -> new NotFoundException("The specified account activation code was not found"));
 
         User user = accountVerification.getUser();
         boolean verifiedAccount = userRepository.findByUsername(user.getUsername()).get().isVerifiedAccount();
-        if (verifiedAccount) {
-            LOGGER.info("---- Account is already activated");
-            throw new BadRequestException("The account has already been activated");
-        }
+//        if (verifiedAccount) {
+//            LOGGER.info("---- Account is already activated");
+//            throw new BadRequestException("The account has already been activated");
+//        }
         if (accountVerification.getExpiredAt().isBefore(LocalDateTime.now())) {
             LOGGER.info("---- Activation link has expired");
             throw new ResourceGoneException("The account activation link has expired on " + accountVerification.getExpiredAt());
@@ -139,12 +136,19 @@ public class UserServiceImpl implements UserService {
 
         user.setVerifiedAccount(true);
         userRepository.save(user);
+
+        return ActivatedAccountDto.builder()
+                .userId(user.getUserId())
+                .username(user.getUsername())
+                .userEmail(user.getEmail())
+                .build();
     }
 
     @Override
     public JwtResponse loginUser(UserLoginDto userLoginDto) {
         User authorizedUser = userRepository.findByUsernameOrEmail(userLoginDto.getLogin(), userLoginDto.getLogin())
                 .orElse(new User());
+
         if (userRepository.existsByUsernameOrEmail(userLoginDto.getLogin(), userLoginDto.getLogin())) {
             authorizedUser.setBlocked(authorizedUser.getIncorrectLoginCounter() >= MAX_LOGIN_ATTEMPTS);
             authorizedUser.setIncorrectLoginCounter(authorizedUser.getIncorrectLoginCounter() + 1);
@@ -162,6 +166,10 @@ public class UserServiceImpl implements UserService {
         authorizedUser.setIncorrectLoginCounter(0);
         authorizedUser.setActivityStatus(ActivityStatus.ONLINE);
         userRepository.save(authorizedUser);
+
+        if (authorizedUser.isDeleted()) {
+            throw new LockedException("Account has been deleted and is archived");
+        }
 
         if (authorizedUser.isBanned()) {
             throw new ForbiddenException(String.format("User account with login: %s has been banned. " +
@@ -233,7 +241,7 @@ public class UserServiceImpl implements UserService {
         Context context = new Context();
         context.setVariable("link", activationLink);
         context.setVariable("name", user.getUserProfile().getFirstName() + " " + user.getUserProfile().getLastName());
-        String html = templateEngine.process("ActivationAccount", context);
+        String html = templateEngine.process("EmailActivationTemplate", context);
         emailService.sendEmail(userEmail, "Serwis społecznościowy - aktywacja konta", html);
     }
 

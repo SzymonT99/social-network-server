@@ -19,13 +19,10 @@ import com.server.springboot.service.FileService;
 import com.server.springboot.service.ProfileService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
-import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Set;
 
@@ -40,6 +37,7 @@ public class ProfileServiceImpl implements ProfileService {
     private final AddressRepository addressRepository;
     private final SchoolRepository schoolRepository;
     private final WorkPlaceRepository workPlaceRepository;
+    private final FriendRepository friendRepository;
     private final JwtUtils jwtUtils;
     private final FileService fileService;
     private final Converter<UserProfileDto, UserProfile> userProfileDtoMapper;
@@ -51,12 +49,14 @@ public class ProfileServiceImpl implements ProfileService {
     private final Converter<School, RequestSchoolDto> schoolMapper;
     private final Converter<WorkPlace, RequestWorkPlaceDto> workPlaceMapper;
     private final Converter<Address, RequestAddressDto> addressMapper;
+    private final Converter<List<FriendDto>, List<Friend>> friendDtoListMapper;
 
     @Autowired
     public ProfileServiceImpl(UserRepository userRepository, UserFavouriteRepository userFavouriteRepository,
                               InterestRepository interestRepository, UserProfileRepository userProfileRepository,
                               ImageRepository imageRepository, AddressRepository addressRepository,
-                              SchoolRepository schoolRepository, WorkPlaceRepository workPlaceRepository, JwtUtils jwtUtils,
+                              SchoolRepository schoolRepository, WorkPlaceRepository workPlaceRepository,
+                              FriendRepository friendRepository, JwtUtils jwtUtils,
                               FileService fileService, Converter<UserProfileDto, UserProfile> userProfileDtoMapper,
                               Converter<UserActivityDto, User> userActivityDtoMapper,
                               Converter<List<UserFavouriteDto>, List<UserFavourite>> userFavouriteDtoListMapper,
@@ -65,7 +65,8 @@ public class ProfileServiceImpl implements ProfileService {
                               Converter<UserFavourite, RequestUserFavouriteDto> userFavouriteMapper,
                               Converter<School, RequestSchoolDto> schoolMapper,
                               Converter<WorkPlace, RequestWorkPlaceDto> workPlaceMapper,
-                              Converter<Address, RequestAddressDto> addressMapper) {
+                              Converter<Address, RequestAddressDto> addressMapper,
+                              Converter<List<FriendDto>, List<Friend>> friendDtoListMapper) {
         this.userRepository = userRepository;
         this.userFavouriteRepository = userFavouriteRepository;
         this.interestRepository = interestRepository;
@@ -74,6 +75,7 @@ public class ProfileServiceImpl implements ProfileService {
         this.addressRepository = addressRepository;
         this.schoolRepository = schoolRepository;
         this.workPlaceRepository = workPlaceRepository;
+        this.friendRepository = friendRepository;
         this.jwtUtils = jwtUtils;
         this.fileService = fileService;
         this.userProfileDtoMapper = userProfileDtoMapper;
@@ -85,6 +87,7 @@ public class ProfileServiceImpl implements ProfileService {
         this.schoolMapper = schoolMapper;
         this.workPlaceMapper = workPlaceMapper;
         this.addressMapper = addressMapper;
+        this.friendDtoListMapper = friendDtoListMapper;
     }
 
     @Override
@@ -99,7 +102,12 @@ public class ProfileServiceImpl implements ProfileService {
     public UserActivityDto findUserActivityByUserId(Long userId) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new NotFoundException("Not found user with id: " + userId));
-        return userActivityDtoMapper.convert(user);
+
+        List<Friend> friends = friendRepository.findByUserAndIsInvitationAccepted(user, true);
+        UserActivityDto userActivityDto = userActivityDtoMapper.convert(user);
+        userActivityDto.setFriends(friendDtoListMapper.convert(friends));
+
+        return userActivityDto;
     }
 
     @Override

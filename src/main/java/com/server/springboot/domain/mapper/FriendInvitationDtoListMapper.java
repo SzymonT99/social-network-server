@@ -16,30 +16,32 @@ import java.util.stream.Collectors;
 public class FriendInvitationDtoListMapper implements Converter<List<FriendInvitationDto>, List<Friend>> {
 
     private final Converter<UserDto, User> userDtoMapper;
+    private final Converter<List<UserDto>, List<User>> userDtoListMapper;
 
     @Autowired
-    public FriendInvitationDtoListMapper(Converter<UserDto, User> userDtoMapper) {
+    public FriendInvitationDtoListMapper(Converter<UserDto, User> userDtoMapper, Converter<List<UserDto>, List<User>> userDtoListMapper) {
         this.userDtoMapper = userDtoMapper;
+        this.userDtoListMapper = userDtoListMapper;
     }
 
     @Override
     public List<FriendInvitationDto> convert(List<Friend> from) {
         List<FriendInvitationDto> friendInvitationDtoList = new ArrayList<>();
-        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd.MM.yyyy HH:mm:ss");
 
         for (Friend friend : from) {
 
-            List<Friend> currentFriends = friend.getUser().getFriends().stream()
+            List<User> currentFriends = friend.getUser().getFriends().stream()
                     .filter(el -> el.getIsInvitationAccepted() != null && el.getIsInvitationAccepted())
+                    .map(Friend::getUserFriend)
                     .collect(Collectors.toList());
 
             FriendInvitationDto friendInvitationDto = FriendInvitationDto.builder()
                     .friendId(friend.getFriendId())
                     .isInvitationAccepted(friend.getIsInvitationAccepted())
                     .invitationDisplayed(friend.isInvitationDisplayed())
-                    .invitationDate(friend.getInvitationDate().format(formatter))
+                    .invitationDate(friend.getInvitationDate().toString())
                     .invitingUser(userDtoMapper.convert(friend.getUser()))
-                    .friendsNumber(currentFriends.isEmpty() ? 0 : currentFriends.size())
+                    .invitingUserFriends(userDtoListMapper.convert(currentFriends))
                     .build();
 
             friendInvitationDtoList.add(friendInvitationDto);

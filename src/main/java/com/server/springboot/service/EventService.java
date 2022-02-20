@@ -23,7 +23,7 @@ public interface EventService {
     void inviteUser(Long eventId, Long invitedUserId);
 
     @Transactional
-    List<EventInvitationDto> findAllUserEventInvitation();
+    List<EventInvitationDto> findAllUserEventInvitation(boolean isDisplayed);
 
     void respondToEvent(Long eventId, String reactionToEvent);
 
@@ -33,4 +33,6 @@ public interface EventService {
     void deleteSharedEvent(Long eventId);
 
     List<SharedEventDto>  findAllSharedEventsByUser(Long userId);
+
+    EventDto findEvent(Long eventId);
 }

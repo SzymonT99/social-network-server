@@ -35,8 +35,8 @@ public class UserActivityController {
 
     @ApiOperation(value = "Get logged user notifications")
     @GetMapping(value = "/activity/notifications")
-    public ResponseEntity<List<NotificationDto>> getUserNotifications() {
-        LOGGER.info("---- User get own activity board");
-        return new ResponseEntity<>(userActivityService.findUserNotifications(), HttpStatus.OK);
+    public ResponseEntity<List<NotificationDto>> getUserNotifications(@RequestParam(value = "isDisplayed") boolean isDisplayed) {
+        LOGGER.info("---- User get own activity notifications");
+        return new ResponseEntity<>(userActivityService.findUserNotifications(isDisplayed), HttpStatus.OK);
     }
 }

@@ -31,7 +31,6 @@ public class EventDtoListMapper implements Converter<List<EventDto>, List<Event>
 
     @Override
     public List<EventDto> convert(List<Event> from) {
-        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd.MM.yyyy HH:mm:ss");
         List<EventDto> eventDtoList = new ArrayList<>();
 
         for (Event event : from) {
@@ -39,9 +38,9 @@ public class EventDtoListMapper implements Converter<List<EventDto>, List<Event>
                     .eventId(event.getEventId())
                     .title(event.getTitle())
                     .description(event.getDescription())
-                    .image(imageDtoMapper.convert(event.getImage()))
-                    .eventDate(event.getEventDate().format(formatter))
-                    .createdAt(event.getCreatedAt().format(formatter))
+                    .image(event.getImage() != null ? imageDtoMapper.convert(event.getImage()) : null)
+                    .eventDate(event.getEventDate().toString())
+                    .createdAt(event.getCreatedAt().toString())
                     .eventAuthor(userDtoMapper.convert(event.getEventCreator()))
                     .eventAddress(addressDtoMapper.convert(event.getEventAddress()))
                     .members(eventMemberDtoListMapper.convert(Lists.newArrayList(event.getMembers())))
@@ -49,7 +48,7 @@ public class EventDtoListMapper implements Converter<List<EventDto>, List<Event>
                             event.getSharing().stream()
                                     .map(sharedEvent -> SharedEventInfoDto.builder()
                                             .authorOfSharing(userDtoMapper.convert(sharedEvent.getSharedEventUser()))
-                                            .sharingDate(sharedEvent.getDate().format(formatter))
+                                            .sharingDate(sharedEvent.getDate().toString())
                                             .build())
                                     .collect(Collectors.toList())
                     )

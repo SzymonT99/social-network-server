@@ -93,11 +93,15 @@ public class FileServiceImpl implements FileService {
         if (!imageFile.isEmpty()) {
             image = Image.builder()
                     .filename(fileName)
-                    .filePath("/uploads/" + creator.getUserId())
+                    .filePath("/uploads/" + fileName)
                     .type(imageFile.getContentType())
                     .addedIn(LocalDateTime.now())
-                    .userProfile(userProfile)
                     .build();
+
+            if (assignToProfile) {
+                image.setUserProfile(userProfile);
+            }
+
             imageRepository.save(image);
             saveImage(image, imageFile);
         }
