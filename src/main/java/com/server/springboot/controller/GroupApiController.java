@@ -2,7 +2,11 @@ package com.server.springboot.controller;
 
 import com.server.springboot.domain.dto.request.*;
 import com.server.springboot.domain.dto.response.*;
+import com.server.springboot.service.GroupService;
 import io.swagger.annotations.ApiOperation;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -18,38 +22,54 @@ import java.util.List;
 @RequestMapping("/api")
 public class GroupApiController {
 
+    private static final Logger LOGGER = LoggerFactory.getLogger(UserApiController.class);
+    private final GroupService groupService;
+
+    @Autowired
+    public GroupApiController(GroupService groupService) {
+        this.groupService = groupService;
+    }
+
     @ApiOperation(value = "Create a group")
     @PostMapping(value = "/groups", consumes = {MediaType.APPLICATION_JSON_VALUE, MediaType.MULTIPART_FORM_DATA_VALUE})
-    public ResponseEntity<?> createGroup(@RequestPart(value = "image") MultipartFile imageFile,
+    public ResponseEntity<?> createGroup(@RequestPart(value = "image", required = false) MultipartFile imageFile,
                                          @Valid @RequestPart(value = "group") RequestGroupDto requestGroupDto) {
+        LOGGER.info("---- Create group with name: {}", requestGroupDto.getName());
+        groupService.addGroup(requestGroupDto, imageFile);
         return new ResponseEntity<>(HttpStatus.CREATED);
     }
 
     @ApiOperation(value = "Update existing group by id")
     @PutMapping(value = "/groups/{groupId}", consumes = {MediaType.APPLICATION_JSON_VALUE, MediaType.MULTIPART_FORM_DATA_VALUE})
     public ResponseEntity<?> updateGroup(@PathVariable(value = "groupId") Long groupId,
-                                         @RequestPart(value = "image") MultipartFile imageFile,
+                                         @RequestPart(value = "image", required = false) MultipartFile imageFile,
                                          @Valid @RequestPart(value = "group") RequestGroupDto requestGroupDto) {
+        LOGGER.info("---- Update group with id: {} and name: {}", groupId, requestGroupDto.getName());
+        groupService.editGroup(groupId, requestGroupDto, imageFile);
         return new ResponseEntity<>(HttpStatus.OK);
     }
 
-    @ApiOperation(value = "Delete a group with archiving")
-    @DeleteMapping(value = "/groups/{groupId}/archive")
-    public ResponseEntity<?> deleteGroup(@PathVariable(value = "groupId") Long groupId) {
+    @ApiOperation(value = "Delete a group by id")
+    @DeleteMapping(value = "/groups/{groupId}")
+    public ResponseEntity<?> deleteGroup(@PathVariable(value = "groupId") Long groupId,
+                                         @RequestParam(value = "archive") boolean archive) {
+        LOGGER.info("---- Delete group with id: {}", groupId);
+        groupService.deleteGroupById(groupId, archive);
         return new ResponseEntity<>(HttpStatus.OK);
     }
 
     @ApiOperation(value = "Get all groups")
     @GetMapping(value = "/groups")
-    public ResponseEntity<List<GroupDto>> getAllGroups() {
-        List<GroupDto> groupDtoList = new ArrayList<>();
-        return new ResponseEntity<>(groupDtoList, HttpStatus.OK);
+    public ResponseEntity<List<GroupDto>> getAllGroups(@RequestParam(value = "isPublic") boolean isPublic) {
+        LOGGER.info("---- Get all public groups");
+        return new ResponseEntity<>(groupService.findAllGroups(isPublic), HttpStatus.OK);
     }
 
-    @ApiOperation(value = "Get group detail by id")
+    @ApiOperation(value = "Get group details by id")
     @GetMapping(value = "/groups/{groupId}")
     public ResponseEntity<GroupDetailsDto> getGroupDetails(@PathVariable(value = "groupId") Long groupId) {
-        return new ResponseEntity<>(new GroupDetailsDto(), HttpStatus.OK);
+        LOGGER.info("---- Get group details with id: {}", groupId);
+        return new ResponseEntity<>(groupService.findGroup(groupId), HttpStatus.OK);
     }
 
     @ApiOperation(value = "Create group rule")

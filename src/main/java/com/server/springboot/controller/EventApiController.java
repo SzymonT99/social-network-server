@@ -52,17 +52,10 @@ public class EventApiController {
 
     @ApiOperation(value = "Delete an event by id")
     @DeleteMapping(value = "/events/{eventId}")
-    public ResponseEntity<?> deleteEvent(@PathVariable(value = "eventId") Long eventId) {
+    public ResponseEntity<?> deleteEvent(@PathVariable(value = "eventId") Long eventId,
+                                         @RequestParam(value = "archive") boolean archive) {
         LOGGER.info("---- Delete event with id: {}", eventId);
-        eventService.deleteEventById(eventId, false);
-        return new ResponseEntity<>(HttpStatus.OK);
-    }
-
-    @ApiOperation(value = "Delete an event by id with archiving")
-    @DeleteMapping(value = "/events/{eventId}/archive")
-    public ResponseEntity<?> deleteEventWithArchiving(@PathVariable(value = "eventId") Long eventId) {
-        LOGGER.info("---- Delete event by archiving with id: {}", eventId);
-        eventService.deleteEventById(eventId, true);
+        eventService.deleteEventById(eventId, archive);
         return new ResponseEntity<>(HttpStatus.OK);
     }
 

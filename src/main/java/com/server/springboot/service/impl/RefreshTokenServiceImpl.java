@@ -8,7 +8,6 @@ import com.server.springboot.domain.entity.RefreshToken;
 import com.server.springboot.domain.entity.User;
 import com.server.springboot.domain.repository.RefreshTokenRepository;
 import com.server.springboot.domain.repository.UserRepository;
-import com.server.springboot.exception.ForbiddenException;
 import com.server.springboot.exception.NotFoundException;
 import com.server.springboot.exception.ResourceGoneException;
 import com.server.springboot.security.JwtUtils;

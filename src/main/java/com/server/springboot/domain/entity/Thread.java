@@ -55,5 +55,4 @@ public class Thread {
     @OneToMany(mappedBy = "thread", fetch = FetchType.LAZY,
             cascade = CascadeType.ALL, orphanRemoval = true)
     private Set<ThreadAnswer> answers;
-
 }

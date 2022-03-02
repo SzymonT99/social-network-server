@@ -51,4 +51,10 @@ public class Image {
 
     @OneToOne(mappedBy = "image", fetch = FetchType.LAZY)
     private Event event;
+
+    @OneToOne(mappedBy = "image", fetch = FetchType.LAZY)
+    private Group group;
+
+    @OneToOne(mappedBy = "image", fetch = FetchType.LAZY)
+    private Thread groupThread;
 }

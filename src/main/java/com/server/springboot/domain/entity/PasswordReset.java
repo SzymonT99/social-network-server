@@ -35,6 +35,10 @@ public class PasswordReset {
     @Column(name = "expired_at", nullable = false)
     private LocalDateTime expiredAt;
 
+    @NotNull
+    @Column(name = "is_used", nullable = false)
+    private boolean isUsed;
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", nullable = false)
     @JsonIgnore

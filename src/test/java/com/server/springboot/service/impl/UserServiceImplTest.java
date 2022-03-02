@@ -92,7 +92,7 @@ public class UserServiceImplTest {
 
         Long userId = jwtUtils.getLoggedUserId();
 
-        userService.logoutUser();
+        userService.logoutUser(userId);
 
         assertEquals(ActivityStatus.OFFLINE, userRepository.findById(userId).get().getActivityStatus());
     }

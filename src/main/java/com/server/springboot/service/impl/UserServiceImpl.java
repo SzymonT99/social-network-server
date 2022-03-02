@@ -27,6 +27,7 @@ import org.thymeleaf.context.Context;
 import org.springframework.security.core.Authentication;
 
 import java.time.LocalDateTime;
+import java.time.temporal.ChronoField;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -46,6 +47,7 @@ public class UserServiceImpl implements UserService {
     private final ReportRepository reportRepository;
     private final PasswordResetRepository passwordResetRepository;
     private final AccountVerificationRepository accountVerificationRepository;
+    private final RefreshTokenRepository refreshTokenRepository;
     private final Converter<User, CreateUserDto> userMapper;
     private final EmailService emailService;
     private final TemplateEngine templateEngine;
@@ -59,8 +61,10 @@ public class UserServiceImpl implements UserService {
 
     @Autowired
     public UserServiceImpl(UserRepository userRepository, RoleRepository roleRepository,
-                           ReportRepository reportRepository, PasswordResetRepository passwordResetRepository, AccountVerificationRepository accountVerificationRepository,
-                           Converter<User, CreateUserDto> userMapper, EmailService emailService, TemplateEngine templateEngine,
+                           ReportRepository reportRepository, PasswordResetRepository passwordResetRepository,
+                           AccountVerificationRepository accountVerificationRepository,
+                           RefreshTokenRepository refreshTokenRepository, Converter<User, CreateUserDto> userMapper,
+                           EmailService emailService, TemplateEngine templateEngine,
                            AuthenticationManager authenticationManager, JwtUtils jwtUtils,
                            RefreshTokenService refreshTokenService, UserDetailsServiceImpl userDetailsService,
                            Converter<Report, RequestReportDto> reportMapper,
@@ -71,6 +75,7 @@ public class UserServiceImpl implements UserService {
         this.reportRepository = reportRepository;
         this.passwordResetRepository = passwordResetRepository;
         this.accountVerificationRepository = accountVerificationRepository;
+        this.refreshTokenRepository = refreshTokenRepository;
         this.userMapper = userMapper;
         this.emailService = emailService;
         this.templateEngine = templateEngine;
@@ -125,10 +130,10 @@ public class UserServiceImpl implements UserService {
 
         User user = accountVerification.getUser();
         boolean verifiedAccount = userRepository.findByUsername(user.getUsername()).get().isVerifiedAccount();
-//        if (verifiedAccount) {
-//            LOGGER.info("---- Account is already activated");
-//            throw new BadRequestException("The account has already been activated");
-//        }
+        if (verifiedAccount) {
+            LOGGER.info("---- Account is already activated");
+            throw new BadRequestException("The account has already been activated");
+        }
         if (accountVerification.getExpiredAt().isBefore(LocalDateTime.now())) {
             LOGGER.info("---- Activation link has expired");
             throw new ResourceGoneException("The account activation link has expired on " + accountVerification.getExpiredAt());
@@ -190,12 +195,14 @@ public class UserServiceImpl implements UserService {
 
         RefreshToken refreshToken = refreshTokenService.createRefreshToken(userDetails.getUsername());
 
+        LocalDateTime accessTokenExpirationDate = LocalDateTime.now().plus(accessTokenExpirationMs, ChronoField.MILLI_OF_DAY.getBaseUnit());
+
         return new JwtResponse(
                 userDetails.getUserId(),
                 roles,
                 accessToken,
                 "Bearer",
-                accessTokenExpirationMs,
+                accessTokenExpirationDate.toString(),
                 refreshToken.getToken());
     }
 
@@ -210,8 +217,13 @@ public class UserServiceImpl implements UserService {
             String newAccessToken = jwtUtils.generateAccessToken(userDetails);
             String newRefreshToken = refreshTokenService.createRefreshToken(userDetails.getUsername()).getToken();
 
+            refreshTokenRepository.delete(lastRefreshToken);
+
+            LocalDateTime newAccessTokenExpirationDate = LocalDateTime.now().plus(accessTokenExpirationMs, ChronoField.MILLI_OF_DAY.getBaseUnit());
+
             return new RefreshTokenResponse(
                     newAccessToken,
+                    newAccessTokenExpirationDate.toString(),
                     newRefreshToken,
                     "Bearer"
             );
@@ -220,8 +232,7 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public void logoutUser() {
-        Long userId = jwtUtils.getLoggedUserId();
+    public void logoutUser(Long userId) {
         LOGGER.info("---- Logout user with id: {}", userId);
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new NotFoundException("Not found user with given id: " + userId));
@@ -285,12 +296,14 @@ public class UserServiceImpl implements UserService {
 
         RefreshToken refreshToken = refreshTokenService.createRefreshToken(userDetails.getUsername());
 
+        LocalDateTime accessTokenExpirationDate = LocalDateTime.now().plus(accessTokenExpirationMs, ChronoField.MILLI_OF_DAY.getBaseUnit());
+
         return new JwtResponse(
                 userDetails.getUserId(),
                 roles,
                 accessToken,
                 "Bearer",
-                accessTokenExpirationMs,
+                accessTokenExpirationDate.toString(),
                 refreshToken.getToken());
     }
 
@@ -319,12 +332,14 @@ public class UserServiceImpl implements UserService {
 
         RefreshToken refreshToken = refreshTokenService.createRefreshToken(userDetails.getUsername());
 
+        LocalDateTime accessTokenExpirationDate = LocalDateTime.now().plus(accessTokenExpirationMs, ChronoField.MILLI_OF_DAY.getBaseUnit());
+
         return new JwtResponse(
                 userDetails.getUserId(),
                 roles,
                 accessToken,
                 "Bearer",
-                accessTokenExpirationMs,
+                accessTokenExpirationDate.toString(),
                 refreshToken.getToken());
     }
 
@@ -353,12 +368,14 @@ public class UserServiceImpl implements UserService {
 
         RefreshToken refreshToken = refreshTokenService.createRefreshToken(userDetails.getUsername());
 
+        LocalDateTime accessTokenExpirationDate = LocalDateTime.now().plus(accessTokenExpirationMs, ChronoField.MILLI_OF_DAY.getBaseUnit());
+
         return new JwtResponse(
                 userDetails.getUserId(),
                 roles,
                 accessToken,
                 "Bearer",
-                accessTokenExpirationMs,
+                accessTokenExpirationDate.toString(),
                 refreshToken.getToken());
     }
 
@@ -434,8 +451,14 @@ public class UserServiceImpl implements UserService {
         if (passwordReset.getExpiredAt().isBefore(LocalDateTime.now())) {
             throw new ResourceGoneException("The reset password link has expired on " + passwordReset.getExpiredAt());
         } else {
-            user.setPassword(resetPasswordDto.getNewPassword());
-            userRepository.save(user);
+            if (passwordReset.isUsed()) {
+                throw new ConflictRequestException("The reset link has already been used");
+            } else {
+                passwordReset.setUsed(true);
+                passwordResetRepository.save(passwordReset);
+                user.setPassword(resetPasswordDto.getNewPassword());
+                userRepository.save(user);
+            }
         }
     }
 

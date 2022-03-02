@@ -15,7 +15,7 @@ public interface UserService {
 
     RefreshTokenResponse refreshExpiredToken(String refreshTokenStr);
 
-    void logoutUser();
+    void logoutUser(Long userId);
 
     void resendActivationLink(String userEmail);
 
