@@ -36,18 +36,20 @@ public class PostServiceImpl implements PostService {
     private final ImageRepository imageRepository;
     private final JwtUtils jwtUtils;
     private final FileService fileService;
+    private final GroupRepository groupRepository;
     private final Converter<List<PostDto>, List<Post>> postDtoListMapper;
     private final Converter<PostDto, Post> postDtoMapper;
     private final Converter<Post, RequestSharePostDto> sharedPostMapper;
     private final Converter<List<SharedPostDto>, List<SharedPost>> sharedPostDtoListMapper;
-    private final  Converter<SharedPostDto, SharedPost> sharedPostDtoMapper;
+    private final Converter<SharedPostDto, SharedPost> sharedPostDtoMapper;
 
 
     @Autowired
     public PostServiceImpl(Converter<Post, RequestPostDto> postMapper, UserRepository userRepository,
                            PostRepository postRepository, SharedPostRepository sharedPostRepository,
                            LikedPostRepository likedPostRepository, ImageRepository imageRepository,
-                           JwtUtils jwtUtils, FileService fileService, Converter<List<PostDto>, List<Post>> postDtoListMapper,
+                           JwtUtils jwtUtils, FileService fileService, GroupRepository groupRepository,
+                           Converter<List<PostDto>, List<Post>> postDtoListMapper,
                            Converter<PostDto, Post> postDtoMapper, Converter<Post, RequestSharePostDto> sharedPostMapper,
                            Converter<List<SharedPostDto>, List<SharedPost>> sharedPostDtoListMapper,
                            Converter<SharedPostDto, SharedPost> sharedPostDtoMapper) {
@@ -59,6 +61,7 @@ public class PostServiceImpl implements PostService {
         this.imageRepository = imageRepository;
         this.jwtUtils = jwtUtils;
         this.fileService = fileService;
+        this.groupRepository = groupRepository;
         this.postDtoListMapper = postDtoListMapper;
         this.postDtoMapper = postDtoMapper;
         this.sharedPostMapper = sharedPostMapper;
@@ -89,7 +92,7 @@ public class PostServiceImpl implements PostService {
     }
 
     @Override
-    public PostDto addPost(RequestPostDto requestPostDto, List<MultipartFile> imageFiles) {
+    public PostDto addPost(RequestPostDto requestPostDto, List<MultipartFile> imageFiles, Long groupId) {
         Long userId  = jwtUtils.getLoggedUserId();
         User author = userRepository.findById(userId)
                 .orElseThrow(() -> new NotFoundException("Not found user with id: " + userId));
@@ -99,6 +102,12 @@ public class PostServiceImpl implements PostService {
             Set<Image> postImages = fileService.storageImages(imageFiles, author);
             addedPost.setImages(postImages);
         }
+
+        if (groupId != null) {
+            Group group = groupRepository.findById(groupId).get();
+            addedPost.setGroup(group);
+        }
+
         postRepository.save(addedPost);
 
         return postDtoMapper.convert(addedPost);
@@ -133,7 +142,7 @@ public class PostServiceImpl implements PostService {
     }
 
     @Override
-    public void deleteUserPostById(Long postId, boolean archive) {
+    public void deletePostById(Long postId, boolean archive) {
         Long userId  = jwtUtils.getLoggedUserId();
         Post post = postRepository.findById(postId)
                 .orElseThrow(() -> new NotFoundException("Not found post with id: " + postId));
@@ -269,14 +278,6 @@ public class PostServiceImpl implements PostService {
                 .orElseThrow(() -> new NotFoundException("Not found user with id: " + userId));
         List<Post> favouritePosts = postRepository.findByFavourites(user);
         return postDtoListMapper.convert(favouritePosts);
-    }
-
-    @Override
-    public List<PostDto> findPostsByUserId(Long userId) {
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new NotFoundException("Not found user with id: " + userId));
-        List<Post> userPosts = postRepository.findByPostAuthor(user);
-        return postDtoListMapper.convert(userPosts);
     }
 
     @Override

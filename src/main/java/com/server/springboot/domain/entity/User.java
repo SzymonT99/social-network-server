@@ -2,7 +2,6 @@ package com.server.springboot.domain.entity;
 
 import com.server.springboot.domain.enumeration.ActivityStatus;
 import lombok.*;
-import org.hibernate.annotations.Cascade;
 
 import javax.persistence.*;
 import javax.validation.constraints.Email;
@@ -142,7 +141,7 @@ public class User {
             cascade = CascadeType.ALL, orphanRemoval = true)
     private Set<Group> createdGroups;
 
-    @OneToMany(mappedBy = "groupMember", fetch = FetchType.LAZY,
+    @OneToMany(mappedBy = "member", fetch = FetchType.LAZY,
             cascade = CascadeType.ALL, orphanRemoval = true)
     private Set<GroupMember> memberOfGroups;
 

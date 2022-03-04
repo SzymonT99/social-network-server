@@ -38,12 +38,15 @@ public class GroupMember {
     private LocalDateTime addedIn;
 
     @NotNull
-    @Column(name = "invitation_displayed", nullable = false)
+    @Column(name = "invitation_displayed")
     private boolean invitationDisplayed;
+
+    @Column(name = "invitation_date")
+    private LocalDateTime invitationDate;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", nullable = false)
-    private User groupMember;
+    private User member;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "group_id", nullable = false)

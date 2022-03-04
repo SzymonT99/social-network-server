@@ -21,7 +21,7 @@ public class GroupMemberDtoMapper implements Converter<GroupMemberDto, GroupMemb
     public GroupMemberDto convert(GroupMember from) {
         return GroupMemberDto.builder()
                 .groupMemberId(from.getGroupMemberId())
-                .member(userDtoMapper.convert(from.getGroupMember()))
+                .member(userDtoMapper.convert(from.getMember()))
                 .groupPermissionType(from.getGroupPermissionType())
                 .groupMemberStatus(from.getGroupMemberStatus())
                 .addedIn(from.getAddedIn().toString())

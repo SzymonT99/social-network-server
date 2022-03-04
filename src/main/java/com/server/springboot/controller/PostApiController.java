@@ -41,7 +41,7 @@ public class PostApiController {
     public ResponseEntity<PostDto> createPost(@RequestPart(value = "images", required = false) List<MultipartFile> imageFiles,
                                         @Valid @RequestPart(value = "post") RequestPostDto requestPostDto) {
         LOGGER.info("---- Create post");
-        PostDto post = postService.addPost(requestPostDto, imageFiles);
+        PostDto post = postService.addPost(requestPostDto, imageFiles, null);
         return new ResponseEntity<>(post, HttpStatus.CREATED);
     }
 
@@ -59,7 +59,7 @@ public class PostApiController {
     @DeleteMapping(value = "/posts/{postId}")
     public ResponseEntity<?> deletePost(@PathVariable(value = "postId") Long postId) {
         LOGGER.info("---- Delete post with id: {}", postId);
-        postService.deleteUserPostById(postId, false);
+        postService.deletePostById(postId, false);
         return new ResponseEntity<>(HttpStatus.OK);
     }
 
@@ -67,7 +67,7 @@ public class PostApiController {
     @DeleteMapping(value = "/posts/{postId}/archive")
     public ResponseEntity<?> deletePostWithArchiving(@PathVariable(value = "postId") Long postId) {
         LOGGER.info("---- Delete post by archiving with id: {}", postId);
-        postService.deleteUserPostById(postId, true);
+        postService.deletePostById(postId, true);
         return new ResponseEntity<>(HttpStatus.OK);
     }
 

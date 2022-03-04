@@ -18,5 +18,7 @@ public class GroupInvitationDto {
     private String groupName;
     private ImageDto groupImage;
     private String groupDescription;
+    private String groupCreatedAt;
+    private Integer groupMembersNumber;
     private List<InterestDto> groupInterests;
 }

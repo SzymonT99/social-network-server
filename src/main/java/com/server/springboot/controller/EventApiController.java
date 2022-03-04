@@ -75,7 +75,8 @@ public class EventApiController {
 
     @ApiOperation(value = "Invite user to events")
     @PostMapping(value = "/events/{eventId}/invite")
-    public ResponseEntity<?> inviteForEvent(@PathVariable(value = "eventId") Long eventId, @RequestParam(value = "invitedUserId") Long invitedUserId) {
+    public ResponseEntity<?> inviteForEvent(@PathVariable(value = "eventId") Long eventId,
+                                            @RequestParam(value = "invitedUserId") Long invitedUserId) {
         LOGGER.info("---- Invitation to event for user with id: {}", invitedUserId);
         eventService.inviteUser(eventId, invitedUserId);
         return new ResponseEntity<>(HttpStatus.CREATED);
@@ -119,7 +120,6 @@ public class EventApiController {
         LOGGER.info("---- Get all shared user shared events");
         return new ResponseEntity<>(eventService.findAllSharedEventsByUser(userId), HttpStatus.OK);
     }
-
 }
 
 

@@ -1,15 +1,9 @@
 package com.server.springboot.service.impl;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
-import com.server.springboot.domain.dto.request.CreateUserDto;
 import com.server.springboot.domain.dto.request.RequestPostDto;
 import com.server.springboot.domain.dto.response.*;
-import com.server.springboot.domain.entity.Post;
 import com.server.springboot.domain.entity.User;
-import com.server.springboot.domain.enumeration.Gender;
 import com.server.springboot.domain.mapper.Converter;
-import com.server.springboot.domain.repository.PostRepository;
-import com.server.springboot.domain.repository.ReportRepository;
 import com.server.springboot.domain.repository.UserRepository;
 import com.server.springboot.exception.NotFoundException;
 import com.server.springboot.security.JwtUtils;
@@ -51,7 +45,7 @@ public class PostServiceImplTest {
                 .isCommentingBlocked("false")
                 .build();
 
-        postService.addPost(requestPostDto, null);
+        postService.addPost(requestPostDto, null, null);
 
         assertTrue(new ReflectionEquals(PostDto
                 .builder()
@@ -98,7 +92,7 @@ public class PostServiceImplTest {
     @DisplayName("Delete post by id: 131")
     @Order(value = 3)
     void deleteUserPostById() {
-        postService.deleteUserPostById(131L, false);
+        postService.deletePostById(131L, false);
 
         assertThatThrownBy(() -> postService.findPostById(131L))
                 .isInstanceOf(NotFoundException.class);

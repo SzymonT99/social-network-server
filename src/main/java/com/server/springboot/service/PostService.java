@@ -13,12 +13,12 @@ public interface PostService {
 
     List<PostDto> findAllPublicPosts();
 
-    PostDto addPost(RequestPostDto requestPostDto, List<MultipartFile> imageFiles);
+    PostDto addPost(RequestPostDto requestPostDto, List<MultipartFile> imageFiles, Long groupId);
 
     @Transactional
     PostDto editPost(Long postId, RequestPostDto requestPostDto, List<MultipartFile> imageFiles);
 
-    void deleteUserPostById(Long postId, boolean archive);
+    void deletePostById(Long postId, boolean archive);
 
     PostDto findPostById(Long postId);
 
@@ -37,8 +37,6 @@ public interface PostService {
     void deletePostFromFavourite(Long postId);
 
     List<PostDto> findAllFavouritePostsByUserId(Long userId);
-
-    List<PostDto> findPostsByUserId(Long userId);
 
     void setPostCommentsAvailability(Long postId, boolean isBlocked);
 
