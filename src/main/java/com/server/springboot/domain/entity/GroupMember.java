@@ -25,8 +25,7 @@ public class GroupMember {
     private Long groupMemberId;
 
     @Enumerated(EnumType.STRING)
-    @NotNull
-    @Column(name = "group_permission_type", nullable = false)
+    @Column(name = "group_permission_type")
     private GroupPermissionType groupPermissionType;
 
     @Enumerated(EnumType.STRING)
@@ -54,7 +53,7 @@ public class GroupMember {
 
     @OneToMany(mappedBy = "threadAuthor", fetch = FetchType.LAZY,
             cascade = CascadeType.ALL, orphanRemoval = true)
-    private Set<Thread> threads;
+    private Set<GroupThread> groupThreads;
 
     @OneToMany(mappedBy = "answerAuthor", fetch = FetchType.LAZY,
             cascade = CascadeType.ALL, orphanRemoval = true)

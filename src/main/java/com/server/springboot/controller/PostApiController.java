@@ -39,7 +39,7 @@ public class PostApiController {
     @ApiOperation(value = "Create a post")
     @PostMapping(value = "/posts", consumes = {MediaType.APPLICATION_JSON_VALUE, MediaType.MULTIPART_FORM_DATA_VALUE})
     public ResponseEntity<PostDto> createPost(@RequestPart(value = "images", required = false) List<MultipartFile> imageFiles,
-                                        @Valid @RequestPart(value = "post") RequestPostDto requestPostDto) {
+                                              @Valid @RequestPart(value = "post") RequestPostDto requestPostDto) {
         LOGGER.info("---- Create post");
         PostDto post = postService.addPost(requestPostDto, imageFiles, null);
         return new ResponseEntity<>(post, HttpStatus.CREATED);
@@ -48,8 +48,8 @@ public class PostApiController {
     @ApiOperation(value = "Update existing post by id")
     @PutMapping(value = "/posts/{postId}", consumes = {MediaType.APPLICATION_JSON_VALUE, MediaType.MULTIPART_FORM_DATA_VALUE})
     public ResponseEntity<PostDto> updatePost(@PathVariable(value = "postId") Long postId,
-                                        @RequestPart(value = "images", required = false) List<MultipartFile> imageFiles,
-                                        @Valid @RequestPart(value = "post") RequestPostDto requestPostDto) {
+                                              @RequestPart(value = "images", required = false) List<MultipartFile> imageFiles,
+                                              @Valid @RequestPart(value = "post") RequestPostDto requestPostDto) {
         LOGGER.info("---- Update post with id: {}", postId);
         PostDto updatedPost = postService.editPost(postId, requestPostDto, imageFiles);
         return new ResponseEntity<>(updatedPost, HttpStatus.OK);
@@ -104,7 +104,7 @@ public class PostApiController {
     @ApiOperation(value = "Share post by id")
     @PostMapping(value = "/posts/{basePostId}/share")
     public ResponseEntity<SharedPostDto> sharePost(@PathVariable(value = "basePostId") Long basePostId,
-                                       @Valid @RequestBody RequestSharePostDto requestSharePostDto) {
+                                                   @Valid @RequestBody RequestSharePostDto requestSharePostDto) {
         LOGGER.info("---- User shares post with id: {}", basePostId);
         SharedPostDto sharedPost = postService.sharePost(basePostId, requestSharePostDto);
         return new ResponseEntity<>(sharedPost, HttpStatus.CREATED);

@@ -1,8 +1,7 @@
 package com.server.springboot.service.impl;
 
 import com.google.common.collect.Lists;
-import com.server.springboot.domain.dto.request.RequestGroupDto;
-import com.server.springboot.domain.dto.request.RequestGroupRuleDto;
+import com.server.springboot.domain.dto.request.*;
 import com.server.springboot.domain.dto.response.*;
 import com.server.springboot.domain.entity.*;
 import com.server.springboot.domain.enumeration.GroupMemberStatus;
@@ -21,8 +20,10 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.time.LocalDateTime;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 @Service
 public class GroupServiceImpl implements GroupService {
@@ -36,25 +37,34 @@ public class GroupServiceImpl implements GroupService {
     private final JwtUtils jwtUtils;
     private final ImageRepository imageRepository;
     private final InterestRepository interestRepository;
+    private final GroupThreadRepository groupThreadRepository;
+    private final ThreadAnswerRepository threadAnswerRepository;
+    private final ThreadAnswerReviewRepository threadAnswerReviewRepository;
     private final Converter<List<GroupDto>, List<Group>> groupDtoListMapper;
     private final Converter<GroupDetailsDto, Group> groupDetailsDtoMapper;
     private final Converter<GroupRule, RequestGroupRuleDto> groupRuleMapper;
     private final Converter<List<InterestDto>, List<Interest>> interestDtoListMapper;
     private final Converter<List<GroupInvitationDto>, List<GroupMember>> groupInvitationDtoListMapper;
     private final Converter<List<PostDto>, List<Post>> postDtoListMapper;
+    private final Converter<GroupThread, RequestThreadDto> groupThreadMapper;
+    private final Converter<List<UserDto>, List<User>> userDtoListMapper;
+    private final Converter<List<GroupMemberDto>, List<GroupMember>> groupMemberDtoListMapper;
 
     @Autowired
-
     public GroupServiceImpl(GroupRepository groupRepository, GroupRuleRepository groupRuleRepository,
                             GroupMemberRepository groupMemberRepository, UserRepository userRepository,
                             Converter<Group, RequestGroupDto> groupMapper, FileService fileService, JwtUtils jwtUtils,
                             ImageRepository imageRepository, InterestRepository interestRepository,
+                            GroupThreadRepository groupThreadRepository,
+                            ThreadAnswerRepository threadAnswerRepository,
+                            ThreadAnswerReviewRepository threadAnswerReviewRepository,
                             Converter<List<GroupDto>, List<Group>> groupDtoListMapper,
                             Converter<GroupDetailsDto, Group> groupDetailsDtoMapper,
                             Converter<GroupRule, RequestGroupRuleDto> groupRuleMapper,
                             Converter<List<InterestDto>, List<Interest>> interestDtoListMapper,
                             Converter<List<GroupInvitationDto>, List<GroupMember>> groupInvitationDtoListMapper,
-                            Converter<List<PostDto>, List<Post>> postDtoListMapper) {
+                            Converter<List<PostDto>, List<Post>> postDtoListMapper,
+                            Converter<GroupThread, RequestThreadDto> groupThreadMapper, Converter<List<UserDto>, List<User>> userDtoListMapper, Converter<List<GroupMemberDto>, List<GroupMember>> groupMemberDtoListMapper) {
         this.groupRepository = groupRepository;
         this.groupRuleRepository = groupRuleRepository;
         this.groupMemberRepository = groupMemberRepository;
@@ -64,12 +74,18 @@ public class GroupServiceImpl implements GroupService {
         this.jwtUtils = jwtUtils;
         this.imageRepository = imageRepository;
         this.interestRepository = interestRepository;
+        this.groupThreadRepository = groupThreadRepository;
+        this.threadAnswerRepository = threadAnswerRepository;
+        this.threadAnswerReviewRepository = threadAnswerReviewRepository;
         this.groupDtoListMapper = groupDtoListMapper;
         this.groupDetailsDtoMapper = groupDetailsDtoMapper;
         this.groupRuleMapper = groupRuleMapper;
         this.interestDtoListMapper = interestDtoListMapper;
         this.groupInvitationDtoListMapper = groupInvitationDtoListMapper;
         this.postDtoListMapper = postDtoListMapper;
+        this.groupThreadMapper = groupThreadMapper;
+        this.userDtoListMapper = userDtoListMapper;
+        this.groupMemberDtoListMapper = groupMemberDtoListMapper;
     }
 
     @Override
@@ -86,8 +102,18 @@ public class GroupServiceImpl implements GroupService {
             createdGroup.setImage(image);
         }
 
+        GroupMember groupMember = GroupMember.builder()
+                .groupPermissionType(GroupPermissionType.ADMINISTRATOR)
+                .groupMemberStatus(GroupMemberStatus.JOINED)
+                .addedIn(LocalDateTime.now())
+                .member(creator)
+                .group(createdGroup)
+                .build();
+
         groupRepository.save(createdGroup);
+        groupMemberRepository.save(groupMember);
     }
+
 
     @Override
     public void editGroup(Long groupId, RequestGroupDto requestGroupDto, MultipartFile imageFile) {
@@ -156,7 +182,11 @@ public class GroupServiceImpl implements GroupService {
     public GroupDetailsDto findGroup(Long groupId) {
         Group group = groupRepository.findById(groupId)
                 .orElseThrow(() -> new NotFoundException("Not found group with id: " + groupId));
-        return groupDetailsDtoMapper.convert(group);
+        GroupDetailsDto groupDetailsDto = groupDetailsDtoMapper.convert(group);
+        List<GroupMember> groupMembers = groupMemberRepository.findByGroupAndGroupMemberStatus(group, GroupMemberStatus.JOINED);
+        groupDetailsDto.setMembers(groupMemberDtoListMapper.convert(groupMembers));
+
+        return groupDetailsDto;
     }
 
     @Override
@@ -282,17 +312,29 @@ public class GroupServiceImpl implements GroupService {
 
     @Override
     public void inviteUserToGroup(Long groupId, Long invitedUserId) {
-        User user = userRepository.findById(invitedUserId)
-                .orElseThrow(() -> new NotFoundException("Not found user with id: " + invitedUserId));
+        Long loggedUserId = jwtUtils.getLoggedUserId();
+        User loggedUser = userRepository.findById(loggedUserId)
+                .orElseThrow(() -> new NotFoundException("Not found user with id: " + loggedUserId));
         Group group = groupRepository.findById(groupId)
                 .orElseThrow(() -> new NotFoundException("Not found group with id: " + groupId));
+
+        GroupMember loggedUserMember = groupMemberRepository.findByGroupAndMember(group, loggedUser)
+                .orElseThrow(() -> new NotFoundException("Logged user is not member of the group with id: " + groupId));
+
+        if (loggedUserMember.getGroupPermissionType() != GroupPermissionType.ADMINISTRATOR
+                && loggedUserMember.getGroupPermissionType() != GroupPermissionType.ASSISTANT) {
+            throw new ForbiddenException("Logged user not have access to invite in group with id: " + groupId);
+        }
+
+        User user = userRepository.findById(invitedUserId)
+                .orElseThrow(() -> new NotFoundException("Not found user with id: " + invitedUserId));
 
         if (groupMemberRepository.existsByMemberAndGroup(user, group)) {
             throw new ConflictRequestException("The user is already a member of the group or an invitation has already been sent to him");
         }
 
         GroupMember groupMember = GroupMember.builder()
-                .groupPermissionType(GroupPermissionType.MEMBER)
+                .groupPermissionType(null)
                 .groupMemberStatus(GroupMemberStatus.INVITED)
                 .invitationDate(LocalDateTime.now())
                 .invitationDisplayed(false)
@@ -323,12 +365,12 @@ public class GroupServiceImpl implements GroupService {
         Group group = groupRepository.findById(groupId)
                 .orElseThrow(() -> new NotFoundException("Not found group with id: " + groupId));
 
-        if (groupMemberRepository.existsByMemberAndGroup(user, group)) {
-            throw new ConflictRequestException("The user is already a member of the group or declined the invitation");
-        }
-
         GroupMember groupMember = groupMemberRepository.findByGroupAndMember(group, user)
                 .orElseThrow(() -> new NotFoundException(String.format("Not found user with id: %s in group with id: %s", userId, groupId)));
+
+        if (groupMember.getGroupMemberStatus() != GroupMemberStatus.INVITED) {
+            throw new ConflictRequestException("The user is already a member of the group or declined the invitation");
+        }
 
         if (isInvitationAccepted) {
             groupMember.setGroupMemberStatus(GroupMemberStatus.JOINED);
@@ -347,5 +389,290 @@ public class GroupServiceImpl implements GroupService {
         List<Post> groupPosts = Lists.newArrayList(group.getPosts());
         return postDtoListMapper.convert(groupPosts);
     }
-}
 
+    @Override
+    public void addGroupThread(Long groupId, RequestThreadDto requestThreadDto, MultipartFile imageFile) {
+        Long userId = jwtUtils.getLoggedUserId();
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new NotFoundException("Not found user with id: " + userId));
+        Group group = groupRepository.findById(groupId)
+                .orElseThrow(() -> new NotFoundException("Not found group with id: " + groupId));
+
+        GroupMember groupMember = groupMemberRepository.findByGroupAndMember(group, user)
+                .orElseThrow(() -> new NotFoundException(String.format("Not found user with id: %s in group with id: %s", userId, groupId)));
+
+        GroupThread groupThread = groupThreadMapper.convert(requestThreadDto);
+        groupThread.setGroup(group);
+        groupThread.setThreadAuthor(groupMember);
+
+        if (imageFile != null) {
+            Image image = fileService.storageOneImage(imageFile, user, false);
+            groupThread.setImage(image);
+        }
+
+        groupThreadRepository.save(groupThread);
+    }
+
+    @Override
+    public void editGroupThreadById(Long threadId, RequestThreadDto requestThreadDto, MultipartFile imageFile) {
+        Long userId = jwtUtils.getLoggedUserId();
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new NotFoundException("Not found user with id: " + userId));
+        GroupThread groupThread = groupThreadRepository.findById(threadId)
+                .orElseThrow(() -> new NotFoundException("Not found group thread with id: " + threadId));
+
+        if (groupThread.getThreadAuthor().getMember() != user) {
+            throw new ForbiddenException("Invalid group thread author - thread editing access forbidden");
+        }
+
+        if (groupThread.getImage() != null) {
+            String lastImageId = groupThread.getImage().getImageId();
+            groupThread.setImage(null);
+            imageRepository.deleteByImageId(lastImageId);
+        }
+
+        if (imageFile != null) {
+            Image updatedImages = fileService.storageOneImage(imageFile, user, false);
+            groupThread.setImage(updatedImages);
+        }
+
+        groupThread.setTitle(requestThreadDto.getTitle());
+        groupThread.setContent(requestThreadDto.getContent());
+
+        groupThreadRepository.save(groupThread);
+    }
+
+    @Override
+    public void deleteGroupThreadById(Long threadId) {
+        Long userId = jwtUtils.getLoggedUserId();
+        GroupThread groupThread = groupThreadRepository.findById(threadId)
+                .orElseThrow(() -> new NotFoundException("Not found group thread with id: " + threadId));
+
+        if (!groupThread.getThreadAuthor().getMember().getUserId().equals(userId)) {
+            throw new ForbiddenException("Invalid group thread author id - thread deleting access forbidden");
+        }
+
+        groupThreadRepository.deleteByThreadId(threadId);
+    }
+
+    @Override
+    public void addThreadAnswer(Long threadId, RequestThreadAnswerDto requestThreadAnswerDto) {
+        Long userId = jwtUtils.getLoggedUserId();
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new NotFoundException("Not found user with id: " + userId));
+        GroupThread groupThread = groupThreadRepository.findById(threadId)
+                .orElseThrow(() -> new NotFoundException("Not found group thread with id: " + threadId));
+
+        GroupMember groupMember = groupMemberRepository.findByGroupAndMember(groupThread.getGroup(), user)
+                .orElseThrow(() -> new NotFoundException(String.format("Not found user with id: %s in group with id: %s",
+                        userId, groupThread.getGroup().getGroupId())));
+
+        ThreadAnswer threadAnswer = ThreadAnswer.builder()
+                .text(requestThreadAnswerDto.getText())
+                .date(LocalDateTime.now())
+                .answerAuthor(groupMember)
+                .groupThread(groupThread)
+                .build();
+        threadAnswerRepository.save(threadAnswer);
+    }
+
+    @Override
+    public void editThreadAnswerById(Long answerId, RequestThreadAnswerDto requestThreadAnswerDto) {
+        Long userId = jwtUtils.getLoggedUserId();
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new NotFoundException("Not found user with id: " + userId));
+
+        ThreadAnswer threadAnswer = threadAnswerRepository.findById(answerId)
+                .orElseThrow(() -> new NotFoundException("Not found thread answer with id: " + answerId));
+
+        if (threadAnswer.getAnswerAuthor().getMember() != user) {
+            throw new ForbiddenException("Invalid group thread answer author - answer editing access forbidden");
+        }
+
+        threadAnswer.setText(requestThreadAnswerDto.getText());
+        threadAnswerRepository.save(threadAnswer);
+    }
+
+    @Override
+    public void deleteThreadAnswerById(Long answerId) {
+        Long userId = jwtUtils.getLoggedUserId();
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new NotFoundException("Not found user with id: " + userId));
+
+        ThreadAnswer threadAnswer = threadAnswerRepository.findById(answerId)
+                .orElseThrow(() -> new NotFoundException("Not found thread answer with id: " + answerId));
+
+        if (threadAnswer.getAnswerAuthor().getMember() != user) {
+            throw new ForbiddenException("Invalid group thread answer author - answer deleting access forbidden");
+        }
+
+        threadAnswerRepository.deleteByAnswerId(answerId);
+    }
+
+    @Override
+    public void addThreadAnswerReview(Long answerId, RequestThreadAnswerReviewDto requestThreadAnswerReviewDto) {
+        Long userId = jwtUtils.getLoggedUserId();
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new NotFoundException("Not found user with id: " + userId));
+
+        ThreadAnswer threadAnswer = threadAnswerRepository.findById(answerId)
+                .orElseThrow(() -> new NotFoundException("Not found group thread answer with id: " + answerId));
+
+        GroupMember groupMember = groupMemberRepository.findByGroupAndMember(threadAnswer.getGroupThread().getGroup(), user)
+                .orElseThrow(() -> new NotFoundException(String.format("Not found user with id: %s in group with id: %s",
+                        userId, threadAnswer.getGroupThread().getGroup().getGroupId())));
+
+        if (threadAnswerReviewRepository.existsByThreadAnswerAndAnswerReviewAuthor(threadAnswer, groupMember)) {
+            throw new ConflictRequestException("The user has already rated this thread answer");
+        }
+
+        ThreadAnswerReview threadAnswerReview = ThreadAnswerReview.builder()
+                .threadAnswer(threadAnswer)
+                .answerReviewAuthor(groupMember)
+                .rate(requestThreadAnswerReviewDto.getRate())
+                .date(LocalDateTime.now())
+                .build();
+
+        List<Float> answerRates = threadAnswer.getReviews().stream().map(ThreadAnswerReview::getRate)
+                .collect(Collectors.toList());
+
+        double lastRatesSum = answerRates.stream()
+                .mapToDouble(Float::doubleValue)
+                .sum();
+
+        threadAnswer.setAverageRate((float) ((lastRatesSum + requestThreadAnswerReviewDto.getRate()) / (answerRates.size() + 1)));
+
+        threadAnswerRepository.save(threadAnswer);
+        threadAnswerReviewRepository.save(threadAnswerReview);
+    }
+
+    @Override
+    public void editThreadAnswerReviewById(Long reviewId, RequestThreadAnswerReviewDto requestThreadAnswerReviewDto) {
+        Long userId = jwtUtils.getLoggedUserId();
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new NotFoundException("Not found user with id: " + userId));
+
+        ThreadAnswerReview threadAnswerReview = threadAnswerReviewRepository.findById(reviewId)
+                .orElseThrow(() -> new NotFoundException("Not found group thread answer review with id: " + reviewId));
+
+        if (threadAnswerReview.getAnswerReviewAuthor().getMember() != user) {
+            throw new ForbiddenException("Invalid group thread answer review author - review editing access forbidden");
+        }
+
+        threadAnswerReview.setRate(requestThreadAnswerReviewDto.getRate());
+        threadAnswerReviewRepository.save(threadAnswerReview);
+    }
+
+    @Override
+    public void deleteThreadAnswerReviewById(Long reviewId) {
+        Long userId = jwtUtils.getLoggedUserId();
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new NotFoundException("Not found user with id: " + userId));
+
+        ThreadAnswerReview threadAnswerReview = threadAnswerReviewRepository.findById(reviewId)
+                .orElseThrow(() -> new NotFoundException("Not found group thread answer review with id: " + reviewId));
+
+        if (threadAnswerReview.getAnswerReviewAuthor().getMember() != user) {
+            throw new ForbiddenException("Invalid group thread answer review author - review deleting access forbidden");
+        }
+
+        threadAnswerReviewRepository.deleteByAnswerReviewId(reviewId);
+    }
+
+    @Override
+    public void wantToJoinGroup(Long groupId) {
+        Long userId = jwtUtils.getLoggedUserId();
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new NotFoundException("Not found user with id: " + userId));
+
+        Group group = groupRepository.findById(groupId)
+                .orElseThrow(() -> new NotFoundException("Not found group with id: " + groupId));
+
+        if (groupMemberRepository.existsByMemberAndGroup(user, group)) {
+            throw new ConflictRequestException("The user is already a member of the group or an invitation has already been sent to him");
+        }
+
+        GroupMember groupMember = GroupMember.builder()
+                .groupPermissionType(null)
+                .groupMemberStatus(GroupMemberStatus.WANT_TO_JOIN)
+                .invitationDate(null)
+                .invitationDisplayed(false)
+                .member(user)
+                .group(group)
+                .build();
+
+        groupMemberRepository.save(groupMember);
+    }
+
+    @Override
+    public List<UserDto> findAllUserRequestToJoinGroup(Long groupId) {
+        Group group = groupRepository.findById(groupId)
+                .orElseThrow(() -> new NotFoundException("Not found group with id: " + groupId));
+
+        List<GroupMember> requestGroupMembers = groupMemberRepository.findByGroupAndGroupMemberStatus(group, GroupMemberStatus.WANT_TO_JOIN);
+        List<User> requestUsers = requestGroupMembers.stream().map(GroupMember::getMember).collect(Collectors.toList());
+        return userDtoListMapper.convert(requestUsers);
+    }
+
+    @Override
+    public void decideAboutRequestToJoin(Long groupId, Long requesterId, boolean isApproved) {
+        Long loggedUserId = jwtUtils.getLoggedUserId();
+        User loggedUser = userRepository.findById(loggedUserId)
+                .orElseThrow(() -> new NotFoundException("Not found user with id: " + loggedUserId));
+        Group group = groupRepository.findById(groupId)
+                .orElseThrow(() -> new NotFoundException("Not found group with id: " + groupId));
+
+        GroupMember loggedUserMember = groupMemberRepository.findByGroupAndMember(group, loggedUser)
+                .orElseThrow(() -> new NotFoundException("Logged user is not member of the group with id: " + groupId));
+
+        if (loggedUserMember.getGroupPermissionType() != GroupPermissionType.ADMINISTRATOR
+                && loggedUserMember.getGroupPermissionType() != GroupPermissionType.ASSISTANT) {
+            throw new ForbiddenException("Logged user not have access to decide about request to join the group with id: " + groupId);
+        }
+
+        User user = userRepository.findById(requesterId)
+                .orElseThrow(() -> new NotFoundException("Not found user with id: " + requesterId));
+
+        GroupMember groupMember = groupMemberRepository.findByGroupAndMember(group, user)
+                .orElseThrow(() -> new NotFoundException(String.format("Not found user with id: %s in group with id: %s",
+                        user.getUserId(), group.getGroupId())));
+
+        if (isApproved) {
+            groupMember.setGroupMemberStatus(GroupMemberStatus.JOINED);
+            groupMember.setGroupPermissionType(GroupPermissionType.MEMBER);
+            groupMember.setAddedIn(LocalDateTime.now());
+        } else {
+            groupMember.setGroupMemberStatus(GroupMemberStatus.REJECTED);
+        }
+
+        groupMemberRepository.save(groupMember);
+    }
+
+    @Override
+    public void setGroupMemberPermission(Long groupId, Long memberId, String permission) {
+        List<String> groupPermissionTypeList = Arrays.stream(GroupPermissionType.values())
+                .map(Enum::name)
+                .collect(Collectors.toList());
+
+        if (!groupPermissionTypeList.contains(permission)) {
+            throw new BadRequestException("Unknown permission type");
+        }
+
+        Long userId = jwtUtils.getLoggedUserId();
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new NotFoundException("Not found user with id: " + userId));
+        Group group = groupRepository.findById(groupId)
+                .orElseThrow(() -> new NotFoundException("Not found group with id: " + groupId));
+
+        if (group.getGroupCreator() != user) {
+            throw new ForbiddenException("Only the group creator can assign permissions");
+        }
+
+        GroupMember member = groupMemberRepository.findById(memberId)
+                .orElseThrow(() -> new NotFoundException("Not found group member with id: " + memberId));
+
+        member.setGroupPermissionType(GroupPermissionType.valueOf(permission));
+
+        groupMemberRepository.save(member);
+    }
+}

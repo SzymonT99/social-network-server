@@ -3,7 +3,6 @@ package com.server.springboot.domain.dto.request;
 import lombok.*;
 
 import javax.validation.constraints.NotEmpty;
-import javax.validation.constraints.Size;
 
 @AllArgsConstructor
 @NoArgsConstructor
@@ -12,12 +11,8 @@ import javax.validation.constraints.Size;
 @Setter
 @Builder
 @ToString
-public class RequestThreadDto {
+public class RequestThreadAnswerDto {
 
     @NotEmpty
-    @Size(max = 100)
-    private String title;
-
-    @NotEmpty
-    private String content;
+    private String text;
 }

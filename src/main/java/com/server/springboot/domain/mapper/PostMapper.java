@@ -11,7 +11,6 @@ public class PostMapper implements Converter<Post, RequestPostDto> {
 
     @Override
     public Post convert(RequestPostDto from) {
-        System.out.println(from.getText());
         return Post.builder()
                 .text(from.getText())
                 .isPublic(Boolean.parseBoolean(from.getIsPublic()))

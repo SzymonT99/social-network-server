@@ -127,8 +127,16 @@ public class GroupApiController {
         return new ResponseEntity<>(HttpStatus.OK);
     }
 
+    @ApiOperation(value = "Send request to join the group")
+    @PostMapping(value = "/groups/{groupId}/request")
+    public ResponseEntity<?> wantToJoinGroup(@PathVariable(value = "groupId") Long groupId) {
+        LOGGER.info("---- User sends a request to join the group with id: {}", groupId);
+        groupService.wantToJoinGroup(groupId);
+        return new ResponseEntity<>(HttpStatus.CREATED);
+    }
+
     @ApiOperation(value = "Invite user to group")
-    @PostMapping(value = "/group/{groupId}/invite")
+    @PostMapping(value = "/groups/{groupId}/invite")
     public ResponseEntity<?> inviteForGroup(@PathVariable(value = "groupId") Long groupId,
                                             @RequestParam(value = "invitedUserId") Long invitedUserId) {
         LOGGER.info("---- Invite user with id: {} to group with id: {}", invitedUserId, groupId);
@@ -141,6 +149,23 @@ public class GroupApiController {
     public ResponseEntity<List<GroupInvitationDto>> getUserInvitationsToGroup() {
         LOGGER.info("---- Get all user group invitations");
         return new ResponseEntity<>(groupService.findAllUserGroupInvitations(false), HttpStatus.OK);
+    }
+
+    @ApiOperation(value = "Get users who want to join the group")
+    @GetMapping(value = "/groups/{groupId}/request")
+    public ResponseEntity<List<UserDto>> getUserRequestsToJoinGroup(@PathVariable(value = "groupId") Long groupId) {
+        LOGGER.info("---- Get user's requests to join the group");
+        return new ResponseEntity<>(groupService.findAllUserRequestToJoinGroup(groupId), HttpStatus.OK);
+    }
+
+    @ApiOperation(value = "Decide about user group requests to join")
+    @PutMapping(value = "/groups/{groupId}/requests")
+    public ResponseEntity<?> decideAboutRequestToJoin(@PathVariable(value = "groupId") Long groupId,
+                                                      @RequestParam(value = "requesterId") Long requesterId,
+                                                      @RequestParam(value = "isApproved") boolean isApproved) {
+        LOGGER.info("---- Decide about request to join the group with id: {} for user with id: {}", groupId, requesterId);
+        groupService.decideAboutRequestToJoin(groupId, requesterId, isApproved);
+        return new ResponseEntity<>(HttpStatus.OK);
     }
 
     @ApiOperation(value = "Respond to group invitation")
@@ -192,23 +217,88 @@ public class GroupApiController {
     public ResponseEntity<?> createGroupThread(@PathVariable(value = "groupId") Long groupId,
                                                @RequestPart(value = "image") MultipartFile imageFile,
                                                @Valid @RequestPart(value = "thread") RequestThreadDto requestThreadDto) {
+        LOGGER.info("---- Create thread in group with id: {}", groupId);
+        groupService.addGroupThread(groupId, requestThreadDto, imageFile);
         return new ResponseEntity<>(HttpStatus.CREATED);
     }
 
     @ApiOperation(value = "Update a group thread")
-    @PutMapping(value = "/groups/{groupId}/threads/{threadId}", consumes = {MediaType.APPLICATION_JSON_VALUE, MediaType.MULTIPART_FORM_DATA_VALUE})
-    public ResponseEntity<?> updateGroupThread(@PathVariable(value = "groupId") Long groupId,
-                                               @PathVariable(value = "threadId") Long threadId,
+    @PutMapping(value = "/groups/threads/{threadId}", consumes = {MediaType.APPLICATION_JSON_VALUE, MediaType.MULTIPART_FORM_DATA_VALUE})
+    public ResponseEntity<?> updateGroupThread(@PathVariable(value = "threadId") Long threadId,
                                                @RequestPart(value = "image") MultipartFile imageFile,
                                                @Valid @RequestPart(value = "thread") RequestThreadDto requestThreadDto) {
-        return new ResponseEntity<>(HttpStatus.CREATED);
-    }
-
-    @ApiOperation(value = "Delete a group thread by id with archiving")
-    @DeleteMapping(value = "/groups/{groupId}/threads/{threadId}/archive")
-    public ResponseEntity<?> deleteThreadWithArchiving(@PathVariable(value = "groupId") Long postId,
-                                                       @PathVariable(value = "threadId") Long threadId) {
+        LOGGER.info("---- Update group thread with id: {}", threadId);
+        groupService.editGroupThreadById(threadId, requestThreadDto, imageFile);
         return new ResponseEntity<>(HttpStatus.OK);
     }
 
+    @ApiOperation(value = "Delete a group thread")
+    @DeleteMapping(value = "/groups/threads/{threadId}")
+    public ResponseEntity<?> deleteThread(@PathVariable(value = "threadId") Long threadId) {
+        LOGGER.info("---- Delete a group thread with id: {}", threadId);
+        groupService.deleteGroupThreadById(threadId);
+        return new ResponseEntity<>(HttpStatus.OK);
+    }
+
+    @ApiOperation(value = "Create a group thread answer")
+    @PostMapping(value = "/groups/threads/{threadId}/answers")
+    public ResponseEntity<?> createThreadAnswer(@PathVariable(value = "threadId") Long threadId,
+                                                @Valid @RequestBody RequestThreadAnswerDto requestThreadAnswerDto) {
+        LOGGER.info("---- Create answer to group thread with id: {}", threadId);
+        groupService.addThreadAnswer(threadId, requestThreadAnswerDto);
+        return new ResponseEntity<>(HttpStatus.CREATED);
+    }
+
+    @ApiOperation(value = "Update a group thread answer")
+    @PutMapping(value = "/groups/threads/answers/{answerId}")
+    public ResponseEntity<?> updateThreadAnswer(@PathVariable(value = "answerId") Long answerId,
+                                                @Valid @RequestBody RequestThreadAnswerDto requestThreadAnswerDto) {
+        LOGGER.info("---- Update answer with id: {} in group thread", answerId);
+        groupService.editThreadAnswerById(answerId, requestThreadAnswerDto);
+        return new ResponseEntity<>(HttpStatus.OK);
+    }
+
+    @ApiOperation(value = "Delete a group thread answer")
+    @DeleteMapping(value = "/groups/threads/answers/{answerId}")
+    public ResponseEntity<?> deleteThreadAnswer(@PathVariable(value = "answerId") Long answerId) {
+        LOGGER.info("---- Delete answer with id: {} in group thread", answerId);
+        groupService.deleteThreadAnswerById(answerId);
+        return new ResponseEntity<>(HttpStatus.OK);
+    }
+
+    @ApiOperation(value = "Create a group thread answer review")
+    @PostMapping(value = "/groups/threads/answers/{answerId}/reviews")
+    public ResponseEntity<?> createThreadAnswerReview(@PathVariable(value = "answerId") Long answerId,
+                                                      @Valid @RequestBody RequestThreadAnswerReviewDto requestThreadAnswerReviewDto) {
+        LOGGER.info("---- Create review to group thread answer with id: {}", answerId);
+        groupService.addThreadAnswerReview(answerId, requestThreadAnswerReviewDto);
+        return new ResponseEntity<>(HttpStatus.CREATED);
+    }
+
+    @ApiOperation(value = "Update a group thread answer review")
+    @PutMapping(value = "/groups/threads/answers/reviews/{reviewId}")
+    public ResponseEntity<?> updateThreadAnswerReview(@PathVariable(value = "reviewId") Long reviewId,
+                                                      @Valid @RequestBody RequestThreadAnswerReviewDto requestThreadAnswerReviewDto) {
+        LOGGER.info("---- Update review with id: {} in group thread answer", reviewId);
+        groupService.editThreadAnswerReviewById(reviewId, requestThreadAnswerReviewDto);
+        return new ResponseEntity<>(HttpStatus.OK);
+    }
+
+    @ApiOperation(value = "Delete a group thread answer review")
+    @DeleteMapping(value = "/groups/threads/answers/reviews/{reviewId}")
+    public ResponseEntity<?> deleteThreadAnswerReview(@PathVariable(value = "reviewId") Long reviewId) {
+        LOGGER.info("---- Delete review with id: {} in group thread answer", reviewId);
+        groupService.deleteThreadAnswerReviewById(reviewId);
+        return new ResponseEntity<>(HttpStatus.OK);
+    }
+
+    @ApiOperation(value = "Set group member permission")
+    @PutMapping(value = "/groups/{groupId}/members/{memberId}")
+    public ResponseEntity<?> setMemberPermission(@PathVariable(value = "groupId") Long groupId,
+                                                 @PathVariable(value = "memberId") Long memberId,
+                                                 @RequestParam(value = "permission") String permission) {
+        LOGGER.info("---- Set group member with id: {} permission type: {}", memberId, permission);
+        groupService.setGroupMemberPermission(groupId, memberId, permission);
+        return new ResponseEntity<>(HttpStatus.OK);
+    }
 }

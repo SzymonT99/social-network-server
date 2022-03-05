@@ -26,4 +26,6 @@ public interface GroupMemberRepository extends JpaRepository<GroupMember, Long> 
     @Query("UPDATE GroupMember gm SET gm.invitationDisplayed = :invitationDisplayed where gm.member = :member")
     void setGroupInvitationDisplayed(@Param("invitationDisplayed") boolean invitationDisplayed,
                                      @Param("member") User member);
+
+    List<GroupMember> findByGroupAndGroupMemberStatus(Group group, GroupMemberStatus groupMemberStatus);
 }

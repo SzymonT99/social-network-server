@@ -6,7 +6,6 @@ import javax.persistence.*;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
 import java.time.LocalDateTime;
-import java.util.List;
 import java.util.Set;
 
 @AllArgsConstructor
@@ -62,7 +61,7 @@ public class Group {
 
     @OneToMany(mappedBy = "group", fetch = FetchType.LAZY,
             cascade = CascadeType.ALL, orphanRemoval = true)
-    private Set<Thread> threads;
+    private Set<GroupThread> groupThreads;
 
     @OneToMany(mappedBy = "group", fetch = FetchType.LAZY,
             cascade = CascadeType.ALL, orphanRemoval = true)

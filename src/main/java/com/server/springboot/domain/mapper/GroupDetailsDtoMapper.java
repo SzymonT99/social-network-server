@@ -3,7 +3,7 @@ package com.server.springboot.domain.mapper;
 import com.google.common.collect.Lists;
 import com.server.springboot.domain.dto.response.*;
 import com.server.springboot.domain.entity.*;
-import com.server.springboot.domain.entity.Thread;
+import com.server.springboot.domain.entity.GroupThread;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -16,24 +16,20 @@ public class GroupDetailsDtoMapper implements Converter<GroupDetailsDto, Group>{
     private final Converter<UserDto, User> userDtoMapper;
     private final Converter<List<PostDto>, List<Post>> postDtoListMapper;
     private final Converter<List<GroupRuleDto>, List<GroupRule>> groupRuleDtoListMapper;
-    private final Converter<List<GroupMemberDto>, List<GroupMember>> groupMemberDtoListMapper;
-    private final Converter<List<GroupThreadDto>, List<Thread>> groupThreadDtoListMapper;
+    private final Converter<List<GroupThreadDto>, List<GroupThread>> groupThreadDtoListMapper;
     private final Converter<List<InterestDto>, List<Interest>> interestDtoListMapper;
-
 
     @Autowired
     public GroupDetailsDtoMapper(Converter<ImageDto, Image> imageDtoMapper,
                                  Converter<UserDto, User> userDtoMapper,
                                  Converter<List<PostDto>, List<Post>> postDtoListMapper,
                                  Converter<List<GroupRuleDto>, List<GroupRule>> groupRuleDtoListMapper,
-                                 Converter<List<GroupMemberDto>, List<GroupMember>> groupMemberDtoListMapper,
-                                 Converter<List<GroupThreadDto>, List<Thread>> groupThreadDtoListMapper,
+                                 Converter<List<GroupThreadDto>, List<GroupThread>> groupThreadDtoListMapper,
                                  Converter<List<InterestDto>, List<Interest>> interestDtoListMapper) {
         this.imageDtoMapper = imageDtoMapper;
         this.userDtoMapper = userDtoMapper;
         this.postDtoListMapper = postDtoListMapper;
         this.groupRuleDtoListMapper = groupRuleDtoListMapper;
-        this.groupMemberDtoListMapper = groupMemberDtoListMapper;
         this.groupThreadDtoListMapper = groupThreadDtoListMapper;
         this.interestDtoListMapper = interestDtoListMapper;
     }
@@ -49,9 +45,8 @@ public class GroupDetailsDtoMapper implements Converter<GroupDetailsDto, Group>{
                 .isPublic(from.isPublic())
                 .groupCreator(userDtoMapper.convert(from.getGroupCreator()))
                 .rules(groupRuleDtoListMapper.convert(Lists.newArrayList(from.getGroupRules())))
-                .members(groupMemberDtoListMapper.convert(Lists.newArrayList(from.getGroupMembers())))
                 .posts(postDtoListMapper.convert(Lists.newArrayList(from.getPosts())))
-                .threads(groupThreadDtoListMapper.convert(Lists.newArrayList(from.getThreads())))
+                .threads(groupThreadDtoListMapper.convert(Lists.newArrayList(from.getGroupThreads())))
                 .interests(interestDtoListMapper.convert(Lists.newArrayList(from.getGroupInterests())))
                 .build();
     }

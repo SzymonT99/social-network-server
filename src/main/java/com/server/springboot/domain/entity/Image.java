@@ -56,5 +56,5 @@ public class Image {
     private Group group;
 
     @OneToOne(mappedBy = "image", fetch = FetchType.LAZY)
-    private Thread groupThread;
+    private GroupThread groupThread;
 }

@@ -4,6 +4,7 @@ import lombok.*;
 
 import javax.persistence.*;
 import javax.validation.constraints.NotNull;
+import java.time.LocalDateTime;
 
 @AllArgsConstructor
 @NoArgsConstructor
@@ -23,6 +24,10 @@ public class ThreadAnswerReview {
     @NotNull
     @Column(name = "rate", nullable = false)
     private Float rate;
+
+    @NotNull
+    @Column(name = "date", nullable = false)
+    private LocalDateTime date;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "group_member_id", nullable = false)
