@@ -9,4 +9,5 @@ public enum ActivityType {
     CHANGE_PROFILE_PHOTO,
     CREATE_GROUP_POST,
     RESPOND_TO_EVENT,
+    JOIN_TO_GROUP,
 }

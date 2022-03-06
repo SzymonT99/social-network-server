@@ -25,8 +25,7 @@ public class GroupMember {
     private Long groupMemberId;
 
     @Enumerated(EnumType.STRING)
-    @NotNull
-    @Column(name = "group_permission_type", nullable = false)
+    @Column(name = "group_permission_type")
     private GroupPermissionType groupPermissionType;
 
     @Enumerated(EnumType.STRING)
@@ -38,12 +37,19 @@ public class GroupMember {
     private LocalDateTime addedIn;
 
     @NotNull
-    @Column(name = "invitation_displayed", nullable = false)
+    @Column(name = "invitation_displayed")
     private boolean invitationDisplayed;
+
+    @Column(name = "invitation_date")
+    private LocalDateTime invitationDate;
+
+    @NotNull
+    @Column(name = "has_notification", nullable = false)
+    private boolean hasNotification;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", nullable = false)
-    private User groupMember;
+    private User member;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "group_id", nullable = false)
@@ -51,7 +57,7 @@ public class GroupMember {
 
     @OneToMany(mappedBy = "threadAuthor", fetch = FetchType.LAZY,
             cascade = CascadeType.ALL, orphanRemoval = true)
-    private Set<Thread> threads;
+    private Set<GroupThread> groupThreads;
 
     @OneToMany(mappedBy = "answerAuthor", fetch = FetchType.LAZY,
             cascade = CascadeType.ALL, orphanRemoval = true)

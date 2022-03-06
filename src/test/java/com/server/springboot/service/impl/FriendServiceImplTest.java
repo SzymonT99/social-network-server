@@ -44,7 +44,7 @@ public class FriendServiceImplTest {
     void findAllUserInvitationsToFriends() {
         Long userId  = jwtUtils.getLoggedUserId();
 
-        assertThat(friendService.findAllUserInvitationsToFriends(userId))
+        assertThat(friendService.findAllUserReceivedInvitationsToFriends(userId, true))
                 .extracting(FriendInvitationDto::getFriendId,FriendInvitationDto::getIsInvitationAccepted)
                 .containsExactly(tuple(62L, false));
 

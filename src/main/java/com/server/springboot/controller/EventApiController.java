@@ -33,7 +33,7 @@ public class EventApiController {
 
     @ApiOperation(value = "Create an event")
     @PostMapping(value = "/events", consumes = {MediaType.APPLICATION_JSON_VALUE, MediaType.MULTIPART_FORM_DATA_VALUE})
-    public ResponseEntity<?> createEvent(@RequestPart(value = "image") MultipartFile imageFile,
+    public ResponseEntity<?> createEvent(@RequestPart(value = "image", required = false) MultipartFile imageFile,
                                          @Valid @RequestPart(value = "event") RequestEventDto requestEventDto) {
         LOGGER.info("---- Create event with title: {}", requestEventDto.getTitle());
         eventService.addEvent(requestEventDto, imageFile);
@@ -43,7 +43,7 @@ public class EventApiController {
     @ApiOperation(value = "Update existing event by id")
     @PutMapping(value = "/events/{eventId}", consumes = {MediaType.APPLICATION_JSON_VALUE, MediaType.MULTIPART_FORM_DATA_VALUE})
     public ResponseEntity<?> updateEvent(@PathVariable(value = "eventId") Long eventId,
-                                         @RequestPart(value = "image") MultipartFile imageFile,
+                                         @RequestPart(value = "image", required = false) MultipartFile imageFile,
                                          @Valid @RequestPart(value = "event") RequestEventDto requestEventDto) {
         LOGGER.info("---- Update event with id: {} and title: {}", eventId, requestEventDto.getTitle());
         eventService.editEvent(eventId, requestEventDto, imageFile);
@@ -52,18 +52,18 @@ public class EventApiController {
 
     @ApiOperation(value = "Delete an event by id")
     @DeleteMapping(value = "/events/{eventId}")
-    public ResponseEntity<?> deleteEvent(@PathVariable(value = "eventId") Long eventId) {
+    public ResponseEntity<?> deleteEvent(@PathVariable(value = "eventId") Long eventId,
+                                         @RequestParam(value = "archive") boolean archive) {
         LOGGER.info("---- Delete event with id: {}", eventId);
-        eventService.deleteEventById(eventId, false);
+        eventService.deleteEventById(eventId, archive);
         return new ResponseEntity<>(HttpStatus.OK);
     }
 
-    @ApiOperation(value = "Delete an event by id ith archiving")
-    @DeleteMapping(value = "/events/{eventId}/archive")
-    public ResponseEntity<?> deleteEventWithArchiving(@PathVariable(value = "eventId") Long eventId) {
-        LOGGER.info("---- Delete event by archiving with id: {}", eventId);
-        eventService.deleteEventById(eventId, true);
-        return new ResponseEntity<>(HttpStatus.OK);
+    @ApiOperation(value = "Get event by id")
+    @GetMapping(value = "/events/{eventId}")
+    public ResponseEntity<EventDto> getAllEvents(@PathVariable(value = "eventId") Long eventId) {
+        LOGGER.info("---- Get event by id");
+        return new ResponseEntity<>(eventService.findEvent(eventId), HttpStatus.OK);
     }
 
     @ApiOperation(value = "Get all events")
@@ -75,7 +75,8 @@ public class EventApiController {
 
     @ApiOperation(value = "Invite user to events")
     @PostMapping(value = "/events/{eventId}/invite")
-    public ResponseEntity<?> inviteForEvent(@PathVariable(value = "eventId") Long eventId, @RequestParam(value = "invitedUserId") Long invitedUserId) {
+    public ResponseEntity<?> inviteForEvent(@PathVariable(value = "eventId") Long eventId,
+                                            @RequestParam(value = "invitedUserId") Long invitedUserId) {
         LOGGER.info("---- Invitation to event for user with id: {}", invitedUserId);
         eventService.inviteUser(eventId, invitedUserId);
         return new ResponseEntity<>(HttpStatus.CREATED);
@@ -85,7 +86,7 @@ public class EventApiController {
     @GetMapping(value = "/events/invitations")
     public ResponseEntity<List<EventInvitationDto>> getUserInvitationForEvent() {
         LOGGER.info("---- Get all user invitations to event");
-        return new ResponseEntity<>(eventService.findAllUserEventInvitation(), HttpStatus.OK);
+        return new ResponseEntity<>(eventService.findAllUserEventInvitation(false), HttpStatus.OK);
     }
 
     @ApiOperation(value = "Respond to event")
@@ -119,7 +120,6 @@ public class EventApiController {
         LOGGER.info("---- Get all shared user shared events");
         return new ResponseEntity<>(eventService.findAllSharedEventsByUser(userId), HttpStatus.OK);
     }
-
 }
 
 

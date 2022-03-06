@@ -1,8 +1,9 @@
 package com.server.springboot.service.impl;
 
-import com.server.springboot.domain.dto.response.FriendDto;
-import com.server.springboot.domain.dto.response.FriendInvitationDto;
+import com.server.springboot.domain.dto.response.*;
+import com.server.springboot.domain.entity.Address;
 import com.server.springboot.domain.entity.Friend;
+import com.server.springboot.domain.entity.Image;
 import com.server.springboot.domain.entity.User;
 import com.server.springboot.domain.mapper.Converter;
 import com.server.springboot.domain.repository.FriendRepository;
@@ -15,7 +16,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 public class FriendServiceImpl implements FriendService {
@@ -24,17 +27,29 @@ public class FriendServiceImpl implements FriendService {
     private final FriendRepository friendRepository;
     private final JwtUtils jwtUtils;
     private final Converter<List<FriendInvitationDto>, List<Friend>> friendInvitationDtoListMapper;
+    private final Converter<List<SentFriendInvitationDto>, List<Friend>> sentFriendInvitationDtoListMapper;
     private final Converter<List<FriendDto>, List<Friend>> friendDtoListMapper;
+    private final Converter<ProfilePhotoDto, Image> profilePhotoDtoMapper;
+    private final Converter<AddressDto, Address> addressDtoMapper;
+    private final Converter<List<UserDto>, List<User>> userDtoListMapper;
 
     @Autowired
     public FriendServiceImpl(UserRepository userRepository, FriendRepository friendRepository, JwtUtils jwtUtils,
                              Converter<List<FriendInvitationDto>, List<Friend>> friendInvitationDtoListMapper,
-                             Converter<List<FriendDto>, List<Friend>> friendDtoListMapper) {
+                             Converter<List<SentFriendInvitationDto>, List<Friend>> sentFriendInvitationDtoListMapper,
+                             Converter<List<FriendDto>, List<Friend>> friendDtoListMapper,
+                             Converter<ProfilePhotoDto, Image> profilePhotoDtoMapper,
+                             Converter<AddressDto, Address> addressDtoMapper,
+                             Converter<List<UserDto>, List<User>> userDtoListMapper) {
         this.userRepository = userRepository;
         this.friendRepository = friendRepository;
         this.jwtUtils = jwtUtils;
         this.friendInvitationDtoListMapper = friendInvitationDtoListMapper;
+        this.sentFriendInvitationDtoListMapper = sentFriendInvitationDtoListMapper;
         this.friendDtoListMapper = friendDtoListMapper;
+        this.profilePhotoDtoMapper = profilePhotoDtoMapper;
+        this.addressDtoMapper = addressDtoMapper;
+        this.userDtoListMapper = userDtoListMapper;
     }
 
     @Override
@@ -59,11 +74,13 @@ public class FriendServiceImpl implements FriendService {
     }
 
     @Override
-    public List<FriendInvitationDto> findAllUserInvitationsToFriends(Long userId) {
+    public List<FriendInvitationDto> findAllUserReceivedInvitationsToFriends(Long userId, boolean isDisplayed) {
         User userFriend = userRepository.findById(userId)
                 .orElseThrow(() -> new NotFoundException("Not found user with id: " + userId));
+        if (isDisplayed) {
+            friendRepository.setFriendInvitationDisplayed(true, userFriend);
+        }
         List<Friend> friends = friendRepository.findByUserFriendAndIsInvitationAccepted(userFriend, null);
-        friendRepository.setFriendInvitationDisplayed(true, userFriend);
         return friendInvitationDtoListMapper.convert(friends);
     }
 
@@ -119,7 +136,7 @@ public class FriendServiceImpl implements FriendService {
         } else {
             userFriend = friend.getUser();
         }
-        if (friend.getUser() != currentUser && friend.getUserFriend() != currentUser ) {
+        if (friend.getUser() != currentUser && friend.getUserFriend() != currentUser) {
             throw new ForbiddenException("Invalid user inviter - friend deleting access forbidden");
         }
 
@@ -133,5 +150,68 @@ public class FriendServiceImpl implements FriendService {
                 .orElseThrow(() -> new NotFoundException("Not found user with id: " + userId));
         List<Friend> userFriends = friendRepository.findByUserAndIsInvitationAccepted(user, true);
         return friendDtoListMapper.convert(userFriends);
+    }
+
+    @Override
+    public List<SentFriendInvitationDto> findAllUserSentInvitationsToFriends(Long userId) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new NotFoundException("Not found user with id: " + userId));
+
+        List<Friend> friends = friendRepository.findByUserAndIsInvitationAccepted(user, null);
+        return sentFriendInvitationDtoListMapper.convert(friends);
+    }
+
+    @Override
+    public List<FriendSuggestionDto> findAllFriendsSuggestions() {
+        Long loggedUserId = jwtUtils.getLoggedUserId();
+        User loggedUser = userRepository.findById(loggedUserId)
+                .orElseThrow(() -> new NotFoundException("Not found user with id: " + loggedUserId));
+        List<User> loggedUserFriends = loggedUser.getFriends().stream()
+                .filter((friend) -> friend.getIsInvitationAccepted() != null && friend.getIsInvitationAccepted())
+                .map(Friend::getUserFriend)
+                .collect(Collectors.toList());
+
+        List<User> users = userRepository.findAll();
+        users = users.stream()
+                .filter((userEl) -> !userEl.getUserId().equals(loggedUserId)
+                        && !loggedUserFriends.contains(userEl)
+                        && !friendRepository.existsByUserAndUserFriend(loggedUser, userEl)
+                        && !friendRepository.existsByUserAndUserFriend(userEl, loggedUser))
+                .collect(Collectors.toList());
+
+        List<FriendSuggestionDto> friendSuggestionList = new ArrayList<>();
+
+        for (User currentUser : users) {
+            List<User> currentUserFriends = currentUser.getFriends().stream()
+                    .filter((friendEl) -> friendEl.getIsInvitationAccepted() != null && friendEl.getIsInvitationAccepted())
+                    .map(Friend::getUserFriend)
+                    .collect(Collectors.toList());
+
+            List<User> mutualFriends = new ArrayList<>();
+
+            currentUserFriends.forEach((currentUserFriend) -> {
+                if (loggedUserFriends.contains(currentUserFriend)) {
+                    mutualFriends.add(currentUserFriend);
+                }
+            });
+
+            if (mutualFriends.size() > 0) {
+                FriendSuggestionDto friendSuggestionDto = FriendSuggestionDto.builder()
+                        .userId(currentUser.getUserId())
+                        .firstName(currentUser.getUserProfile().getFirstName())
+                        .lastName(currentUser.getUserProfile().getLastName())
+                        .profilePhoto(currentUser.getUserProfile().getProfilePhoto() != null
+                                ? profilePhotoDtoMapper.convert(currentUser.getUserProfile().getProfilePhoto()) : null)
+                        .address(currentUser.getUserProfile().getAddress() != null
+                                ? addressDtoMapper.convert(currentUser.getUserProfile().getAddress()) : null)
+                        .userFriends(userDtoListMapper.convert(currentUserFriends))
+                        .mutualFriends(userDtoListMapper.convert((mutualFriends)))
+                        .build();
+
+                friendSuggestionList.add(friendSuggestionDto);
+            }
+        }
+
+        return friendSuggestionList;
     }
 }

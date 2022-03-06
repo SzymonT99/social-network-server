@@ -16,7 +16,7 @@ import java.util.Set;
 
 @Entity
 @Table(name = "thread")
-public class Thread {
+public class GroupThread {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -40,10 +40,6 @@ public class Thread {
     @Column(name = "created_at", nullable = false)
     private LocalDateTime createdAt;
 
-    @NotNull
-    @Column(name = "is_deleted", nullable = false)
-    private boolean isDeleted;
-
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "group_member_id", nullable = false)
     private GroupMember threadAuthor;
@@ -52,8 +48,7 @@ public class Thread {
     @JoinColumn(name = "group_id", nullable = false)
     private Group group;
 
-    @OneToMany(mappedBy = "thread", fetch = FetchType.LAZY,
+    @OneToMany(mappedBy = "groupThread", fetch = FetchType.LAZY,
             cascade = CascadeType.ALL, orphanRemoval = true)
     private Set<ThreadAnswer> answers;
-
 }

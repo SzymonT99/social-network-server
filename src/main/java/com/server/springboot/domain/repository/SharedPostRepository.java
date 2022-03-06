@@ -1,6 +1,5 @@
 package com.server.springboot.domain.repository;
 
-import com.server.springboot.domain.entity.Comment;
 import com.server.springboot.domain.entity.Post;
 import com.server.springboot.domain.entity.SharedPost;
 import com.server.springboot.domain.entity.User;

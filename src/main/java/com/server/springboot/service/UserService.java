@@ -1,10 +1,7 @@
 package com.server.springboot.service;
 
 import com.server.springboot.domain.dto.request.*;
-import com.server.springboot.domain.dto.response.JwtResponse;
-import com.server.springboot.domain.dto.response.RefreshTokenResponse;
-import com.server.springboot.domain.dto.response.ReportDto;
-import com.server.springboot.domain.dto.response.UserDto;
+import com.server.springboot.domain.dto.response.*;
 
 import java.util.List;
 
@@ -12,13 +9,13 @@ public interface UserService {
 
     void addUser(CreateUserDto createUserDto);
 
-    void activateAccount(String token);
+    ActivatedAccountDto activateAccount(String token);
 
     JwtResponse loginUser(UserLoginDto userLoginDto);
 
     RefreshTokenResponse refreshExpiredToken(String refreshTokenStr);
 
-    void logoutUser();
+    void logoutUser(Long userId);
 
     void resendActivationLink(String userEmail);
 

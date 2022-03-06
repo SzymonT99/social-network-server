@@ -11,6 +11,7 @@ import lombok.*;
 @ToString
 public class RefreshTokenResponse {
     private String accessToken;
+    private String accessTokenExpirationDate;
     private String refreshToken;
     private String tokenType;
 }

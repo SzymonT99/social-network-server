@@ -35,6 +35,7 @@ public class UserProfileDtoMapper implements Converter<UserProfileDto, UserProfi
                 .firstName(from.getFirstName())
                 .lastName(from.getLastName())
                 .email(from.getUser().getEmail())
+                .username(from.getUser().getUsername())
                 .phoneNumber(from.getUser().getPhoneNumber())
                 .joinDate(from.getUser().getCreatedAt().toString())
                 .aboutUser(from.getAboutUser())

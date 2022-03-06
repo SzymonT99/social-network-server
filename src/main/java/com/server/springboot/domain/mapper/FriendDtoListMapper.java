@@ -1,8 +1,9 @@
 package com.server.springboot.domain.mapper;
 
+import com.server.springboot.domain.dto.response.AddressDto;
 import com.server.springboot.domain.dto.response.FriendDto;
 import com.server.springboot.domain.dto.response.UserDto;
-import com.server.springboot.domain.entity.Comment;
+import com.server.springboot.domain.entity.Address;
 import com.server.springboot.domain.entity.Friend;
 import com.server.springboot.domain.entity.User;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -18,15 +19,19 @@ import java.util.stream.Collectors;
 public class FriendDtoListMapper implements Converter<List<FriendDto>, List<Friend>> {
 
     private final Converter<UserDto, User> userDtoMapper;
+    private final Converter<List<UserDto>, List<User>> userDtoListMapper;
+    private final Converter<AddressDto, Address> addressDtoMapper;
 
     @Autowired
-    public FriendDtoListMapper(Converter<UserDto, User> userDtoMapper) {
+    public FriendDtoListMapper(Converter<UserDto, User> userDtoMapper,
+                               Converter<List<UserDto>, List<User>> userDtoListMapper, Converter<AddressDto, Address> addressDtoMapper) {
         this.userDtoMapper = userDtoMapper;
+        this.userDtoListMapper = userDtoListMapper;
+        this.addressDtoMapper = addressDtoMapper;
     }
 
     @Override
     public List<FriendDto> convert(List<Friend> from) {
-        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd.MM.yyyy");
         List<FriendDto> friendDtoList = new ArrayList<>();
 
         from = from.stream()
@@ -34,13 +39,23 @@ public class FriendDtoListMapper implements Converter<List<FriendDto>, List<Frie
                 .collect(Collectors.toList());
 
         for (Friend friend : from) {
+
+            List<User> friendsOfUserFriend = friend.getUserFriend().getFriends().stream()
+                    .filter((userFriend) -> userFriend.getIsInvitationAccepted() != null && userFriend.getIsInvitationAccepted())
+                    .map(Friend::getUserFriend)
+                    .collect(Collectors.toList());
+
             FriendDto friendDto = FriendDto.builder()
                     .friendId(friend.getFriendId())
                     .isInvitationAccepted(friend.getIsInvitationAccepted() != null ? friend.getIsInvitationAccepted() : null)
-                    .invitationDate(friend.getInvitationDate().format(formatter))
+                    .invitationDate(friend.getInvitationDate().toString())
                     .friendFromDate(friend.getFriendFromDate() != null
-                            ? friend.getFriendFromDate().format(formatter) : null)
+                            ? friend.getFriendFromDate().toString() : null)
+                    .address(friend.getUserFriend().getUserProfile().getAddress() != null
+                            ? addressDtoMapper.convert(friend.getUserFriend().getUserProfile().getAddress())
+                            : null)
                     .user(userDtoMapper.convert(friend.getUserFriend()))
+                    .userFriends(userDtoListMapper.convert(friendsOfUserFriend))
                     .build();
 
             friendDtoList.add(friendDto);

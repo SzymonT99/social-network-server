@@ -2,6 +2,8 @@ package com.server.springboot.controller;
 
 import com.server.springboot.domain.dto.response.FriendDto;
 import com.server.springboot.domain.dto.response.FriendInvitationDto;
+import com.server.springboot.domain.dto.response.FriendSuggestionDto;
+import com.server.springboot.domain.dto.response.SentFriendInvitationDto;
 import com.server.springboot.service.FriendService;
 import io.swagger.annotations.ApiOperation;
 import org.slf4j.Logger;
@@ -34,11 +36,19 @@ public class FriendApiController {
         return new ResponseEntity<>(HttpStatus.CREATED);
     }
 
-    @ApiOperation(value = "Get all invitations to friends")
-    @GetMapping(value = "/friends/invitations")
-    public ResponseEntity<List<FriendInvitationDto>> getUserInvitationToFriends(@RequestParam(value = "userId") Long userId) {
-        LOGGER.info("---- Get all user invitation to friends");
-        return new ResponseEntity<>(friendService.findAllUserInvitationsToFriends(userId), HttpStatus.OK);
+    @ApiOperation(value = "Get all received invitations to friends")
+    @GetMapping(value = "/friends/invitations/received")
+    public ResponseEntity<List<FriendInvitationDto>> getUserReceivedInvitationToFriends(@RequestParam(value = "userId") Long userId,
+                                                                                @RequestParam(value = "isDisplayed") boolean isDisplayed) {
+        LOGGER.info("---- Get all received invitation to friends");
+        return new ResponseEntity<>(friendService.findAllUserReceivedInvitationsToFriends(userId, isDisplayed), HttpStatus.OK);
+    }
+
+    @ApiOperation(value = "Get all sent invitations to friends")
+    @GetMapping(value = "/friends/invitations/sent")
+    public ResponseEntity<List<SentFriendInvitationDto>> getUserSentInvitationToFriends(@RequestParam(value = "userId") Long userId) {
+        LOGGER.info("---- Get all sent invitation to friends");
+        return new ResponseEntity<>(friendService.findAllUserSentInvitationsToFriends(userId), HttpStatus.OK);
     }
 
     @ApiOperation(value = "Respond to the invitation to friends")
@@ -65,5 +75,12 @@ public class FriendApiController {
     public ResponseEntity<List<FriendDto>> getAllUserFriends(@RequestParam(value = "userId") Long userId) {
         LOGGER.info("---- User with id: {} get all friend", userId);
         return new ResponseEntity<>(friendService.findAllUserFriends(userId), HttpStatus.OK);
+    }
+
+    @ApiOperation(value = "Get friends suggestions")
+    @GetMapping(value = "/friends/suggestions")
+    public ResponseEntity<List<FriendSuggestionDto>> getFriendsSuggestions() {
+        LOGGER.info("---- User get suggestions of friends");
+        return new ResponseEntity<>(friendService.findAllFriendsSuggestions(), HttpStatus.OK);
     }
 }

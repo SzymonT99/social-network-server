@@ -6,7 +6,6 @@ import javax.persistence.*;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
 import java.time.LocalDateTime;
-import java.util.List;
 import java.util.Set;
 
 @AllArgsConstructor
@@ -26,7 +25,7 @@ public class Group {
 
     @NotNull
     @Column(name = "name", nullable = false, length = 30)
-    @Size(max = 30)
+    @Size(max = 100)
     private String name;
 
     @OneToOne(fetch = FetchType.LAZY, cascade = CascadeType.ALL)
@@ -44,6 +43,10 @@ public class Group {
     @Column(name = "is_deleted", nullable = false)
     private boolean isDeleted;
 
+    @NotNull
+    @Column(name = "is_public", nullable = false)
+    private boolean isPublic;
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "creator_id", nullable = false)
     private User groupCreator;
@@ -58,7 +61,7 @@ public class Group {
 
     @OneToMany(mappedBy = "group", fetch = FetchType.LAZY,
             cascade = CascadeType.ALL, orphanRemoval = true)
-    private Set<Thread> threads;
+    private Set<GroupThread> groupThreads;
 
     @OneToMany(mappedBy = "group", fetch = FetchType.LAZY,
             cascade = CascadeType.ALL, orphanRemoval = true)

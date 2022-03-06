@@ -15,6 +15,8 @@ public interface SharedEventRepository extends JpaRepository<SharedEvent, Long> 
 
     Optional<SharedEvent> findBySharedEventUserAndEvent(User user, Event event);
 
+    boolean existsBySharedEventUserAndEvent(User user, Event event);
+
     List<SharedEvent> findBySharedEventUser(User user);
 
     List<SharedEvent> findAllBySharedEventUserInAndDateIsGreaterThan(List<User> users, LocalDateTime dateLimit);

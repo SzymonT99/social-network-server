@@ -2,6 +2,7 @@ package com.server.springboot.controller;
 
 import com.server.springboot.domain.dto.request.*;
 
+import com.server.springboot.domain.dto.response.ActivatedAccountDto;
 import com.server.springboot.domain.dto.response.JwtResponse;
 import com.server.springboot.domain.dto.response.ReportDto;
 import com.server.springboot.domain.dto.response.UserDto;
@@ -42,11 +43,10 @@ public class UserApiController {
     }
 
     @ApiOperation(value = "Activate account")
-    @GetMapping(value = "/auth/account-activation")
-    public ResponseEntity<?> confirmUserAccount(@RequestParam("token") String token) {
+    @PutMapping(value = "/auth/account-activation")
+    public ResponseEntity<ActivatedAccountDto> confirmUserAccount(@RequestParam("token") String token) {
         LOGGER.info("---- Activate account by token: {}", token);
-        userService.activateAccount(token);
-        return new ResponseEntity<>(HttpStatus.OK);
+        return new ResponseEntity<>(userService.activateAccount(token), HttpStatus.OK);
     }
 
     @ApiOperation(value = "Resend activation account link")
@@ -73,9 +73,9 @@ public class UserApiController {
     }
 
     @ApiOperation(value = "Log out user")
-    @PutMapping(value = "/auth/logout")
-    public ResponseEntity<?> logoutUser() {
-        userService.logoutUser();
+    @PutMapping(value = "/auth/logout/{userId}")
+    public ResponseEntity<?> logoutUser(@PathVariable(value = "userId") Long userId) {
+        userService.logoutUser(userId);
         return new ResponseEntity<>(HttpStatus.OK);
     }
 
@@ -106,23 +106,6 @@ public class UserApiController {
         return new ResponseEntity<>(userService.changeEmail(userId, changeEmailDto), HttpStatus.OK);
     }
 
-    @ApiOperation(value = "Send reset user password link")
-    @PostMapping(value = "/users/reset-password/step1")
-    public ResponseEntity<?> sendResetPasswordLink(@Email @RequestParam(value = "userEmail") String userEmail) {
-        LOGGER.info("---- Send reset password link for user with email: {}", userEmail);
-        userService.sendResetPasswordLink(userEmail);
-        return new ResponseEntity<>(HttpStatus.CREATED);
-    }
-
-    @ApiOperation(value = "Reset not logged user password")
-    @PutMapping(value = "/users/reset-password/step2")
-    public ResponseEntity<?> resetPasswordNotLoggedUser(@RequestParam("token") String token,
-                                                        @Valid @RequestBody ResetPasswordDto resetPasswordDto) {
-        LOGGER.info("---- Reset password user with login: {}", resetPasswordDto.getLogin());
-        userService.resetPasswordNotLoggedUser(token, resetPasswordDto);
-        return new ResponseEntity<>(HttpStatus.OK);
-    }
-
     @ApiOperation(value = "Change user password")
     @PutMapping(value = "/users/{userId}/password")
     public ResponseEntity<JwtResponse> changePassword(@PathVariable(value = "userId") Long userId,
@@ -138,6 +121,23 @@ public class UserApiController {
         LOGGER.info("---- User changes phone number - current phone number: {} , new phone number: {}",
                 changePhoneNumberDto.getOldPhoneNumber(), changePhoneNumberDto.getNewPhoneNumber());
         userService.changePhoneNumber(userId, changePhoneNumberDto);
+        return new ResponseEntity<>(HttpStatus.OK);
+    }
+
+    @ApiOperation(value = "Send reset user password link")
+    @PostMapping(value = "/users/reset-password/step1")
+    public ResponseEntity<?> sendResetPasswordLink(@Email @RequestParam(value = "userEmail") String userEmail) {
+        LOGGER.info("---- Send reset password link for user with email: {}", userEmail);
+        userService.sendResetPasswordLink(userEmail);
+        return new ResponseEntity<>(HttpStatus.CREATED);
+    }
+
+    @ApiOperation(value = "Reset not logged user password")
+    @PutMapping(value = "/users/reset-password/step2")
+    public ResponseEntity<?> resetPasswordNotLoggedUser(@RequestParam("token") String token,
+                                                        @Valid @RequestBody ResetPasswordDto resetPasswordDto) {
+        LOGGER.info("---- Reset password user with login: {}", resetPasswordDto.getLogin());
+        userService.resetPasswordNotLoggedUser(token, resetPasswordDto);
         return new ResponseEntity<>(HttpStatus.OK);
     }
 

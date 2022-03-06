@@ -2,6 +2,9 @@ package com.server.springboot.domain.dto.request;
 
 import lombok.*;
 
+import javax.validation.constraints.NotEmpty;
+import javax.validation.constraints.Size;
+
 @AllArgsConstructor
 @NoArgsConstructor
 @EqualsAndHashCode
@@ -10,8 +13,14 @@ import lombok.*;
 @Builder
 @ToString
 public class RequestGroupDto {
+
+    @NotEmpty
+    @Size(max = 100)
     private String name;
+
+    @NotEmpty
     private String description;
-    private String groupCreatorId;
-    private String groupCreatorName;
+
+    @NotEmpty
+    private String isPublic;
 }

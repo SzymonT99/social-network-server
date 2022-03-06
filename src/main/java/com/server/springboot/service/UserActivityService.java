@@ -11,5 +11,5 @@ public interface UserActivityService {
     List<BoardActivityItemDto> findUserActivityBoard();
 
     @Transactional
-    List<NotificationDto> findUserNotifications();
+    List<NotificationDto> findUserNotifications(boolean isDisplayed);
 }

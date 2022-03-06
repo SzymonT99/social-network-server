@@ -8,13 +8,13 @@ import java.util.ArrayList;
 import java.util.List;
 
 @Component
-public class InterestDtoListMapper implements Converter<List<InterestDto>, List<Interest>>{
+public class InterestDtoListMapper implements Converter<List<InterestDto>, List<Interest>> {
 
     @Override
     public List<InterestDto> convert(List<Interest> from) {
         List<InterestDto> interestDtoList = new ArrayList<>();
 
-        for (Interest interest: from) {
+        for (Interest interest : from) {
             InterestDto interestDto = InterestDto.builder()
                     .interestId(interest.getInterestId())
                     .name(interest.getName())

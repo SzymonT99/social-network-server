@@ -2,6 +2,8 @@ package com.server.springboot.domain.dto.request;
 
 import lombok.*;
 
+import javax.validation.constraints.NotEmpty;
+
 @AllArgsConstructor
 @NoArgsConstructor
 @EqualsAndHashCode
@@ -9,7 +11,8 @@ import lombok.*;
 @Setter
 @Builder
 @ToString
-public class RequestGroupRule {
-    private String name;
-    private String description;
+public class RequestThreadAnswerDto {
+
+    @NotEmpty
+    private String text;
 }

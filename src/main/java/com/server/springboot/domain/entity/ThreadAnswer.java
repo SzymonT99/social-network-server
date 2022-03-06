@@ -39,7 +39,7 @@ public class ThreadAnswer {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "thread_id", nullable = false)
-    private Thread thread;
+    private GroupThread groupThread;
 
     @OneToMany(mappedBy = "threadAnswer", fetch = FetchType.LAZY,
             cascade = CascadeType.ALL, orphanRemoval = true)

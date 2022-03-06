@@ -6,6 +6,7 @@ import com.server.springboot.domain.dto.response.UserDto;
 import com.server.springboot.domain.entity.Event;
 import com.server.springboot.domain.entity.EventMember;
 import com.server.springboot.domain.entity.User;
+import com.server.springboot.domain.enumeration.EventParticipationStatus;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 

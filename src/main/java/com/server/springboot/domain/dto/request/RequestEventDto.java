@@ -4,6 +4,7 @@ import lombok.*;
 
 import javax.validation.constraints.NotEmpty;
 import javax.validation.constraints.NotNull;
+import javax.validation.constraints.Size;
 
 @AllArgsConstructor
 @NoArgsConstructor
@@ -18,6 +19,7 @@ public class RequestEventDto {
     private RequestAddressDto eventAddress;
 
     @NotEmpty
+    @Size(max = 30)
     private String title;
 
     @NotEmpty

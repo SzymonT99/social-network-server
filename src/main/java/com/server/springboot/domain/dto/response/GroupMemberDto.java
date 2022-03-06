@@ -4,8 +4,6 @@ import com.server.springboot.domain.enumeration.GroupMemberStatus;
 import com.server.springboot.domain.enumeration.GroupPermissionType;
 import lombok.*;
 
-import java.time.LocalDateTime;
-
 @AllArgsConstructor
 @NoArgsConstructor
 @EqualsAndHashCode
@@ -15,9 +13,9 @@ import java.time.LocalDateTime;
 @ToString
 public class GroupMemberDto {
     private Long groupMemberId;
-    private String groupMemberName;
+    private UserDto member;
     private GroupPermissionType groupPermissionType;
     private GroupMemberStatus groupMemberStatus;
-    private LocalDateTime addedIn;
+    private String addedIn;
     private boolean invitationDisplayed;
 }

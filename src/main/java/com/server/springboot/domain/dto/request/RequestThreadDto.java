@@ -2,6 +2,9 @@ package com.server.springboot.domain.dto.request;
 
 import lombok.*;
 
+import javax.validation.constraints.NotEmpty;
+import javax.validation.constraints.Size;
+
 @AllArgsConstructor
 @NoArgsConstructor
 @EqualsAndHashCode
@@ -10,7 +13,11 @@ import lombok.*;
 @Builder
 @ToString
 public class RequestThreadDto {
-    private Long groupMemberId;
+
+    @NotEmpty
+    @Size(max = 100)
     private String title;
+
+    @NotEmpty
     private String content;
 }

@@ -29,15 +29,14 @@ public class EventDtoMapper implements Converter<EventDto, Event> {
 
     @Override
     public EventDto convert(Event from) {
-        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd.MM.yyyy HH:mm:ss");
 
         return EventDto.builder()
                 .eventId(from.getEventId())
                 .title(from.getTitle())
                 .description(from.getDescription())
-                .image(imageDtoMapper.convert(from.getImage()))
-                .eventDate(from.getEventDate().format(formatter))
-                .createdAt(from.getCreatedAt().format(formatter))
+                .image(from.getImage() != null ? imageDtoMapper.convert(from.getImage()) : null)
+                .eventDate(from.getEventDate().toString())
+                .createdAt(from.getCreatedAt().toString())
                 .eventAuthor(userDtoMapper.convert(from.getEventCreator()))
                 .eventAddress(addressDtoMapper.convert(from.getEventAddress()))
                 .members(eventMemberDtoListMapper.convert(Lists.newArrayList(from.getMembers())))
@@ -45,7 +44,7 @@ public class EventDtoMapper implements Converter<EventDto, Event> {
                         from.getSharing().stream()
                                 .map(sharedEvent -> SharedEventInfoDto.builder()
                                         .authorOfSharing(userDtoMapper.convert(sharedEvent.getSharedEventUser()))
-                                        .sharingDate(sharedEvent.getDate().format(formatter))
+                                        .sharingDate(sharedEvent.getDate().toString())
                                         .build())
                                 .collect(Collectors.toList())
                 )
