@@ -57,4 +57,9 @@ public class Image {
 
     @OneToOne(mappedBy = "image", fetch = FetchType.LAZY)
     private GroupThread groupThread;
+
+    @OneToOne(fetch = FetchType.LAZY, cascade = CascadeType.ALL)
+    @JoinColumn(name = "change_photo_post_id")
+    private Post changePhotoPost;
+
 }

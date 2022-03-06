@@ -375,6 +375,7 @@ public class GroupServiceImpl implements GroupService {
         if (isInvitationAccepted) {
             groupMember.setGroupMemberStatus(GroupMemberStatus.JOINED);
             groupMember.setAddedIn(LocalDateTime.now());
+            groupMember.setHasNotification(false);
         } else {
             groupMember.setGroupMemberStatus(GroupMemberStatus.REJECTED);
         }
@@ -641,6 +642,7 @@ public class GroupServiceImpl implements GroupService {
             groupMember.setGroupMemberStatus(GroupMemberStatus.JOINED);
             groupMember.setGroupPermissionType(GroupPermissionType.MEMBER);
             groupMember.setAddedIn(LocalDateTime.now());
+            groupMember.setHasNotification(false);
         } else {
             groupMember.setGroupMemberStatus(GroupMemberStatus.REJECTED);
         }

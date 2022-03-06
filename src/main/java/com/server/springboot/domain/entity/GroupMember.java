@@ -43,6 +43,10 @@ public class GroupMember {
     @Column(name = "invitation_date")
     private LocalDateTime invitationDate;
 
+    @NotNull
+    @Column(name = "has_notification", nullable = false)
+    private boolean hasNotification;
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", nullable = false)
     private User member;

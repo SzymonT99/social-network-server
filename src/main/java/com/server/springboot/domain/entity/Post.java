@@ -82,6 +82,9 @@ public class Post {
             inverseJoinColumns = @JoinColumn(name = "image_id"))
     private Set<Image> images;
 
+    @OneToOne(mappedBy = "changePhotoPost", fetch = FetchType.LAZY)
+    private Image changedProfileImage;
+
     public void removeImages() {
         this.images.clear();
     }

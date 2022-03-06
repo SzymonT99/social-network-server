@@ -11,9 +11,5 @@ import lombok.*;
 @ToString
 public class ChangeProfilePhotoDto {
     private UserDto user;
-    private String filename;
-    private String url;
-    private String type;
-    private String caption;
-    private String addedIn;
+    private PostDto changePhotoPost;
 }

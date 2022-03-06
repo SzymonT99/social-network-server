@@ -21,8 +21,12 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
+import javax.persistence.*;
+import javax.validation.constraints.NotNull;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 
@@ -261,9 +265,20 @@ public class ProfileServiceImpl implements ProfileService {
             imageRepository.delete(userProfile.getProfilePhoto());
         }
         Image image = fileService.storageOneImage(photo, user, true);
+
+        Post changePhotoPost = Post.builder()
+                .isCommentingBlocked(false)
+                .isPublic(false)
+                .createdAt(LocalDateTime.now())
+                .isEdited(false)
+                .isDeleted(false)
+                .postAuthor(user)
+                .images(Collections.singleton(image))
+                .build();
+
+        image.setChangePhotoPost(changePhotoPost);
         userProfile.setProfilePhoto(image);
         userProfileRepository.save(userProfile);
-
     }
 
     @Override

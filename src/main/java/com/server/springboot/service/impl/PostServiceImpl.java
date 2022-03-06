@@ -37,6 +37,7 @@ public class PostServiceImpl implements PostService {
     private final JwtUtils jwtUtils;
     private final FileService fileService;
     private final GroupRepository groupRepository;
+    private final GroupMemberRepository groupMemberRepository;
     private final Converter<List<PostDto>, List<Post>> postDtoListMapper;
     private final Converter<PostDto, Post> postDtoMapper;
     private final Converter<Post, RequestSharePostDto> sharedPostMapper;
@@ -49,7 +50,7 @@ public class PostServiceImpl implements PostService {
                            PostRepository postRepository, SharedPostRepository sharedPostRepository,
                            LikedPostRepository likedPostRepository, ImageRepository imageRepository,
                            JwtUtils jwtUtils, FileService fileService, GroupRepository groupRepository,
-                           Converter<List<PostDto>, List<Post>> postDtoListMapper,
+                           GroupMemberRepository groupMemberRepository, Converter<List<PostDto>, List<Post>> postDtoListMapper,
                            Converter<PostDto, Post> postDtoMapper, Converter<Post, RequestSharePostDto> sharedPostMapper,
                            Converter<List<SharedPostDto>, List<SharedPost>> sharedPostDtoListMapper,
                            Converter<SharedPostDto, SharedPost> sharedPostDtoMapper) {
@@ -62,6 +63,7 @@ public class PostServiceImpl implements PostService {
         this.jwtUtils = jwtUtils;
         this.fileService = fileService;
         this.groupRepository = groupRepository;
+        this.groupMemberRepository = groupMemberRepository;
         this.postDtoListMapper = postDtoListMapper;
         this.postDtoMapper = postDtoMapper;
         this.sharedPostMapper = sharedPostMapper;
@@ -78,7 +80,11 @@ public class PostServiceImpl implements PostService {
                 .collect(Collectors.toList());      // ignorowanie postów które są udostępnieniem
         posts.removeAll(postWithShares);
 
-        return postDtoListMapper.convert(posts);
+        List<Post> filteredPosts = posts.stream()
+                .filter(post -> post.getGroup() == null)    // ignorowanie postów które należa do grup
+                .collect(Collectors.toList());
+
+        return postDtoListMapper.convert(filteredPosts);
     }
 
     @Override
@@ -106,6 +112,8 @@ public class PostServiceImpl implements PostService {
         if (groupId != null) {
             Group group = groupRepository.findById(groupId).get();
             addedPost.setGroup(group);
+
+            groupMemberRepository.setGroupMembersHasNewNotification(true, group);
         }
 
         postRepository.save(addedPost);
