@@ -13,7 +13,8 @@ import lombok.*;
 @ToString
 public class GroupMemberDto {
     private Long groupMemberId;
-    private UserDto member;
+    private UserDto user;
+    private AddressDto address;
     private GroupPermissionType groupPermissionType;
     private GroupMemberStatus groupMemberStatus;
     private String addedIn;

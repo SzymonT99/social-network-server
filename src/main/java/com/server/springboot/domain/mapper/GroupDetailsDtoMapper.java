@@ -7,7 +7,9 @@ import com.server.springboot.domain.entity.GroupThread;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
+import java.util.Comparator;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Component
 public class GroupDetailsDtoMapper implements Converter<GroupDetailsDto, Group>{
@@ -16,7 +18,6 @@ public class GroupDetailsDtoMapper implements Converter<GroupDetailsDto, Group>{
     private final Converter<UserDto, User> userDtoMapper;
     private final Converter<List<PostDto>, List<Post>> postDtoListMapper;
     private final Converter<List<GroupRuleDto>, List<GroupRule>> groupRuleDtoListMapper;
-    private final Converter<List<GroupThreadDto>, List<GroupThread>> groupThreadDtoListMapper;
     private final Converter<List<InterestDto>, List<Interest>> interestDtoListMapper;
 
     @Autowired
@@ -24,13 +25,11 @@ public class GroupDetailsDtoMapper implements Converter<GroupDetailsDto, Group>{
                                  Converter<UserDto, User> userDtoMapper,
                                  Converter<List<PostDto>, List<Post>> postDtoListMapper,
                                  Converter<List<GroupRuleDto>, List<GroupRule>> groupRuleDtoListMapper,
-                                 Converter<List<GroupThreadDto>, List<GroupThread>> groupThreadDtoListMapper,
                                  Converter<List<InterestDto>, List<Interest>> interestDtoListMapper) {
         this.imageDtoMapper = imageDtoMapper;
         this.userDtoMapper = userDtoMapper;
         this.postDtoListMapper = postDtoListMapper;
         this.groupRuleDtoListMapper = groupRuleDtoListMapper;
-        this.groupThreadDtoListMapper = groupThreadDtoListMapper;
         this.interestDtoListMapper = interestDtoListMapper;
     }
 
@@ -44,10 +43,13 @@ public class GroupDetailsDtoMapper implements Converter<GroupDetailsDto, Group>{
                 .createdAt(from.getCreatedAt().toString())
                 .isPublic(from.isPublic())
                 .groupCreator(userDtoMapper.convert(from.getGroupCreator()))
-                .rules(groupRuleDtoListMapper.convert(Lists.newArrayList(from.getGroupRules())))
+                .rules(groupRuleDtoListMapper.convert(Lists.newArrayList(from.getGroupRules().stream().
+                        sorted(Comparator.comparing(GroupRule::getName))
+                        .collect(Collectors.toList()))))
                 .posts(postDtoListMapper.convert(Lists.newArrayList(from.getPosts())))
-                .threads(groupThreadDtoListMapper.convert(Lists.newArrayList(from.getGroupThreads())))
-                .interests(interestDtoListMapper.convert(Lists.newArrayList(from.getGroupInterests())))
+                .interests(interestDtoListMapper.convert(Lists.newArrayList(from.getGroupInterests().stream().
+                        sorted(Comparator.comparing(Interest::getName))
+                        .collect(Collectors.toList()))))
                 .build();
     }
 }

@@ -10,7 +10,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Component
 public class GroupThreadDtoListMapper implements Converter<List<GroupThreadDto>, List<GroupThread>> {
@@ -32,12 +34,17 @@ public class GroupThreadDtoListMapper implements Converter<List<GroupThreadDto>,
     public List<GroupThreadDto> convert(List<GroupThread> from) {
         List<GroupThreadDto> groupThreadDtoList = new ArrayList<>();
 
+        from = from.stream()
+                .sorted(Comparator.comparing(GroupThread::getCreatedAt).reversed())
+                .collect(Collectors.toList());
+
         for (GroupThread groupThread : from) {
             GroupThreadDto groupThreadDto = GroupThreadDto.builder()
                     .threadId(groupThread.getThreadId())
                     .title(groupThread.getTitle())
                     .content(groupThread.getContent())
                     .image(groupThread.getImage() != null ? imageDtoMapper.convert(groupThread.getImage()) : null)
+                    .isEdited(groupThread.isEdited())
                     .createdAt(groupThread.getCreatedAt().toString())
                     .author(groupMemberDtoMapper.convert(groupThread.getThreadAuthor()))
                     .answers(groupThreadAnswerDtoListMapper.convert(Lists.newArrayList(groupThread.getAnswers())))

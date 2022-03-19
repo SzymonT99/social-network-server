@@ -4,10 +4,13 @@ import com.google.common.collect.Lists;
 import com.server.springboot.domain.dto.request.RequestCommentDto;
 import com.server.springboot.domain.dto.response.CommentDto;
 import com.server.springboot.domain.entity.Comment;
+import com.server.springboot.domain.entity.GroupMember;
 import com.server.springboot.domain.entity.Post;
 import com.server.springboot.domain.entity.User;
+import com.server.springboot.domain.enumeration.GroupPermissionType;
 import com.server.springboot.domain.mapper.Converter;
 import com.server.springboot.domain.repository.CommentRepository;
+import com.server.springboot.domain.repository.GroupMemberRepository;
 import com.server.springboot.domain.repository.PostRepository;
 import com.server.springboot.domain.repository.UserRepository;
 import com.server.springboot.exception.BadRequestException;
@@ -18,7 +21,6 @@ import com.server.springboot.security.JwtUtils;
 import com.server.springboot.service.PostCommentService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -30,17 +32,20 @@ public class PostCommentServiceImpl implements PostCommentService {
     private final UserRepository userRepository;
     private final PostRepository postRepository;
     private final CommentRepository commentRepository;
+    private final GroupMemberRepository groupMemberRepository;
     private final JwtUtils jwtUtils;
     private final Converter<Comment, RequestCommentDto> commentMapper;
     private final Converter<CommentDto, Comment> commentDtoMapper;
 
     @Autowired
     public PostCommentServiceImpl(UserRepository userRepository, PostRepository postRepository,
-                                  CommentRepository commentRepository, JwtUtils jwtUtils,
-                                  Converter<Comment, RequestCommentDto> commentMapper, Converter<CommentDto, Comment> commentDtoMapper) {
+                                  CommentRepository commentRepository, GroupMemberRepository groupMemberRepository, JwtUtils jwtUtils,
+                                  Converter<Comment, RequestCommentDto> commentMapper,
+                                  Converter<CommentDto, Comment> commentDtoMapper) {
         this.userRepository = userRepository;
         this.postRepository = postRepository;
         this.commentRepository = commentRepository;
+        this.groupMemberRepository = groupMemberRepository;
         this.jwtUtils = jwtUtils;
         this.commentMapper = commentMapper;
         this.commentDtoMapper = commentDtoMapper;
@@ -64,11 +69,26 @@ public class PostCommentServiceImpl implements PostCommentService {
     @Override
     public void editCommentById(Long commentId, RequestCommentDto requestCommentDto) {
         Long userId = jwtUtils.getLoggedUserId();
+        User loggedUser = userRepository.findById(userId)
+                .orElseThrow(() -> new NotFoundException("Not found user with id: " + userId));
         Comment comment = commentRepository.findById(commentId)
                 .orElseThrow(() -> new NotFoundException("Not found post comment with id: " + commentId));
-        if (!comment.getCommentAuthor().getUserId().equals(userId)) {
-            throw new ForbiddenException("Invalid comment author id - comment editing access forbidden");
+
+        if (comment.getCommentedPost().getGroup() != null) {
+            GroupMember userGroupMember = groupMemberRepository.findByGroupAndMember(comment.getCommentedPost().getGroup(), loggedUser)
+                    .orElseThrow(() -> new NotFoundException(String.format("Not found user with id: %s in group with id: %s",
+                            userId, comment.getCommentedPost().getGroup().getGroupId())));
+            if (userGroupMember.getGroupPermissionType() != GroupPermissionType.ADMINISTRATOR
+                    && userGroupMember.getGroupPermissionType() != GroupPermissionType.ASSISTANT
+                    && userGroupMember.getGroupPermissionType() != GroupPermissionType.MODERATOR) {
+                throw new ForbiddenException("No access to edit the post comment");
+            }
+        } else {
+            if (!comment.getCommentAuthor().getUserId().equals(userId)) {
+                throw new ForbiddenException("Invalid comment author id - comment editing access forbidden");
+            }
         }
+
         comment.setEdited(true);
         comment.setEditedAt(LocalDateTime.now());
         comment.setText(requestCommentDto.getCommentText());
@@ -78,10 +98,24 @@ public class PostCommentServiceImpl implements PostCommentService {
     @Override
     public void deleteCommentById(Long commentId) {
         Long userId = jwtUtils.getLoggedUserId();
+        User loggedUser = userRepository.findById(userId)
+                .orElseThrow(() -> new NotFoundException("Not found user with id: " + userId));
         Comment comment = commentRepository.findById(commentId)
                 .orElseThrow(() -> new NotFoundException("Not found post comment with id: " + commentId));
-        if (!comment.getCommentAuthor().getUserId().equals(userId)) {
-            throw new ForbiddenException("Invalid comment author id - comment deleting access forbidden");
+
+        if (comment.getCommentedPost().getGroup() != null) {
+            GroupMember userGroupMember = groupMemberRepository.findByGroupAndMember(comment.getCommentedPost().getGroup(), loggedUser)
+                    .orElseThrow(() -> new NotFoundException(String.format("Not found user with id: %s in group with id: %s",
+                            userId, comment.getCommentedPost().getGroup().getGroupId())));
+            if (userGroupMember.getGroupPermissionType() != GroupPermissionType.ADMINISTRATOR
+                    && userGroupMember.getGroupPermissionType() != GroupPermissionType.ASSISTANT
+                    && userGroupMember.getGroupPermissionType() != GroupPermissionType.MODERATOR) {
+                throw new ForbiddenException("No access to delete the post comment");
+            }
+        } else {
+            if (!comment.getCommentAuthor().getUserId().equals(userId)) {
+                throw new ForbiddenException("Invalid comment author id - comment deleting access forbidden");
+            }
         }
 
         List<User> likedPostUsers = Lists.newArrayList(comment.getLikes());

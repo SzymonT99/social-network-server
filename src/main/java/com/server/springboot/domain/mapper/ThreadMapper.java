@@ -13,6 +13,7 @@ public class ThreadMapper implements Converter<GroupThread, RequestThreadDto> {
     public GroupThread convert(RequestThreadDto from) {
         return GroupThread.builder()
                 .title(from.getTitle())
+                .isEdited(false)
                 .content(from.getContent())
                 .createdAt(LocalDateTime.now())
                 .build();

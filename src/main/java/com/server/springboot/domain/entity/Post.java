@@ -58,7 +58,7 @@ public class Post {
 
     @OneToOne(mappedBy = "newPost", fetch = FetchType.LAZY,
             cascade = CascadeType.ALL, orphanRemoval = true)
-    private SharedPost sharedNewPosts;
+    private SharedPost sharedNewPost;
 
     @OneToMany(mappedBy = "post", fetch = FetchType.LAZY,
             cascade = CascadeType.ALL, orphanRemoval = true)

@@ -62,9 +62,23 @@ public class GroupApiController {
 
     @ApiOperation(value = "Get all groups")
     @GetMapping(value = "/groups")
-    public ResponseEntity<List<GroupDto>> getAllGroups(@RequestParam(value = "isPublic") boolean isPublic) {
+    public ResponseEntity<List<GroupDto>> getAllGroups() {
         LOGGER.info("---- Get all public groups");
-        return new ResponseEntity<>(groupService.findAllGroups(isPublic), HttpStatus.OK);
+        return new ResponseEntity<>(groupService.findAllGroups(true), HttpStatus.OK);
+    }
+
+    @ApiOperation(value = "Get all groups with similar interests")
+    @GetMapping(value = "/interesting-groups")
+    public ResponseEntity<List<GroupDto>> getAllGroupsWithSimilarInterests() {
+        LOGGER.info("---- Get all groups with similar interests");
+        return new ResponseEntity<>(groupService.findAllGroupsWithSimilarInterests(), HttpStatus.OK);
+    }
+
+    @ApiOperation(value = "Get all user groups")
+    @GetMapping(value = "/users/{userId}/groups")
+    public ResponseEntity<List<GroupDto>> getAllUserGroups(@PathVariable(value = "userId") Long userId) {
+        LOGGER.info("---- Get all user groups");
+        return new ResponseEntity<>(groupService.findAllUserGroups(userId), HttpStatus.OK);
     }
 
     @ApiOperation(value = "Get group details by id")
@@ -102,20 +116,13 @@ public class GroupApiController {
         return new ResponseEntity<>(HttpStatus.OK);
     }
 
-    @ApiOperation(value = "Get all possible group interests")
-    @GetMapping(value = "/groups/interests")
-    public ResponseEntity<List<InterestDto>> getAllPossibleInterests() {
-        LOGGER.info("---- Get all possible group interests");
-        return new ResponseEntity<>(groupService.findAllInterests(), HttpStatus.OK);
-    }
-
     @ApiOperation(value = "Add group interest")
     @PostMapping(value = "/groups/{groupId}/interests/{interestId}")
     public ResponseEntity<?> addGroupInterest(@PathVariable(value = "groupId") Long groupId,
                                               @PathVariable(value = "interestId") Long interestId) {
         LOGGER.info("---- Add group interest for group with id: {}", groupId);
         groupService.addGroupInterest(groupId, interestId);
-        return new ResponseEntity<>(HttpStatus.OK);
+        return new ResponseEntity<>(HttpStatus.CREATED);
     }
 
     @ApiOperation(value = "Delete group interest")
@@ -152,7 +159,7 @@ public class GroupApiController {
     }
 
     @ApiOperation(value = "Get users who want to join the group")
-    @GetMapping(value = "/groups/{groupId}/request")
+    @GetMapping(value = "/groups/{groupId}/requests")
     public ResponseEntity<List<UserDto>> getUserRequestsToJoinGroup(@PathVariable(value = "groupId") Long groupId) {
         LOGGER.info("---- Get user's requests to join the group");
         return new ResponseEntity<>(groupService.findAllUserRequestToJoinGroup(groupId), HttpStatus.OK);
@@ -177,10 +184,27 @@ public class GroupApiController {
         return new ResponseEntity<>(HttpStatus.OK);
     }
 
+    @ApiOperation(value = "User leaves the group")
+    @DeleteMapping(value = "/groups/{groupId}/leave")
+    public ResponseEntity<?> leaveGroup(@PathVariable(value = "groupId") Long groupId) {
+        LOGGER.info("---- User leave the group with id: {}", groupId);
+        groupService.leaveGroupByUser(groupId);
+        return new ResponseEntity<>(HttpStatus.OK);
+    }
+
+    @ApiOperation(value = "Delete group member")
+    @DeleteMapping(value = "/groups/{groupId}/members/{memberId}")
+    public ResponseEntity<?> deleteGroupMember(@PathVariable(value = "groupId") Long groupId,
+                                               @PathVariable(value = "memberId") Long memberId) {
+        LOGGER.info("---- Delete member with id: {} from group with id: {}", memberId, groupId);
+        groupService.deleteGroupMemberById(memberId, groupId);
+        return new ResponseEntity<>(HttpStatus.OK);
+    }
+
     @ApiOperation(value = "Create a group post")
     @PostMapping(value = "/groups/{groupId}/posts", consumes = {MediaType.APPLICATION_JSON_VALUE, MediaType.MULTIPART_FORM_DATA_VALUE})
     public ResponseEntity<?> createGroupPost(@PathVariable(value = "groupId") Long groupId,
-                                             @RequestPart(value = "images") List<MultipartFile> imageFiles,
+                                             @RequestPart(value = "images", required = false) List<MultipartFile> imageFiles,
                                              @Valid @RequestPart(value = "post") RequestPostDto requestPostDto) {
         LOGGER.info("---- Create post for group with id: {}", groupId);
         postService.addPost(requestPostDto, imageFiles, groupId);
@@ -189,12 +213,11 @@ public class GroupApiController {
 
     @ApiOperation(value = "Update existing group post by id")
     @PutMapping(value = "/groups/posts/{postId}", consumes = {MediaType.APPLICATION_JSON_VALUE, MediaType.MULTIPART_FORM_DATA_VALUE})
-    public ResponseEntity<?> updateGroupPost(@PathVariable(value = "postId") Long postId,
-                                             @RequestPart(value = "images") List<MultipartFile> imageFiles,
-                                             @Valid @RequestPart(value = "post") RequestPostDto requestPostDto) {
+    public ResponseEntity<PostDto> updateGroupPost(@PathVariable(value = "postId") Long postId,
+                                                   @RequestPart(value = "images", required = false) List<MultipartFile> imageFiles,
+                                                   @Valid @RequestPart(value = "post") RequestPostDto requestPostDto) {
         LOGGER.info("---- Update post with id: {} in group", postId);
-        postService.editPost(postId, requestPostDto, imageFiles);
-        return new ResponseEntity<>(HttpStatus.OK);
+        return new ResponseEntity<>(postService.editPost(postId, requestPostDto, imageFiles), HttpStatus.OK);
     }
 
     @ApiOperation(value = "Delete a group post by id")
@@ -212,10 +235,17 @@ public class GroupApiController {
         return new ResponseEntity<>(groupService.findAllGroupPostsById(groupId), HttpStatus.OK);
     }
 
+    @ApiOperation(value = "Get group forum")
+    @GetMapping(value = "/groups/{groupId}/forum")
+    public ResponseEntity<List<GroupThreadDto>> getGroupForum(@PathVariable(value = "groupId") Long groupId) {
+        LOGGER.info("---- Get forum for group with id: {}", groupId);
+        return new ResponseEntity<>(groupService.findGroupThreadsById(groupId), HttpStatus.OK);
+    }
+
     @ApiOperation(value = "Create a group thread")
     @PostMapping(value = "/groups/{groupId}/threads", consumes = {MediaType.APPLICATION_JSON_VALUE, MediaType.MULTIPART_FORM_DATA_VALUE})
     public ResponseEntity<?> createGroupThread(@PathVariable(value = "groupId") Long groupId,
-                                               @RequestPart(value = "image") MultipartFile imageFile,
+                                               @RequestPart(value = "image", required = false) MultipartFile imageFile,
                                                @Valid @RequestPart(value = "thread") RequestThreadDto requestThreadDto) {
         LOGGER.info("---- Create thread in group with id: {}", groupId);
         groupService.addGroupThread(groupId, requestThreadDto, imageFile);
@@ -225,7 +255,7 @@ public class GroupApiController {
     @ApiOperation(value = "Update a group thread")
     @PutMapping(value = "/groups/threads/{threadId}", consumes = {MediaType.APPLICATION_JSON_VALUE, MediaType.MULTIPART_FORM_DATA_VALUE})
     public ResponseEntity<?> updateGroupThread(@PathVariable(value = "threadId") Long threadId,
-                                               @RequestPart(value = "image") MultipartFile imageFile,
+                                               @RequestPart(value = "image", required = false) MultipartFile imageFile,
                                                @Valid @RequestPart(value = "thread") RequestThreadDto requestThreadDto) {
         LOGGER.info("---- Update group thread with id: {}", threadId);
         groupService.editGroupThreadById(threadId, requestThreadDto, imageFile);
@@ -284,14 +314,6 @@ public class GroupApiController {
         return new ResponseEntity<>(HttpStatus.OK);
     }
 
-    @ApiOperation(value = "Delete a group thread answer review")
-    @DeleteMapping(value = "/groups/threads/answers/reviews/{reviewId}")
-    public ResponseEntity<?> deleteThreadAnswerReview(@PathVariable(value = "reviewId") Long reviewId) {
-        LOGGER.info("---- Delete review with id: {} in group thread answer", reviewId);
-        groupService.deleteThreadAnswerReviewById(reviewId);
-        return new ResponseEntity<>(HttpStatus.OK);
-    }
-
     @ApiOperation(value = "Set group member permission")
     @PutMapping(value = "/groups/{groupId}/members/{memberId}")
     public ResponseEntity<?> setMemberPermission(@PathVariable(value = "groupId") Long groupId,
@@ -300,5 +322,12 @@ public class GroupApiController {
         LOGGER.info("---- Set group member with id: {} permission type: {}", memberId, permission);
         groupService.setGroupMemberPermission(groupId, memberId, permission);
         return new ResponseEntity<>(HttpStatus.OK);
+    }
+
+    @ApiOperation(value = "Get group members forum stats")
+    @GetMapping(value = "/groups/{groupId}/forum/stats")
+    public ResponseEntity<List<GroupMemberForumStatsDto>> setMemberPermission(@PathVariable(value = "groupId") Long groupId) {
+        LOGGER.info("---- Get members forum stats for group with id: {}", groupId);
+        return new ResponseEntity<>(groupService.getGroupForumStatsById(groupId), HttpStatus.OK);
     }
 }

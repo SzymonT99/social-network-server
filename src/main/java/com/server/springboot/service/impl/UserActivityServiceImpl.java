@@ -34,19 +34,22 @@ public class UserActivityServiceImpl implements UserActivityService {
     private final SharedEventRepository sharedEventRepository;
     private final EventMemberRepository eventMemberRepository;
     private final ImageRepository imageRepository;
-    private final GroupRepository groupRepository;
     private final GroupService groupService;
     private final GroupMemberRepository groupMemberRepository;
     private final Converter<PostDto, Post> postDtoMapper;
     private final Converter<GroupPostDto, Post> groupPostDtoMapper;
     private final Converter<LikedPostActivityDto, LikedPost> likedPostActivityDtoMapper;
+    private final Converter<LikedSharedPostActivityDto, LikedPost> likedSharedPostActivityDtoMapper;
     private final Converter<CommentActivityDto, Comment> commentActivityDtoMapper;
+    private final Converter<SharedPostCommentActivityDto, Comment> sharedPostCommentActivityDtoMapper;
     private final Converter<SharedPostDto, SharedPost> sharedPostDtoMapper;
     private final Converter<SharedEventDto, SharedEvent> sharedEventDtoMapper;
     private final Converter<EventReactionDto, EventMember> eventReactionDtoMapper;
     private final Converter<GroupJoiningDto, GroupMember> groupJoiningDtoMapper;
     private final Converter<ChangeProfilePhotoDto, Image> changeProfilePhotoDtoMapper;
+    private final Converter<GroupDto, Group> groupDtoMapper;
     private final Converter<UserDto, User> userDtoMapper;
+    private final GroupRepository groupRepository;
 
     @Autowired
     public UserActivityServiceImpl(JwtUtils jwtUtils, EventService eventService,
@@ -54,18 +57,20 @@ public class UserActivityServiceImpl implements UserActivityService {
                                    PostRepository postRepository, LikedPostRepository likedPostRepository,
                                    CommentRepository commentRepository, SharedPostRepository sharedPostRepository,
                                    SharedEventRepository sharedEventRepository, EventMemberRepository eventMemberRepository,
-                                   ImageRepository imageRepository, GroupRepository groupRepository,
+                                   ImageRepository imageRepository,
                                    GroupService groupService, GroupMemberRepository groupMemberRepository,
                                    Converter<PostDto, Post> postDtoMapper,
                                    Converter<GroupPostDto, Post> groupPostDtoMapper,
                                    Converter<LikedPostActivityDto, LikedPost> likedPostActivityDtoMapper,
+                                   Converter<LikedSharedPostActivityDto, LikedPost> likedSharedPostActivityDtoMapper,
                                    Converter<CommentActivityDto, Comment> commentActivityDtoMapper,
+                                   Converter<SharedPostCommentActivityDto, Comment> sharedPostCommentActivityDtoMapper,
                                    Converter<SharedPostDto, SharedPost> sharedPostDtoMapper,
                                    Converter<SharedEventDto, SharedEvent> sharedEventDtoMapper,
                                    Converter<EventReactionDto, EventMember> eventReactionDtoMapper,
                                    Converter<GroupJoiningDto, GroupMember> groupJoiningDtoMapper,
                                    Converter<ChangeProfilePhotoDto, Image> changeProfilePhotoDtoMapper,
-                                   Converter<UserDto, User> userDtoMapper) {
+                                   Converter<GroupDto, Group> groupDtoMapper, Converter<UserDto, User> userDtoMapper, GroupRepository groupRepository) {
         this.jwtUtils = jwtUtils;
         this.eventService = eventService;
         this.userRepository = userRepository;
@@ -77,19 +82,22 @@ public class UserActivityServiceImpl implements UserActivityService {
         this.sharedEventRepository = sharedEventRepository;
         this.eventMemberRepository = eventMemberRepository;
         this.imageRepository = imageRepository;
-        this.groupRepository = groupRepository;
+        this.likedSharedPostActivityDtoMapper = likedSharedPostActivityDtoMapper;
         this.groupService = groupService;
         this.groupMemberRepository = groupMemberRepository;
         this.postDtoMapper = postDtoMapper;
         this.groupPostDtoMapper = groupPostDtoMapper;
         this.likedPostActivityDtoMapper = likedPostActivityDtoMapper;
         this.commentActivityDtoMapper = commentActivityDtoMapper;
+        this.sharedPostCommentActivityDtoMapper = sharedPostCommentActivityDtoMapper;
         this.sharedPostDtoMapper = sharedPostDtoMapper;
         this.sharedEventDtoMapper = sharedEventDtoMapper;
         this.eventReactionDtoMapper = eventReactionDtoMapper;
         this.groupJoiningDtoMapper = groupJoiningDtoMapper;
         this.changeProfilePhotoDtoMapper = changeProfilePhotoDtoMapper;
+        this.groupDtoMapper = groupDtoMapper;
         this.userDtoMapper = userDtoMapper;
+        this.groupRepository = groupRepository;
     }
 
     @Override
@@ -102,7 +110,7 @@ public class UserActivityServiceImpl implements UserActivityService {
         List<User> activeUsers = friends.stream().map(Friend::getUserFriend).collect(Collectors.toList());
         activeUsers.add(user);
 
-        List<Group> userGroups = groupMemberRepository.findByMember(user).stream()
+        List<Group> userGroups = groupMemberRepository.findByMemberAndGroupMemberStatus(user, GroupMemberStatus.JOINED).stream()
                 .map(GroupMember::getGroup)
                 .collect(Collectors.toList());
 
@@ -110,7 +118,7 @@ public class UserActivityServiceImpl implements UserActivityService {
                 activeUsers,
                 LocalDateTime.now().minusWeeks(2),
                 false).stream()
-                .filter(post -> post.getGroup() == null)
+                .filter(post -> post.getGroup() == null && post.getChangedProfileImage() == null && post.getSharedNewPost() == null)
                 .collect(Collectors.toList());
 
         List<Post> groupPosts = postRepository.findAllByGroupInAndCreatedAtIsGreaterThanAndIsDeleted(
@@ -120,11 +128,29 @@ public class UserActivityServiceImpl implements UserActivityService {
 
         List<LikedPost> likedPosts = likedPostRepository.findAllByLikedPostUserInAndDateIsGreaterThan(
                 activeUsers.stream().filter(activeUser -> !activeUser.getUserId().equals(loggedUserId)).collect(Collectors.toList()),
-                LocalDateTime.now().minusWeeks(2));
+                LocalDateTime.now().minusWeeks(2)).stream()
+                .filter(likedPost -> likedPost.getPost().getSharedNewPost() == null
+                        && !likedPost.getPost().isDeleted() && likedPost.getPost().getChangedProfileImage() == null)
+                .collect(Collectors.toList());
+
+        List<LikedPost> likedSharedPosts = likedPostRepository.findAllByLikedPostUserInAndDateIsGreaterThan(
+                activeUsers.stream().filter(activeUser -> !activeUser.getUserId().equals(loggedUserId)).collect(Collectors.toList()),
+                LocalDateTime.now().minusWeeks(2)).stream()
+                .filter(likedPost -> likedPost.getPost().getSharedNewPost() != null && !likedPost.getPost().isDeleted())
+                .collect(Collectors.toList());
 
         List<Comment> comments = commentRepository.findAllByCommentAuthorInAndCreatedAtIsGreaterThan(
                 activeUsers.stream().filter(activeUser -> !activeUser.getUserId().equals(loggedUserId)).collect(Collectors.toList()),
-                LocalDateTime.now().minusWeeks(2));
+                LocalDateTime.now().minusWeeks(2)).stream()
+                .filter(comment -> comment.getCommentedPost().getSharedNewPost() == null
+                        && !comment.getCommentedPost().isDeleted() && comment.getCommentedPost().getChangedProfileImage() == null)
+                .collect(Collectors.toList());
+
+        List<Comment> commentedSharedPosts = commentRepository.findAllByCommentAuthorInAndCreatedAtIsGreaterThan(
+                activeUsers.stream().filter(activeUser -> !activeUser.getUserId().equals(loggedUserId)).collect(Collectors.toList()),
+                LocalDateTime.now().minusWeeks(2)).stream()
+                .filter(comment -> comment.getCommentedPost().getSharedNewPost() != null && !comment.getCommentedPost().isDeleted())
+                .collect(Collectors.toList());
 
         List<SharedPost> sharedPosts = sharedPostRepository.findAllBySharedPostUserInAndDateIsGreaterThan(
                 activeUsers,
@@ -141,7 +167,8 @@ public class UserActivityServiceImpl implements UserActivityService {
         List<GroupMember> groupJoining = groupMemberRepository.findAllByMemberInAndGroupMemberStatusAndAddedInIsGreaterThan(
                 activeUsers,
                 GroupMemberStatus.JOINED,
-                LocalDateTime.now().minusWeeks(2));
+                LocalDateTime.now().minusWeeks(2)).stream()
+                .filter(groupMember -> !groupMember.getGroup().isDeleted()).collect(Collectors.toList());
 
         List<String> activeUsersProfilePhotosId = activeUsers.stream()
                 .map(activeUser -> {
@@ -151,6 +178,9 @@ public class UserActivityServiceImpl implements UserActivityService {
                     return null;
                 })
                 .collect(Collectors.toList());
+
+        activeUsersProfilePhotosId.removeIf(Objects::isNull);
+
         List<Image> profilePhotoChanges = imageRepository.findAllByImageIdInAndAddedInIsGreaterThan(
                 activeUsersProfilePhotosId,
                 LocalDateTime.now().minusWeeks(2));
@@ -169,8 +199,16 @@ public class UserActivityServiceImpl implements UserActivityService {
             activityMap.put(likedPost.getDate(), likedPostActivityDtoMapper.convert(likedPost));
         });
 
+        likedSharedPosts.forEach(likedPost -> {
+            activityMap.put(likedPost.getDate(), likedSharedPostActivityDtoMapper.convert(likedPost));
+        });
+
         comments.forEach(comment -> {
             activityMap.put(comment.getCreatedAt(), commentActivityDtoMapper.convert(comment));
+        });
+
+        commentedSharedPosts.forEach(comment -> {
+            activityMap.put(comment.getCreatedAt(), sharedPostCommentActivityDtoMapper.convert(comment));
         });
 
         sharedPosts.forEach(sharedPost -> {
@@ -213,9 +251,17 @@ public class UserActivityServiceImpl implements UserActivityService {
                     activityType = ActivityType.LIKE_POST;
                     activeUser = ((LikedPostActivityDto) v).getLikedUser();
                     break;
+                case "LikedSharedPostActivityDto":
+                    activityType = ActivityType.LIKE_SHARED_POST;
+                    activeUser = ((LikedSharedPostActivityDto) v).getLikedUser();
+                    break;
                 case "CommentActivityDto":
                     activityType = ActivityType.COMMENT_POST;
                     activeUser = ((CommentActivityDto) v).getCommentAuthor();
+                    break;
+                case "SharedPostCommentActivityDto":
+                    activityType = ActivityType.COMMENT_SHARED_POST;
+                    activeUser = ((SharedPostCommentActivityDto) v).getCommentAuthor();
                     break;
                 case "SharedPostDto":
                     activityType = ActivityType.SHARE_POST;
@@ -262,9 +308,11 @@ public class UserActivityServiceImpl implements UserActivityService {
 
         List<Post> userPosts = Lists.newArrayList(user.getPosts());
 
-        List<Group> userGroups = groupMemberRepository.findByMember(user).stream()
+        List<Group> userGroups = groupMemberRepository.findByMemberAndGroupMemberStatus(user, GroupMemberStatus.JOINED).stream()
                 .map(GroupMember::getGroup)
                 .collect(Collectors.toList());
+
+        List<GroupMember> userGroupMemberList = groupMemberRepository.findByMemberAndGroupMemberStatus(user, GroupMemberStatus.JOINED);
 
         if (isDisplayed) {
             likedPostRepository.setPostAuthorNotificationDisplayed(true, userPosts);
@@ -287,6 +335,10 @@ public class UserActivityServiceImpl implements UserActivityService {
         List<Post> groupPosts = postRepository.findAllByGroupIn(userGroups);
 
         List<GroupInvitationDto> groupInvitations = groupService.findAllUserGroupInvitations(isDisplayed);
+
+        List<GroupMember> addedGroupMember = userGroupMemberList.stream().
+                filter(groupMember -> groupMember.getInvitationDate() == null)
+                .collect(Collectors.toList());
 
         List<NotificationDto> notificationList = new ArrayList<>();
 
@@ -329,7 +381,7 @@ public class UserActivityServiceImpl implements UserActivityService {
                     .notificationDate(sharedPost.getDate().toString())
                     .isNotificationDisplayed(sharedPost.isPostAuthorNotified())
                     .activityInitiator(userDtoMapper.convert(sharedPost.getSharedPostUser()))
-                    .details(Collections.singletonMap("sharedPostId", sharedPost.getSharedPostId()))
+                    .details(Collections.singletonMap("postId", sharedPost.getBasePost().getPostId()))
                     .build();
             notificationList.add(notificationDto);
         });
@@ -339,8 +391,8 @@ public class UserActivityServiceImpl implements UserActivityService {
                     .notificationType(NotificationType.ACCEPTANCE_INVITATION_TO_FRIENDS)
                     .notificationDate(acceptedFriend.getFriendFromDate().toString())
                     .isNotificationDisplayed(acceptedFriend.isUserNotifiedAboutAccepting())
-                    .activityInitiator(userDtoMapper.convert(acceptedFriend.getUserFriend()))
-                    .details(null)
+                    .activityInitiator(userDtoMapper.convert(acceptedFriend.getUser()))
+                    .details(Collections.singletonMap("userFriendId", acceptedFriend.getUser().getUserId()))
                     .build();
             notificationList.add(notificationDto);
         });
@@ -356,7 +408,7 @@ public class UserActivityServiceImpl implements UserActivityService {
                     .notificationDate(groupPost.getCreatedAt().toString())
                     .isNotificationDisplayed(!currentMember.isHasNotification())
                     .activityInitiator(userDtoMapper.convert(groupPost.getPostAuthor()))
-                    .details(Collections.singletonMap("postId", groupPost.getPostId()))
+                    .details(Collections.singletonMap("groupId", groupPost.getGroup().getGroupId()))
                     .build();
             notificationList.add(notificationDto);
         });
@@ -366,12 +418,22 @@ public class UserActivityServiceImpl implements UserActivityService {
                     .notificationType(NotificationType.INVITATION_TO_GROUP)
                     .notificationDate(groupInvitation.getInvitationDate())
                     .isNotificationDisplayed(groupInvitation.isInvitationDisplayed())
-                    .activityInitiator(null)
-                    .details(Collections.singletonMap("groupId", groupInvitation.getGroupId()))
+                    .activityInitiator(groupInvitation.getGroupCreator())
+                    .details(groupDtoMapper.convert(groupRepository.findById(groupInvitation.getGroupId()).get()))
                     .build();
             notificationList.add(notificationDto);
         });
 
+        addedGroupMember.forEach(groupMember -> {
+            NotificationDto notificationDto = NotificationDto.builder()
+                    .notificationType(NotificationType.ADDED_TO_GROUP)
+                    .notificationDate(groupMember.getAddedIn().toString())
+                    .isNotificationDisplayed(!groupMember.isHasNotification())
+                    .activityInitiator(userDtoMapper.convert(groupMember.getGroup().getGroupCreator()))
+                    .details(groupDtoMapper.convert(groupMember.getGroup()))
+                    .build();
+            notificationList.add(notificationDto);
+        });
 
         notificationList.sort(Comparator.comparing(NotificationDto::getNotificationDate).reversed());
 

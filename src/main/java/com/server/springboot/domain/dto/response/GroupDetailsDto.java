@@ -23,6 +23,5 @@ public class GroupDetailsDto {
     private List<GroupRuleDto> rules;
     private List<GroupMemberDto> members;
     private List<PostDto> posts;
-    private List<GroupThreadDto> threads;
     private List<InterestDto> interests;
 }

@@ -2,6 +2,7 @@ package com.server.springboot.service;
 
 import com.server.springboot.domain.dto.request.*;
 import com.server.springboot.domain.dto.response.*;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
@@ -16,6 +17,8 @@ public interface GroupService {
 
     List<GroupDto> findAllGroups(boolean isPublic);
 
+    List<GroupDto> findAllGroupsWithSimilarInterests();
+
     GroupDetailsDto findGroup(Long groupId);
 
     void addGroupRuleByGroupId(Long groupId, RequestGroupRuleDto requestGroupRuleDto);
@@ -23,8 +26,6 @@ public interface GroupService {
     void editGroupRuleByGroupId(Long groupId, Long ruleId, RequestGroupRuleDto requestGroupRuleDto);
 
     void deleteGroupRuleByGroupId(Long groupId, Long ruleId);
-
-    List<InterestDto> findAllInterests();
 
     void addGroupInterest(Long groupId, Long interestId);
 
@@ -54,8 +55,6 @@ public interface GroupService {
 
     void editThreadAnswerReviewById(Long reviewId, RequestThreadAnswerReviewDto requestThreadAnswerReviewDto);
 
-    void deleteThreadAnswerReviewById(Long reviewId);
-
     void wantToJoinGroup(Long groupId);
 
     List<UserDto> findAllUserRequestToJoinGroup(Long groupId);
@@ -63,4 +62,15 @@ public interface GroupService {
     void decideAboutRequestToJoin(Long groupId, Long requesterId, boolean isApproved);
 
     void setGroupMemberPermission(Long groupId, Long memberId, String permission);
+
+    List<GroupDto> findAllUserGroups(Long userId);
+
+    @Transactional
+    void leaveGroupByUser(Long groupId);
+
+    void deleteGroupMemberById(Long memberId, Long groupId);
+
+    List<GroupMemberForumStatsDto> getGroupForumStatsById(Long groupId);
+
+    List<GroupThreadDto> findGroupThreadsById(Long groupId);
 }

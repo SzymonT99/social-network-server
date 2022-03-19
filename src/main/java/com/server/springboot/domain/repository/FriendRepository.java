@@ -32,7 +32,7 @@ public interface FriendRepository extends JpaRepository<Friend, Long> {
                                       @Param("userFriend") User userFriend);
 
     @Modifying
-    @Query("UPDATE Friend f SET f.isUserNotifiedAboutAccepting = :isUserNotifiedAboutAccepting where f.user = :user")
+    @Query("UPDATE Friend f SET f.isUserNotifiedAboutAccepting = :isUserNotifiedAboutAccepting where f.userFriend = :user")
     void setUserNotificationDisplayed(@Param("isUserNotifiedAboutAccepting") boolean isUserNotifiedAboutAccepting,
                                       @Param("user") User user);
 }

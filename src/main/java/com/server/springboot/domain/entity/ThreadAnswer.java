@@ -26,12 +26,16 @@ public class ThreadAnswer {
     @Column(name = "text", nullable = false)
     private String text;
 
-    @Column(name = "average_rate")
-    private Float averageRate;
+    @Column(name = "average_rating")
+    private Float averageRating;
 
     @NotNull
     @Column(name = "date", nullable = false)
     private LocalDateTime date;
+
+    @NotNull
+    @Column(name = "is_edited", nullable = false)
+    private boolean isEdited;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "group_member_id", nullable = false)
