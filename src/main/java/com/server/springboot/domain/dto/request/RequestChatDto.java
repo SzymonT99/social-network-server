@@ -10,6 +10,5 @@ import lombok.*;
 @Builder
 @ToString
 public class RequestChatDto {
-    private Long creatorId;
-    private String title;
+    private String name;
 }

@@ -56,6 +56,9 @@ public class Image {
     private Group group;
 
     @OneToOne(mappedBy = "image", fetch = FetchType.LAZY)
+    private Chat chat;
+
+    @OneToOne(mappedBy = "image", fetch = FetchType.LAZY)
     private GroupThread groupThread;
 
     @OneToOne(fetch = FetchType.LAZY, cascade = CascadeType.ALL)

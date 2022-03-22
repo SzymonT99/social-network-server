@@ -115,9 +115,9 @@ public class User {
 
     @OneToMany(mappedBy = "messageAuthor", fetch = FetchType.LAZY,
             cascade = CascadeType.ALL, orphanRemoval = true)
-    private Set<Message> messages;
+    private Set<ChatMessage> chatMessages;
 
-    @OneToMany(mappedBy = "chatMember", fetch = FetchType.LAZY,
+    @OneToMany(mappedBy = "userMember", fetch = FetchType.LAZY,
             cascade = CascadeType.ALL, orphanRemoval = true)
     private Set<ChatMember> memberOfChats;
 

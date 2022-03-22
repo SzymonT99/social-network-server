@@ -23,22 +23,33 @@ public class Chat {
     @Column(name = "chat_id")
     private Long chatId;
 
-    @NotNull
-    @Column(name = "title", nullable = false, length = 30)
+    @Column(name = "name", length = 30)
     @Size(max = 30)
-    private String title;
+    private String name;
 
     @NotNull
     @Column(name = "created_at", nullable = false)
     private LocalDateTime createdAt;
 
+    @NotNull
+    @Column(name = "is_private", nullable = false)
+    private boolean isPrivate;
+
+    @NotNull
+    @Column(name = "is_edited", nullable = false)
+    private boolean isEdited;
+
+    @OneToOne(fetch = FetchType.LAZY, cascade = CascadeType.ALL)
+    @JoinColumn(name = "image_id")
+    private Image image;
+
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "creator_id", nullable = false)
+    @JoinColumn(name = "creator_id")
     private User chatCreator;
 
     @OneToMany(mappedBy = "messageChat", fetch = FetchType.LAZY,
             cascade = CascadeType.ALL, orphanRemoval = true)
-    private Set<Message> messages;
+    private Set<ChatMessage> chatMessages;
 
     @OneToMany(mappedBy = "chat", fetch = FetchType.LAZY,
             cascade = CascadeType.ALL, orphanRemoval = true)

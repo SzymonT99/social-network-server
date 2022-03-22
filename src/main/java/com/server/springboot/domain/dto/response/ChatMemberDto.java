@@ -11,9 +11,8 @@ import lombok.*;
 @ToString
 public class ChatMemberDto {
     private Long chatMemberId;
-    private String chatMemberName;
-    private String createdAt;
+    private UserDto user;
+    private String addedIn;
     private boolean hasMutedChat;
-    private boolean hasUnreadMessage;
     private boolean canAddOthers;
 }

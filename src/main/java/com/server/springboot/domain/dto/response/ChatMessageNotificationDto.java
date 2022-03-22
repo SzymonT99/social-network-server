@@ -1,4 +1,4 @@
-package com.server.springboot.domain.dto.request;
+package com.server.springboot.domain.dto.response;
 
 import com.server.springboot.domain.enumeration.MessageType;
 import lombok.*;
@@ -10,9 +10,9 @@ import lombok.*;
 @Setter
 @Builder
 @ToString
-public class ChatMessage {
-    private String message;
+public class ChatMessageNotificationDto {
     private MessageType messageType;
     private Long chatId;
-    private Long userId;
+    private Long messageId;
+    private UserDto author;
 }

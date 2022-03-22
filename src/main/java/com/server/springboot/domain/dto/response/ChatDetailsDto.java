@@ -11,12 +11,12 @@ import java.util.List;
 @Setter
 @Builder
 @ToString
-public class ChatDto {
+public class ChatDetailsDto {
     private Long chatId;
     private String name;
     private String createdAt;
-    private Integer newMessages;
+    private ImageDto image;
     private UserDto chatCreator;
     private List<ChatMemberDto> chatMembers;
-    private ImageDto image;
+    private List<ChatMessageDto> messages;
 }
