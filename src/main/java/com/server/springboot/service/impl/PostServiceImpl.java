@@ -6,6 +6,7 @@ import com.server.springboot.domain.dto.response.PostDto;
 import com.server.springboot.domain.dto.response.SharedPostDto;
 import com.server.springboot.domain.entity.*;
 import com.server.springboot.domain.entity.key.UserPostKey;
+import com.server.springboot.domain.enumeration.ActionType;
 import com.server.springboot.domain.enumeration.GroupPermissionType;
 import com.server.springboot.domain.mapper.Converter;
 import com.server.springboot.domain.repository.*;
@@ -15,11 +16,13 @@ import com.server.springboot.exception.ForbiddenException;
 import com.server.springboot.exception.NotFoundException;
 import com.server.springboot.security.JwtUtils;
 import com.server.springboot.service.FileService;
+import com.server.springboot.service.NotificationService;
 import com.server.springboot.service.PostService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
 import java.time.LocalDateTime;
 import java.util.HashSet;
 import java.util.List;
@@ -44,7 +47,7 @@ public class PostServiceImpl implements PostService {
     private final Converter<Post, RequestSharePostDto> sharedPostMapper;
     private final Converter<List<SharedPostDto>, List<SharedPost>> sharedPostDtoListMapper;
     private final Converter<SharedPostDto, SharedPost> sharedPostDtoMapper;
-
+    private final NotificationService notificationService;
 
     @Autowired
     public PostServiceImpl(Converter<Post, RequestPostDto> postMapper, UserRepository userRepository,
@@ -54,7 +57,8 @@ public class PostServiceImpl implements PostService {
                            GroupMemberRepository groupMemberRepository, Converter<List<PostDto>, List<Post>> postDtoListMapper,
                            Converter<PostDto, Post> postDtoMapper, Converter<Post, RequestSharePostDto> sharedPostMapper,
                            Converter<List<SharedPostDto>, List<SharedPost>> sharedPostDtoListMapper,
-                           Converter<SharedPostDto, SharedPost> sharedPostDtoMapper) {
+                           Converter<SharedPostDto, SharedPost> sharedPostDtoMapper,
+                           NotificationService notificationService) {
         this.postMapper = postMapper;
         this.userRepository = userRepository;
         this.postRepository = postRepository;
@@ -70,6 +74,7 @@ public class PostServiceImpl implements PostService {
         this.sharedPostMapper = sharedPostMapper;
         this.sharedPostDtoListMapper = sharedPostDtoListMapper;
         this.sharedPostDtoMapper = sharedPostDtoMapper;
+        this.notificationService = notificationService;
     }
 
     @Override
@@ -119,6 +124,11 @@ public class PostServiceImpl implements PostService {
 
             addedPost.setGroup(group);
             groupMemberRepository.setGroupMembersHasNewNotification(true, group);
+
+            for (GroupMember groupMember : group.getGroupMembers()) {
+                notificationService.sendNotificationToUser(author, groupMember.getMember().getUserId(), ActionType.ACTIVITY_BOARD);
+            }
+
         }
 
         postRepository.save(addedPost);
@@ -150,8 +160,16 @@ public class PostServiceImpl implements PostService {
         }
 
         Set<Image> lastImages = new HashSet<>(post.getImages());
-        post.removeImages();    // Usuwanie zdjęć dodanych przed edycją
-
+        if (lastImages.size() > 0) {
+            post.removeImages();
+            lastImages.forEach((lastImage -> {
+                try {
+                    fileService.deleteImage(lastImage.getImageId());
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }));
+        }
 
         if (imageFiles != null) {
             Set<Image> updatedImages = fileService.storageImages(imageFiles, post.getPostAuthor());
@@ -198,6 +216,15 @@ public class PostServiceImpl implements PostService {
             sharedPostRepository.deleteAll(post.getSharedBasePosts());
             postRepository.deleteByPostId(postId);
             imageRepository.deleteAll(lastImages);
+            if (lastImages.size() > 0) {
+                lastImages.forEach((lastImage -> {
+                    try {
+                        fileService.deleteImage(lastImage.getImageId());
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                }));
+            }
         }
     }
 
@@ -222,6 +249,8 @@ public class PostServiceImpl implements PostService {
         likes.add(newLikedPost);
         post.setLikedPosts(likes);
         postRepository.save(post);
+
+        notificationService.sendNotificationToUser(likedUser, post.getPostAuthor().getUserId(), ActionType.ACTIVITY_BOARD);
     }
 
     @Override
@@ -255,6 +284,8 @@ public class PostServiceImpl implements PostService {
                 .isPostAuthorNotified(false)
                 .build();
         sharedPostRepository.save(sharedPost);
+
+        notificationService.sendNotificationToUser(user, basePost.getPostAuthor().getUserId(), ActionType.ACTIVITY_BOARD);
 
         return sharedPostDtoMapper.convert(sharedPost);
     }

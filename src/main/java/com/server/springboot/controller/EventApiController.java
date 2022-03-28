@@ -16,6 +16,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import javax.validation.Valid;
+import java.io.IOException;
 import java.util.List;
 
 @CrossOrigin
@@ -44,7 +45,7 @@ public class EventApiController {
     @PutMapping(value = "/events/{eventId}", consumes = {MediaType.APPLICATION_JSON_VALUE, MediaType.MULTIPART_FORM_DATA_VALUE})
     public ResponseEntity<?> updateEvent(@PathVariable(value = "eventId") Long eventId,
                                          @RequestPart(value = "image", required = false) MultipartFile imageFile,
-                                         @Valid @RequestPart(value = "event") RequestEventDto requestEventDto) {
+                                         @Valid @RequestPart(value = "event") RequestEventDto requestEventDto) throws IOException {
         LOGGER.info("---- Update event with id: {} and title: {}", eventId, requestEventDto.getTitle());
         eventService.editEvent(eventId, requestEventDto, imageFile);
         return new ResponseEntity<>(HttpStatus.OK);
@@ -53,7 +54,7 @@ public class EventApiController {
     @ApiOperation(value = "Delete an event by id")
     @DeleteMapping(value = "/events/{eventId}")
     public ResponseEntity<?> deleteEvent(@PathVariable(value = "eventId") Long eventId,
-                                         @RequestParam(value = "archive") boolean archive) {
+                                         @RequestParam(value = "archive") boolean archive) throws IOException {
         LOGGER.info("---- Delete event with id: {}", eventId);
         eventService.deleteEventById(eventId, archive);
         return new ResponseEntity<>(HttpStatus.OK);

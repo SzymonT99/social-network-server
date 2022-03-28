@@ -15,6 +15,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import javax.validation.Valid;
+import java.io.IOException;
 import java.util.List;
 
 @CrossOrigin
@@ -45,7 +46,7 @@ public class GroupApiController {
     @PutMapping(value = "/groups/{groupId}", consumes = {MediaType.APPLICATION_JSON_VALUE, MediaType.MULTIPART_FORM_DATA_VALUE})
     public ResponseEntity<?> updateGroup(@PathVariable(value = "groupId") Long groupId,
                                          @RequestPart(value = "image", required = false) MultipartFile imageFile,
-                                         @Valid @RequestPart(value = "group") RequestGroupDto requestGroupDto) {
+                                         @Valid @RequestPart(value = "group") RequestGroupDto requestGroupDto) throws IOException {
         LOGGER.info("---- Update group with id: {} and name: {}", groupId, requestGroupDto.getName());
         groupService.editGroup(groupId, requestGroupDto, imageFile);
         return new ResponseEntity<>(HttpStatus.OK);
@@ -54,7 +55,7 @@ public class GroupApiController {
     @ApiOperation(value = "Delete a group by id")
     @DeleteMapping(value = "/groups/{groupId}")
     public ResponseEntity<?> deleteGroup(@PathVariable(value = "groupId") Long groupId,
-                                         @RequestParam(value = "archive") boolean archive) {
+                                         @RequestParam(value = "archive") boolean archive) throws IOException {
         LOGGER.info("---- Delete group with id: {}", groupId);
         groupService.deleteGroupById(groupId, archive);
         return new ResponseEntity<>(HttpStatus.OK);

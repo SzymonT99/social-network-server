@@ -33,13 +33,15 @@ public class ChatDtoListMapper implements Converter<List<ChatDto>, List<Chat>> {
         List<ChatDto> chatDtoList = new ArrayList<>();
 
         for (Chat chat : from) {
+
             ChatDto chatDto = ChatDto.builder()
                     .chatId(chat.getChatId())
                     .name(chat.getName())
                     .createdAt(chat.getCreatedAt().toString())
-                    .chatCreator(userDtoMapper.convert(chat.getChatCreator()))
-                    .chatMembers(chatMemberDtoListMapper.convert(Lists.newArrayList(chat.getChatMembers())))
+                    .chatCreator(chat.getChatCreator() != null ? userDtoMapper.convert(chat.getChatCreator()) : null)
                     .image(chat.getImage() != null ? imageDtoMapper.convert(chat.getImage()) : null)
+                    .isPrivate(chat.isPrivate())
+                    .members(chatMemberDtoListMapper.convert(Lists.newArrayList(chat.getChatMembers())))
                     .build();
 
             chatDtoList.add(chatDto);

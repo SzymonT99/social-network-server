@@ -4,7 +4,6 @@ import com.server.springboot.domain.dto.response.ChatMessageDto;
 import com.server.springboot.domain.dto.response.ImageDto;
 import com.server.springboot.domain.dto.response.UserDto;
 import com.server.springboot.domain.entity.ChatMessage;
-import com.server.springboot.domain.entity.GroupThread;
 import com.server.springboot.domain.entity.Image;
 import com.server.springboot.domain.entity.User;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -32,13 +31,14 @@ public class ChatMessageDtoListMapper implements Converter<List<ChatMessageDto>,
         List<ChatMessageDto> chatMessageDtoList = new ArrayList<>();
 
         from = from.stream()
-                .sorted(Comparator.comparing(ChatMessage::getCreatedAt))
+                .sorted(Comparator.comparing(ChatMessage::getMessageId))
                 .collect(Collectors.toList());
 
         for (ChatMessage chatMessage : from) {
             ChatMessageDto chatMessageDto = ChatMessageDto.builder()
                     .messageId(chatMessage.getMessageId())
                     .text(chatMessage.getText())
+                    .messageType(chatMessage.getMessageType())
                     .image(chatMessage.getImage() != null ? imageDtoMapper.convert(chatMessage.getImage()) : null)
                     .createdAt(chatMessage.getCreatedAt().toString())
                     .editedAt(chatMessage.getEditedAt() != null ? chatMessage.getEditedAt().toString() : null)

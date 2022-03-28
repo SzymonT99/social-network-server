@@ -7,6 +7,7 @@ import com.server.springboot.domain.entity.Comment;
 import com.server.springboot.domain.entity.GroupMember;
 import com.server.springboot.domain.entity.Post;
 import com.server.springboot.domain.entity.User;
+import com.server.springboot.domain.enumeration.ActionType;
 import com.server.springboot.domain.enumeration.GroupPermissionType;
 import com.server.springboot.domain.mapper.Converter;
 import com.server.springboot.domain.repository.CommentRepository;
@@ -18,6 +19,7 @@ import com.server.springboot.exception.ConflictRequestException;
 import com.server.springboot.exception.ForbiddenException;
 import com.server.springboot.exception.NotFoundException;
 import com.server.springboot.security.JwtUtils;
+import com.server.springboot.service.NotificationService;
 import com.server.springboot.service.PostCommentService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -36,12 +38,14 @@ public class PostCommentServiceImpl implements PostCommentService {
     private final JwtUtils jwtUtils;
     private final Converter<Comment, RequestCommentDto> commentMapper;
     private final Converter<CommentDto, Comment> commentDtoMapper;
+    private final NotificationService notificationService;
 
     @Autowired
     public PostCommentServiceImpl(UserRepository userRepository, PostRepository postRepository,
                                   CommentRepository commentRepository, GroupMemberRepository groupMemberRepository, JwtUtils jwtUtils,
                                   Converter<Comment, RequestCommentDto> commentMapper,
-                                  Converter<CommentDto, Comment> commentDtoMapper) {
+                                  Converter<CommentDto, Comment> commentDtoMapper,
+                                  NotificationService notificationService) {
         this.userRepository = userRepository;
         this.postRepository = postRepository;
         this.commentRepository = commentRepository;
@@ -49,6 +53,7 @@ public class PostCommentServiceImpl implements PostCommentService {
         this.jwtUtils = jwtUtils;
         this.commentMapper = commentMapper;
         this.commentDtoMapper = commentDtoMapper;
+        this.notificationService = notificationService;
     }
 
     @Override
@@ -62,6 +67,8 @@ public class PostCommentServiceImpl implements PostCommentService {
         comment.setCommentAuthor(commentAuthor);
         comment.setCommentedPost(post);
         commentRepository.save(comment);
+
+        notificationService.sendNotificationToUser(commentAuthor, post.getPostAuthor().getUserId(), ActionType.ACTIVITY_BOARD);
 
         return commentDtoMapper.convert(comment);
     }

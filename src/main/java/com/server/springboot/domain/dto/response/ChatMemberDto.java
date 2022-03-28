@@ -14,5 +14,5 @@ public class ChatMemberDto {
     private UserDto user;
     private String addedIn;
     private boolean hasMutedChat;
-    private boolean canAddOthers;
+    private Boolean canAddOthers;
 }

@@ -4,6 +4,7 @@ import com.google.common.collect.Lists;
 import com.server.springboot.domain.dto.request.*;
 import com.server.springboot.domain.dto.response.*;
 import com.server.springboot.domain.entity.*;
+import com.server.springboot.domain.enumeration.ActionType;
 import com.server.springboot.domain.enumeration.GroupMemberStatus;
 import com.server.springboot.domain.enumeration.GroupPermissionType;
 import com.server.springboot.domain.mapper.Converter;
@@ -12,10 +13,12 @@ import com.server.springboot.exception.*;
 import com.server.springboot.security.JwtUtils;
 import com.server.springboot.service.FileService;
 import com.server.springboot.service.GroupService;
+import com.server.springboot.service.NotificationService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
 import java.time.LocalDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -45,6 +48,7 @@ public class GroupServiceImpl implements GroupService {
     private final Converter<List<UserDto>, List<User>> userDtoListMapper;
     private final Converter<List<GroupMemberDto>, List<GroupMember>> groupMemberDtoListMapper;
     private final Converter<List<GroupThreadDto>, List<GroupThread>> groupThreadDtoListMapper;
+    private final NotificationService notificationService;
 
     @Autowired
     public GroupServiceImpl(GroupRepository groupRepository, GroupRuleRepository groupRuleRepository,
@@ -63,7 +67,8 @@ public class GroupServiceImpl implements GroupService {
                             Converter<UserDto, User> userDtoMapper,
                             Converter<List<UserDto>, List<User>> userDtoListMapper,
                             Converter<List<GroupMemberDto>, List<GroupMember>> groupMemberDtoListMapper,
-                            Converter<List<GroupThreadDto>, List<GroupThread>> groupThreadDtoListMapper) {
+                            Converter<List<GroupThreadDto>, List<GroupThread>> groupThreadDtoListMapper,
+                            NotificationService notificationService) {
         this.groupRepository = groupRepository;
         this.groupRuleRepository = groupRuleRepository;
         this.groupMemberRepository = groupMemberRepository;
@@ -86,6 +91,7 @@ public class GroupServiceImpl implements GroupService {
         this.userDtoListMapper = userDtoListMapper;
         this.groupMemberDtoListMapper = groupMemberDtoListMapper;
         this.groupThreadDtoListMapper = groupThreadDtoListMapper;
+        this.notificationService = notificationService;
     }
 
     @Override
@@ -122,7 +128,7 @@ public class GroupServiceImpl implements GroupService {
 
 
     @Override
-    public void editGroup(Long groupId, RequestGroupDto requestGroupDto, MultipartFile imageFile) {
+    public void editGroup(Long groupId, RequestGroupDto requestGroupDto, MultipartFile imageFile) throws IOException {
         Long userId = jwtUtils.getLoggedUserId();
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new NotFoundException("Not found user with id: " + userId));
@@ -141,6 +147,7 @@ public class GroupServiceImpl implements GroupService {
             String lastImageId = group.getImage().getImageId();
             group.setImage(null);
             imageRepository.deleteByImageId(lastImageId);
+            fileService.deleteImage(group.getImage().getImageId());
         }
 
         if (imageFile != null) {
@@ -162,7 +169,7 @@ public class GroupServiceImpl implements GroupService {
     }
 
     @Override
-    public void deleteGroupById(Long groupId, boolean archive) {
+    public void deleteGroupById(Long groupId, boolean archive) throws IOException {
         Long userId = jwtUtils.getLoggedUserId();
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new NotFoundException("Not found user with id: " + userId));
@@ -181,6 +188,9 @@ public class GroupServiceImpl implements GroupService {
             groupRepository.save(group);
         } else {
             groupRepository.deleteByGroupId(groupId);
+            if (group.getImage() != null) {
+                fileService.deleteImage(group.getImage().getImageId());
+            }
         }
     }
 
@@ -381,6 +391,8 @@ public class GroupServiceImpl implements GroupService {
                 .build();
 
         groupMemberRepository.save(groupMember);
+
+        notificationService.sendNotificationToUser(loggedUser, invitedUserId, ActionType.ACTIVITY_BOARD);
     }
 
     @Override
@@ -724,6 +736,8 @@ public class GroupServiceImpl implements GroupService {
         }
 
         groupMemberRepository.save(groupMember);
+
+        notificationService.sendNotificationToUser(loggedUser, requesterId, ActionType.ACTIVITY_BOARD);
     }
 
     @Override

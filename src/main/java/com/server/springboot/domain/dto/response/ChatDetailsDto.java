@@ -1,5 +1,6 @@
 package com.server.springboot.domain.dto.response;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.*;
 
 import java.util.List;
@@ -17,6 +18,8 @@ public class ChatDetailsDto {
     private String createdAt;
     private ImageDto image;
     private UserDto chatCreator;
+    @JsonProperty(value = "isPrivate")
+    private boolean isPrivate;
     private List<ChatMemberDto> chatMembers;
     private List<ChatMessageDto> messages;
 }

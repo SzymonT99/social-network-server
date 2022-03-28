@@ -7,6 +7,7 @@ import com.server.springboot.domain.dto.response.EventInvitationDto;
 import com.server.springboot.domain.dto.response.SharedEventDto;
 import com.server.springboot.domain.entity.*;
 import com.server.springboot.domain.entity.key.UserEventKey;
+import com.server.springboot.domain.enumeration.ActionType;
 import com.server.springboot.domain.enumeration.EventParticipationStatus;
 import com.server.springboot.domain.mapper.Converter;
 import com.server.springboot.domain.repository.*;
@@ -17,10 +18,13 @@ import com.server.springboot.exception.NotFoundException;
 import com.server.springboot.security.JwtUtils;
 import com.server.springboot.service.EventService;
 import com.server.springboot.service.FileService;
+import com.server.springboot.service.NotificationService;
+import com.server.springboot.service.UserActivityService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.Arrays;
@@ -44,6 +48,7 @@ public class EventServiceImpl implements EventService {
     private final Converter<List<EventDto>, List<Event>> eventDtoListMapper;
     private final Converter<List<EventInvitationDto>, List<EventMember>> eventInvitationDtoListMapper;
     private final Converter<List<SharedEventDto>, List<SharedEvent>> sharedEventDtoListMapper;
+    private final NotificationService notificationService;
 
     @Autowired
     public EventServiceImpl(FileService fileService, UserRepository userRepository, EventRepository eventRepository,
@@ -52,7 +57,8 @@ public class EventServiceImpl implements EventService {
                             Converter<Address, RequestAddressDto> addressMapper, Converter<EventDto, Event> eventDtoMapper,
                             Converter<List<EventDto>, List<Event>> eventDtoListMapper,
                             Converter<List<EventInvitationDto>, List<EventMember>> eventInvitationDtoListMapper,
-                            Converter<List<SharedEventDto>, List<SharedEvent>> sharedEventDtoListMapper) {
+                            Converter<List<SharedEventDto>, List<SharedEvent>> sharedEventDtoListMapper,
+                            NotificationService notificationService) {
         this.fileService = fileService;
         this.userRepository = userRepository;
         this.eventRepository = eventRepository;
@@ -67,6 +73,7 @@ public class EventServiceImpl implements EventService {
         this.eventDtoListMapper = eventDtoListMapper;
         this.eventInvitationDtoListMapper = eventInvitationDtoListMapper;
         this.sharedEventDtoListMapper = sharedEventDtoListMapper;
+        this.notificationService = notificationService;
     }
 
     @Override
@@ -90,7 +97,7 @@ public class EventServiceImpl implements EventService {
     }
 
     @Override
-    public void editEvent(Long eventId, RequestEventDto requestEventDto, MultipartFile imageFile) {
+    public void editEvent(Long eventId, RequestEventDto requestEventDto, MultipartFile imageFile) throws IOException {
         Long userId = jwtUtils.getLoggedUserId();
         Event event = eventRepository.findById(eventId)
                 .orElseThrow(() -> new NotFoundException("Not found event with id: " + eventId));
@@ -102,6 +109,7 @@ public class EventServiceImpl implements EventService {
             String lastImageId = event.getImage().getImageId();
             event.setImage(null);
             imageRepository.deleteByImageId(lastImageId);
+            fileService.deleteImage(lastImageId);
         }
 
         if (imageFile != null) {
@@ -126,7 +134,7 @@ public class EventServiceImpl implements EventService {
     }
 
     @Override
-    public void deleteEventById(Long eventId, boolean archive) {
+    public void deleteEventById(Long eventId, boolean archive) throws IOException {
         Long userId = jwtUtils.getLoggedUserId();
         Event event = eventRepository.findById(eventId)
                 .orElseThrow(() -> new NotFoundException("Not found event with id: " + eventId));
@@ -139,6 +147,9 @@ public class EventServiceImpl implements EventService {
             eventRepository.save(event);
         } else {
             eventRepository.deleteByEventId(eventId);
+            if (event.getImage() != null) {
+                fileService.deleteImage(event.getImage().getImageId());
+            }
         }
     }
 
@@ -150,6 +161,10 @@ public class EventServiceImpl implements EventService {
 
     @Override
     public void inviteUser(Long eventId, Long invitedUserId) {
+        Long loggedUserId = jwtUtils.getLoggedUserId();
+        User loggedUser = userRepository.findById(loggedUserId)
+                .orElseThrow(() -> new NotFoundException("Not found user with id: " + loggedUserId));
+
         User user = userRepository.findById(invitedUserId)
                 .orElseThrow(() -> new NotFoundException("Not found user with id: " + invitedUserId));
         Event event = eventRepository.findById(eventId)
@@ -167,6 +182,8 @@ public class EventServiceImpl implements EventService {
                 .event(event)
                 .build();
         eventMemberRepository.save(eventMember);
+
+        notificationService.sendNotificationToUser(loggedUser, invitedUserId, ActionType.ACTIVITY_BOARD);
     }
 
     @Override

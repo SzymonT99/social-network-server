@@ -12,6 +12,7 @@ import lombok.*;
 @ToString
 public class ChatMessageNotificationDto {
     private MessageType messageType;
+    private String typingMessage;
     private Long chatId;
     private Long messageId;
     private UserDto author;

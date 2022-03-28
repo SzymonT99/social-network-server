@@ -5,15 +5,16 @@ import com.server.springboot.domain.dto.response.*;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
 import java.util.List;
 
 public interface GroupService {
 
     void addGroup(RequestGroupDto requestGroupDto, MultipartFile imageFile);
 
-    void editGroup(Long groupId, RequestGroupDto requestGroupDto, MultipartFile imageFile);
+    void editGroup(Long groupId, RequestGroupDto requestGroupDto, MultipartFile imageFile) throws IOException;
 
-    void deleteGroupById(Long groupId, boolean archive);
+    void deleteGroupById(Long groupId, boolean archive) throws IOException;
 
     List<GroupDto> findAllGroups(boolean isPublic);
 

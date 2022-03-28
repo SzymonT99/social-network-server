@@ -1,5 +1,6 @@
 package com.server.springboot.domain.entity;
 
+import com.server.springboot.domain.enumeration.MessageType;
 import lombok.*;
 
 import javax.persistence.*;
@@ -21,9 +22,13 @@ public class ChatMessage {
     @Column(name = "message_id")
     private Long messageId;
 
-    @NotNull
-    @Column(name = "text", nullable = false)
+    @Column(name = "text")
     private String text;
+
+    @NotNull
+    @Enumerated(EnumType.STRING)
+    @Column(name = "type", nullable = false)
+    private MessageType messageType;
 
     @OneToOne(fetch = FetchType.LAZY, cascade = CascadeType.ALL)
     @JoinColumn(name = "image_id")

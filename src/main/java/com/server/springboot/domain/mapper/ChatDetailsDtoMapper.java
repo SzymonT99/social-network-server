@@ -34,7 +34,8 @@ public class ChatDetailsDtoMapper implements Converter<ChatDetailsDto, Chat>{
                 .name(from.getName())
                 .createdAt(from.getCreatedAt().toString())
                 .image(from.getImage() != null ? imageDtoMapper.convert(from.getImage()) : null)
-                .chatCreator(userDtoMapper.convert(from.getChatCreator()))
+                .chatCreator(from.getChatCreator() != null ? userDtoMapper.convert(from.getChatCreator()) : null)
+                .isPrivate(from.isPrivate())
                 .chatMembers(chatMemberDtoListMapper.convert(Lists.newArrayList(from.getChatMembers())))
                 .messages(chatMessageDtoListMapper.convert(Lists.newArrayList(from.getChatMessages())))
                 .build();

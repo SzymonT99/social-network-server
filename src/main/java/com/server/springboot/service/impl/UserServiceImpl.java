@@ -3,15 +3,14 @@ package com.server.springboot.service.impl;
 import com.server.springboot.domain.dto.request.*;
 import com.server.springboot.domain.dto.response.*;
 import com.server.springboot.domain.entity.*;
+import com.server.springboot.domain.enumeration.ActionType;
 import com.server.springboot.domain.enumeration.ActivityStatus;
 import com.server.springboot.domain.enumeration.AppRole;
 import com.server.springboot.domain.mapper.Converter;
 import com.server.springboot.domain.repository.*;
 import com.server.springboot.exception.*;
 import com.server.springboot.security.JwtUtils;
-import com.server.springboot.service.EmailService;
-import com.server.springboot.service.RefreshTokenService;
-import com.server.springboot.service.UserService;
+import com.server.springboot.service.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -58,6 +57,7 @@ public class UserServiceImpl implements UserService {
     private final Converter<Report, RequestReportDto> reportMapper;
     private final Converter<List<ReportDto>, List<Report>> reportDtoListMapper;
     private final Converter<List<UserDto>, List<User>> userDtoListMapper;
+    private final NotificationService notificationService;
 
     @Autowired
     public UserServiceImpl(UserRepository userRepository, RoleRepository roleRepository,
@@ -69,7 +69,8 @@ public class UserServiceImpl implements UserService {
                            RefreshTokenService refreshTokenService, UserDetailsServiceImpl userDetailsService,
                            Converter<Report, RequestReportDto> reportMapper,
                            Converter<List<ReportDto>, List<Report>> reportDtoListMapper,
-                           Converter<List<UserDto>, List<User>> userDtoListMapper) {
+                           Converter<List<UserDto>, List<User>> userDtoListMapper,
+                           NotificationService notificationService) {
         this.userRepository = userRepository;
         this.roleRepository = roleRepository;
         this.reportRepository = reportRepository;
@@ -86,6 +87,7 @@ public class UserServiceImpl implements UserService {
         this.reportMapper = reportMapper;
         this.reportDtoListMapper = reportDtoListMapper;
         this.userDtoListMapper = userDtoListMapper;
+        this.notificationService = notificationService;
     }
 
     @Override
@@ -197,6 +199,8 @@ public class UserServiceImpl implements UserService {
 
         LocalDateTime accessTokenExpirationDate = LocalDateTime.now().plus(accessTokenExpirationMs, ChronoField.MILLI_OF_DAY.getBaseUnit());
 
+        informUserFriendsAboutActivity(authorizedUser);
+
         return new JwtResponse(
                 userDetails.getUserId(),
                 roles,
@@ -238,6 +242,8 @@ public class UserServiceImpl implements UserService {
                 .orElseThrow(() -> new NotFoundException("Not found user with given id: " + userId));
         user.setActivityStatus(ActivityStatus.OFFLINE);
         refreshTokenService.deleteByUser(user);
+
+        informUserFriendsAboutActivity(user);
     }
 
     @Override
@@ -471,9 +477,21 @@ public class UserServiceImpl implements UserService {
     @Override
     public void changeActivityStatus(String status) {
         Long loggedUserId = jwtUtils.getLoggedUserId();
-        User user = userRepository.findById(loggedUserId)
+        User loggedUser = userRepository.findById(loggedUserId)
                 .orElseThrow(() -> new NotFoundException("Not found user with id: " + loggedUserId));
-        user.setActivityStatus(ActivityStatus.valueOf(status));
-        userRepository.save(user);
+        loggedUser.setActivityStatus(ActivityStatus.valueOf(status));
+        userRepository.save(loggedUser);
+
+        informUserFriendsAboutActivity(loggedUser);
+    }
+
+    public void informUserFriendsAboutActivity(User user) {
+        List<User> userFriendList = user.getUserFriends().stream()
+                .map(Friend::getUser)
+                .collect(Collectors.toList());
+
+        for (User userFriend : userFriendList) {
+            notificationService.sendNotificationToUser(user, userFriend.getUserId(), ActionType.FRIENDS_STATUS);
+        }
     }
 }

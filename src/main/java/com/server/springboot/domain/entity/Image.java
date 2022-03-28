@@ -31,12 +31,8 @@ public class Image {
     @Column(name = "type", nullable = false)
     private String type;
 
-    @NotNull
-    @Column(name = "filePath", nullable = false)
+    @Column(name = "filePath")
     private String filePath;
-
-    @Column(name = "caption")
-    private String caption;
 
     @NotNull
     @Column(name = "added_in", nullable = false)

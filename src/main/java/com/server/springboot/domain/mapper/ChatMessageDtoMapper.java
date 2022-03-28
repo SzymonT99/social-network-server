@@ -26,6 +26,7 @@ public class ChatMessageDtoMapper implements Converter<ChatMessageDto, ChatMessa
         return ChatMessageDto.builder()
                 .messageId(from.getMessageId())
                 .text(from.getText())
+                .messageType(from.getMessageType())
                 .image(from.getImage() != null ? imageDtoMapper.convert(from.getImage()) : null)
                 .createdAt(from.getCreatedAt().toString())
                 .editedAt(from.getEditedAt() != null ? from.getEditedAt().toString() : null)

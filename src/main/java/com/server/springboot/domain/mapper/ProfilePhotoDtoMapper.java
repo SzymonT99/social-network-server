@@ -16,7 +16,6 @@ public class ProfilePhotoDtoMapper implements Converter<ProfilePhotoDto, Image> 
                 .filename(from.getFilename())
                 .url("http://localhost:8080/api/images/" + from.getImageId())
                 .type(from.getType())
-                .caption(from.getCaption())
                 .addedIn(from.getAddedIn().format(formatter))
                 .build();
     }
