@@ -13,6 +13,5 @@ public class ProfilePhotoDto {
     private String filename;
     private String url;
     private String type;
-    private String caption;
     private String addedIn;
 }

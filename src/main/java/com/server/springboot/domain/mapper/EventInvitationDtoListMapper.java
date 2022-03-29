@@ -41,7 +41,8 @@ public class EventInvitationDtoListMapper implements Converter<List<EventInvitat
                     .eventId(eventMember.getEvent().getEventId())
                     .title(eventMember.getEvent().getTitle())
                     .description(eventMember.getEvent().getDescription())
-                    .image(imageDtoMapper.convert(eventMember.getEvent().getImage()))
+                    .image(eventMember.getEvent().getImage() != null
+                            ? imageDtoMapper.convert(eventMember.getEvent().getImage()) : null)
                     .eventDate(eventMember.getEvent().getEventDate().toString())
                     .createdAt(eventMember.getEvent().getCreatedAt().toString())
                     .eventAuthor(userDtoMapper.convert(eventMember.getEvent().getEventCreator()))

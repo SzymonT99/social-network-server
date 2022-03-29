@@ -247,7 +247,6 @@ public class ProfileServiceImpl implements ProfileService {
                 .filename(profilePhoto.getFilename())
                 .url("localhost:8080/api/images/" + profilePhoto.getImageId())
                 .type(profilePhoto.getType())
-                .caption(profilePhoto.getCaption())
                 .addedIn(profilePhoto.getAddedIn().format(formatter))
                 .build();
     }

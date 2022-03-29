@@ -41,11 +41,11 @@ public class CommentedPostDtoListMapper implements Converter<List<CommentedPostD
                     .commentId(comment.getCommentId())
                     .commentAuthor(userDtoMapper.convert(comment.getCommentAuthor()))
                     .commentText(comment.getText())
-                    .commentedPost(comment.getCommentedPost().getSharedNewPosts() == null
+                    .commentedPost(comment.getCommentedPost().getSharedNewPost() == null
                             ? postDtoMapper.convert(comment.getCommentedPost())
                             : null)
-                    .commentedSharedPost(comment.getCommentedPost().getSharedNewPosts() != null
-                            ? sharedPostDtoMapper.convert(comment.getCommentedPost().getSharedNewPosts())
+                    .commentedSharedPost(comment.getCommentedPost().getSharedNewPost() != null
+                            ? sharedPostDtoMapper.convert(comment.getCommentedPost().getSharedNewPost())
                             : null)
                     .createdAt(comment.getCreatedAt().format(formatter))
                     .editedAt(comment.getEditedAt() != null ? comment.getEditedAt().format(formatter) : null)

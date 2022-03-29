@@ -7,6 +7,7 @@ import com.server.springboot.domain.dto.response.SharedEventDto;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
 import java.util.List;
 
 public interface EventService {
@@ -14,9 +15,9 @@ public interface EventService {
     void addEvent(RequestEventDto requestEventDto, MultipartFile imageFile);
 
     @Transactional
-    void editEvent(Long eventId, RequestEventDto requestEventDto, MultipartFile imageFile);
+    void editEvent(Long eventId, RequestEventDto requestEventDto, MultipartFile imageFile) throws IOException;
 
-    void deleteEventById(Long eventId, boolean archive);
+    void deleteEventById(Long eventId, boolean archive) throws IOException;
 
     List<EventDto> findAllEvents();
 

@@ -1,5 +1,6 @@
 package com.server.springboot.domain.entity;
 
+import com.server.springboot.domain.enumeration.MessageType;
 import lombok.*;
 
 import javax.persistence.*;
@@ -14,16 +15,20 @@ import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "message")
-public class Message {
+public class ChatMessage {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "message_id")
     private Long messageId;
 
-    @NotNull
-    @Column(name = "text", nullable = false)
+    @Column(name = "text")
     private String text;
+
+    @NotNull
+    @Enumerated(EnumType.STRING)
+    @Column(name = "type", nullable = false)
+    private MessageType messageType;
 
     @OneToOne(fetch = FetchType.LAZY, cascade = CascadeType.ALL)
     @JoinColumn(name = "image_id")
@@ -33,8 +38,7 @@ public class Message {
     @Column(name = "created_at", nullable = false)
     private LocalDateTime createdAt;
 
-    @NotNull
-    @Column(name = "edited_at", nullable = false)
+    @Column(name = "edited_at")
     private LocalDateTime editedAt;
 
     @NotNull

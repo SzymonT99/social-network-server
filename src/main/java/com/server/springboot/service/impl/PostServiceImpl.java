@@ -6,6 +6,8 @@ import com.server.springboot.domain.dto.response.PostDto;
 import com.server.springboot.domain.dto.response.SharedPostDto;
 import com.server.springboot.domain.entity.*;
 import com.server.springboot.domain.entity.key.UserPostKey;
+import com.server.springboot.domain.enumeration.ActionType;
+import com.server.springboot.domain.enumeration.GroupPermissionType;
 import com.server.springboot.domain.mapper.Converter;
 import com.server.springboot.domain.repository.*;
 import com.server.springboot.exception.BadRequestException;
@@ -14,11 +16,13 @@ import com.server.springboot.exception.ForbiddenException;
 import com.server.springboot.exception.NotFoundException;
 import com.server.springboot.security.JwtUtils;
 import com.server.springboot.service.FileService;
+import com.server.springboot.service.NotificationService;
 import com.server.springboot.service.PostService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
 import java.time.LocalDateTime;
 import java.util.HashSet;
 import java.util.List;
@@ -43,7 +47,7 @@ public class PostServiceImpl implements PostService {
     private final Converter<Post, RequestSharePostDto> sharedPostMapper;
     private final Converter<List<SharedPostDto>, List<SharedPost>> sharedPostDtoListMapper;
     private final Converter<SharedPostDto, SharedPost> sharedPostDtoMapper;
-
+    private final NotificationService notificationService;
 
     @Autowired
     public PostServiceImpl(Converter<Post, RequestPostDto> postMapper, UserRepository userRepository,
@@ -53,7 +57,8 @@ public class PostServiceImpl implements PostService {
                            GroupMemberRepository groupMemberRepository, Converter<List<PostDto>, List<Post>> postDtoListMapper,
                            Converter<PostDto, Post> postDtoMapper, Converter<Post, RequestSharePostDto> sharedPostMapper,
                            Converter<List<SharedPostDto>, List<SharedPost>> sharedPostDtoListMapper,
-                           Converter<SharedPostDto, SharedPost> sharedPostDtoMapper) {
+                           Converter<SharedPostDto, SharedPost> sharedPostDtoMapper,
+                           NotificationService notificationService) {
         this.postMapper = postMapper;
         this.userRepository = userRepository;
         this.postRepository = postRepository;
@@ -69,6 +74,7 @@ public class PostServiceImpl implements PostService {
         this.sharedPostMapper = sharedPostMapper;
         this.sharedPostDtoListMapper = sharedPostDtoListMapper;
         this.sharedPostDtoMapper = sharedPostDtoMapper;
+        this.notificationService = notificationService;
     }
 
     @Override
@@ -99,7 +105,7 @@ public class PostServiceImpl implements PostService {
 
     @Override
     public PostDto addPost(RequestPostDto requestPostDto, List<MultipartFile> imageFiles, Long groupId) {
-        Long userId  = jwtUtils.getLoggedUserId();
+        Long userId = jwtUtils.getLoggedUserId();
         User author = userRepository.findById(userId)
                 .orElseThrow(() -> new NotFoundException("Not found user with id: " + userId));
         Post addedPost = postMapper.convert(requestPostDto);
@@ -111,9 +117,18 @@ public class PostServiceImpl implements PostService {
 
         if (groupId != null) {
             Group group = groupRepository.findById(groupId).get();
-            addedPost.setGroup(group);
 
+            if (!groupMemberRepository.existsByMemberAndGroup(author, group)) {
+                throw new ForbiddenException("User does not contain to group with id: " + groupId);
+            }
+
+            addedPost.setGroup(group);
             groupMemberRepository.setGroupMembersHasNewNotification(true, group);
+
+            for (GroupMember groupMember : group.getGroupMembers()) {
+                notificationService.sendNotificationToUser(author, groupMember.getMember().getUserId(), ActionType.ACTIVITY_BOARD);
+            }
+
         }
 
         postRepository.save(addedPost);
@@ -123,16 +138,38 @@ public class PostServiceImpl implements PostService {
 
     @Override
     public PostDto editPost(Long postId, RequestPostDto requestPostDto, List<MultipartFile> imageFiles) {
-        Long userId  = jwtUtils.getLoggedUserId();
+        Long userId = jwtUtils.getLoggedUserId();
+        User loggedUser = userRepository.findById(userId)
+                .orElseThrow(() -> new NotFoundException("Not found user with id: " + userId));
         Post post = postRepository.findById(postId)
                 .orElseThrow(() -> new NotFoundException("Not found post with id: " + postId));
-        if (!post.getPostAuthor().getUserId().equals(userId)) {
-            throw new ForbiddenException("Invalid post author id - post editing access forbidden");
+
+        if (post.getGroup() != null) {
+            GroupMember userGroupMember = groupMemberRepository.findByGroupAndMember(post.getGroup(), loggedUser)
+                    .orElseThrow(() -> new NotFoundException(String.format("Not found user with id: %s in group with id: %s",
+                            userId, post.getGroup().getGroupId())));
+            if (userGroupMember.getGroupPermissionType() != GroupPermissionType.ADMINISTRATOR
+                    && userGroupMember.getGroupPermissionType() != GroupPermissionType.ASSISTANT
+                    && userGroupMember.getGroupPermissionType() != GroupPermissionType.MODERATOR) {
+                throw new ForbiddenException("No access to edit the post");
+            }
+        } else {
+            if (!post.getPostAuthor().getUserId().equals(userId)) {
+                throw new ForbiddenException("Invalid post author id - post editing access forbidden");
+            }
         }
 
-        Set<Image> lastImages =  new HashSet<>(post.getImages());
-        post.removeImages();    // Usuwanie zdjęć dodanych przed edycją
-
+        Set<Image> lastImages = new HashSet<>(post.getImages());
+        if (lastImages.size() > 0) {
+            post.removeImages();
+            lastImages.forEach((lastImage -> {
+                try {
+                    fileService.deleteImage(lastImage.getImageId());
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }));
+        }
 
         if (imageFiles != null) {
             Set<Image> updatedImages = fileService.storageImages(imageFiles, post.getPostAuthor());
@@ -151,11 +188,24 @@ public class PostServiceImpl implements PostService {
 
     @Override
     public void deletePostById(Long postId, boolean archive) {
-        Long userId  = jwtUtils.getLoggedUserId();
+        Long userId = jwtUtils.getLoggedUserId();
+        User loggedUser = userRepository.findById(userId)
+                .orElseThrow(() -> new NotFoundException("Not found user with id: " + userId));
         Post post = postRepository.findById(postId)
                 .orElseThrow(() -> new NotFoundException("Not found post with id: " + postId));
-        if (!post.getPostAuthor().getUserId().equals(userId)) {
-            throw new ForbiddenException("Invalid post author id - post deleting access forbidden");
+        if (post.getGroup() != null) {
+            GroupMember userGroupMember = groupMemberRepository.findByGroupAndMember(post.getGroup(), loggedUser)
+                    .orElseThrow(() -> new NotFoundException(String.format("Not found user with id: %s in group with id: %s",
+                            userId, post.getGroup().getGroupId())));
+            if (userGroupMember.getGroupPermissionType() != GroupPermissionType.ADMINISTRATOR
+                    && userGroupMember.getGroupPermissionType() != GroupPermissionType.ASSISTANT
+                    && userGroupMember.getGroupPermissionType() != GroupPermissionType.MODERATOR) {
+                throw new ForbiddenException("No access to edit the post");
+            }
+        } else {
+            if (!post.getPostAuthor().getUserId().equals(userId)) {
+                throw new ForbiddenException("Invalid post author id - post editing access forbidden");
+            }
         }
 
         if (archive) {
@@ -166,12 +216,21 @@ public class PostServiceImpl implements PostService {
             sharedPostRepository.deleteAll(post.getSharedBasePosts());
             postRepository.deleteByPostId(postId);
             imageRepository.deleteAll(lastImages);
+            if (lastImages.size() > 0) {
+                lastImages.forEach((lastImage -> {
+                    try {
+                        fileService.deleteImage(lastImage.getImageId());
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                }));
+            }
         }
     }
 
     @Override
     public void likePost(Long postId) {
-        Long userId  = jwtUtils.getLoggedUserId();
+        Long userId = jwtUtils.getLoggedUserId();
         Post post = postRepository.findById(postId)
                 .orElseThrow(() -> new NotFoundException("Not found post with id: " + postId));
         User likedUser = userRepository.findById(userId)
@@ -190,11 +249,13 @@ public class PostServiceImpl implements PostService {
         likes.add(newLikedPost);
         post.setLikedPosts(likes);
         postRepository.save(post);
+
+        notificationService.sendNotificationToUser(likedUser, post.getPostAuthor().getUserId(), ActionType.ACTIVITY_BOARD);
     }
 
     @Override
     public void deleteLikeFromPost(Long postId) {
-        Long userId  = jwtUtils.getLoggedUserId();
+        Long userId = jwtUtils.getLoggedUserId();
         Post post = postRepository.findById(postId)
                 .orElseThrow(() -> new NotFoundException("Not found post with id: " + postId));
         User user = userRepository.findById(userId)
@@ -207,7 +268,7 @@ public class PostServiceImpl implements PostService {
 
     @Override
     public SharedPostDto sharePost(Long basePostId, RequestSharePostDto requestSharePostDto) {
-        Long userId  = jwtUtils.getLoggedUserId();
+        Long userId = jwtUtils.getLoggedUserId();
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new NotFoundException("Not found user with id: " + userId));
         Post basePost = postRepository.findById(basePostId)
@@ -224,12 +285,14 @@ public class PostServiceImpl implements PostService {
                 .build();
         sharedPostRepository.save(sharedPost);
 
+        notificationService.sendNotificationToUser(user, basePost.getPostAuthor().getUserId(), ActionType.ACTIVITY_BOARD);
+
         return sharedPostDtoMapper.convert(sharedPost);
     }
 
     @Override
     public void deleteSharedPostById(Long sharedPostId) {
-        Long userId  = jwtUtils.getLoggedUserId();
+        Long userId = jwtUtils.getLoggedUserId();
         if (sharedPostRepository.existsBySharedPostId(sharedPostId)) {
             User postSharedAuthor = sharedPostRepository.findById(sharedPostId).get().getSharedPostUser();
             if (!postSharedAuthor.getUserId().equals(userId)) {
@@ -250,7 +313,7 @@ public class PostServiceImpl implements PostService {
 
     @Override
     public void addPostToFavourite(Long postId) {
-        Long userId  = jwtUtils.getLoggedUserId();
+        Long userId = jwtUtils.getLoggedUserId();
         Post post = postRepository.findById(postId)
                 .orElseThrow(() -> new NotFoundException("Not found post with id: " + postId));
         User user = userRepository.findById(userId)
@@ -266,7 +329,7 @@ public class PostServiceImpl implements PostService {
 
     @Override
     public void deletePostFromFavourite(Long postId) {
-        Long userId  = jwtUtils.getLoggedUserId();
+        Long userId = jwtUtils.getLoggedUserId();
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new NotFoundException("Not found user with id: " + userId));
         Post deletedPost = user.getFavouritePosts().stream()
@@ -290,11 +353,24 @@ public class PostServiceImpl implements PostService {
 
     @Override
     public void setPostCommentsAvailability(Long postId, boolean isBlocked) {
-        Long userId  = jwtUtils.getLoggedUserId();
+        Long userId = jwtUtils.getLoggedUserId();
+        User loggedUser = userRepository.findById(userId)
+                .orElseThrow(() -> new NotFoundException("Not found user with id: " + userId));
         Post post = postRepository.findById(postId)
                 .orElseThrow(() -> new NotFoundException("Not found post with id: " + postId));
-        if (!post.getPostAuthor().getUserId().equals(userId)) {
-            throw new ForbiddenException("Invalid post author id - manage comment availability access forbidden");
+        if (post.getGroup() != null) {
+            GroupMember userGroupMember = groupMemberRepository.findByGroupAndMember(post.getGroup(), loggedUser)
+                    .orElseThrow(() -> new NotFoundException(String.format("Not found user with id: %s in group with id: %s",
+                            userId, post.getGroup().getGroupId())));
+            if (userGroupMember.getGroupPermissionType() != GroupPermissionType.ADMINISTRATOR
+                    && userGroupMember.getGroupPermissionType() != GroupPermissionType.ASSISTANT
+                    && userGroupMember.getGroupPermissionType() != GroupPermissionType.MODERATOR) {
+                throw new ForbiddenException("No access to edit the post");
+            }
+        } else {
+            if (!post.getPostAuthor().getUserId().equals(userId)) {
+                throw new ForbiddenException("Invalid post author id - post editing access forbidden");
+            }
         }
 
         post.setCommentingBlocked(isBlocked);
@@ -303,11 +379,24 @@ public class PostServiceImpl implements PostService {
 
     @Override
     public void setPostAccess(Long postId, boolean isPublic) {
-        Long userId  = jwtUtils.getLoggedUserId();
+        Long userId = jwtUtils.getLoggedUserId();
+        User loggedUser = userRepository.findById(userId)
+                .orElseThrow(() -> new NotFoundException("Not found user with id: " + userId));
         Post post = postRepository.findById(postId)
                 .orElseThrow(() -> new NotFoundException("Not found post with id: " + postId));
-        if (!post.getPostAuthor().getUserId().equals(userId)) {
-            throw new ForbiddenException("Invalid post author id - manage comment availability access forbidden");
+        if (post.getGroup() != null) {
+            GroupMember userGroupMember = groupMemberRepository.findByGroupAndMember(post.getGroup(), loggedUser)
+                    .orElseThrow(() -> new NotFoundException(String.format("Not found user with id: %s in group with id: %s",
+                            userId, post.getGroup().getGroupId())));
+            if (userGroupMember.getGroupPermissionType() != GroupPermissionType.ADMINISTRATOR
+                    && userGroupMember.getGroupPermissionType() != GroupPermissionType.ASSISTANT
+                    && userGroupMember.getGroupPermissionType() != GroupPermissionType.MODERATOR) {
+                throw new ForbiddenException("No access to edit the post");
+            }
+        } else {
+            if (!post.getPostAuthor().getUserId().equals(userId)) {
+                throw new ForbiddenException("Invalid post author id - post editing access forbidden");
+            }
         }
 
         post.setPublic(isPublic);

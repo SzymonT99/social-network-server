@@ -5,12 +5,15 @@ import com.server.springboot.domain.entity.Address;
 import com.server.springboot.domain.entity.Friend;
 import com.server.springboot.domain.entity.Image;
 import com.server.springboot.domain.entity.User;
+import com.server.springboot.domain.enumeration.ActionType;
 import com.server.springboot.domain.mapper.Converter;
 import com.server.springboot.domain.repository.FriendRepository;
 import com.server.springboot.domain.repository.UserRepository;
 import com.server.springboot.exception.*;
 import com.server.springboot.security.JwtUtils;
 import com.server.springboot.service.FriendService;
+import com.server.springboot.service.NotificationService;
+import com.server.springboot.service.UserActivityService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -32,6 +35,8 @@ public class FriendServiceImpl implements FriendService {
     private final Converter<ProfilePhotoDto, Image> profilePhotoDtoMapper;
     private final Converter<AddressDto, Address> addressDtoMapper;
     private final Converter<List<UserDto>, List<User>> userDtoListMapper;
+    private final NotificationService notificationService;
+
 
     @Autowired
     public FriendServiceImpl(UserRepository userRepository, FriendRepository friendRepository, JwtUtils jwtUtils,
@@ -40,7 +45,8 @@ public class FriendServiceImpl implements FriendService {
                              Converter<List<FriendDto>, List<Friend>> friendDtoListMapper,
                              Converter<ProfilePhotoDto, Image> profilePhotoDtoMapper,
                              Converter<AddressDto, Address> addressDtoMapper,
-                             Converter<List<UserDto>, List<User>> userDtoListMapper) {
+                             Converter<List<UserDto>, List<User>> userDtoListMapper,
+                             NotificationService notificationService) {
         this.userRepository = userRepository;
         this.friendRepository = friendRepository;
         this.jwtUtils = jwtUtils;
@@ -50,6 +56,7 @@ public class FriendServiceImpl implements FriendService {
         this.profilePhotoDtoMapper = profilePhotoDtoMapper;
         this.addressDtoMapper = addressDtoMapper;
         this.userDtoListMapper = userDtoListMapper;
+        this.notificationService = notificationService;
     }
 
     @Override
@@ -71,6 +78,8 @@ public class FriendServiceImpl implements FriendService {
                 .friendFromDate(null)
                 .build();
         friendRepository.save(friend);
+
+        notificationService.sendNotificationToUser(user, invitedUser.getUserId(), ActionType.FRIEND_INVITATION);
     }
 
     @Override
@@ -112,6 +121,8 @@ public class FriendServiceImpl implements FriendService {
                     .isUserNotifiedAboutAccepting(false)
                     .build();
             friendRepository.save(acceptedFriend);
+
+            notificationService.sendNotificationToUser(currentUser, inviterId, ActionType.ACTIVITY_BOARD);
 
         } else if (reactionToInvitation.equals("reject")) {
             friend.setIsInvitationAccepted(false);

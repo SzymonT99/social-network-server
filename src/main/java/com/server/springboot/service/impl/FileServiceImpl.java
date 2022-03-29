@@ -5,10 +5,7 @@ import com.server.springboot.domain.entity.User;
 import com.server.springboot.domain.entity.UserProfile;
 import com.server.springboot.domain.repository.ImageRepository;
 import com.server.springboot.exception.NotFoundException;
-import com.server.springboot.security.JwtUtils;
 import com.server.springboot.service.FileService;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.UrlResource;
@@ -45,6 +42,18 @@ public class FileServiceImpl implements FileService {
     }
 
     @Override
+    public void deleteImage(String imageId) {
+        Image image = imageRepository.findById(imageId)
+                .orElseThrow(() -> new NotFoundException("Not found image with id: " + imageId));
+        try {
+            Path imagePath = Paths.get(image.getFilePath());
+            Files.delete(imagePath);
+        } catch (Exception e) {
+            throw new RuntimeException("Error with delete image: " + e.getMessage());
+        }
+    }
+
+    @Override
     public Resource loadImage(String imageId, String filename) {
         try {
             Path file = rootFolder.resolve(imageId + "_" + filename);
@@ -63,7 +72,7 @@ public class FileServiceImpl implements FileService {
     public Set<Image> storageImages(List<MultipartFile> imageFiles, User creator) {
         UserProfile userProfile = creator.getUserProfile();
 
-        Set<Image> postImages = new HashSet<>();
+        Set<Image> images = new HashSet<>();
 
         imageFiles.forEach(file -> {
             String fileName = StringUtils.cleanPath(Objects.requireNonNull(file.getOriginalFilename()));
@@ -72,16 +81,17 @@ public class FileServiceImpl implements FileService {
                 Image image = Image.builder()
                         .filename(fileName)
                         .type(file.getContentType())
-                        .filePath("/uploads/" + fileName)
                         .addedIn(LocalDateTime.now())
                         .userProfile(userProfile)
                         .build();
                 imageRepository.save(image);
-                postImages.add(image);
+                image.setFilePath("uploads/" + image.getImageId() + "_" + fileName);
+                imageRepository.save(image);
+                images.add(image);
                 saveImage(image, file);
             }
         });
-        return postImages;
+        return images;
     }
 
     @Override
@@ -97,12 +107,14 @@ public class FileServiceImpl implements FileService {
                     .type(imageFile.getContentType())
                     .addedIn(LocalDateTime.now())
                     .build();
-
+            imageRepository.save(image);
             if (assignToProfile) {
                 image.setUserProfile(userProfile);
             }
 
+            image.setFilePath("uploads/" + image.getImageId() + "_" + fileName);
             imageRepository.save(image);
+
             saveImage(image, imageFile);
         }
         return image;

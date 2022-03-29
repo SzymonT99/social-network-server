@@ -16,7 +16,6 @@ public class UserActivityDtoMapper implements Converter<UserActivityDto, User> {
     private final Converter<List<CommentedPostDto>, List<Comment>> commentedPostDtoListMapper;
     private final Converter<List<SharedPostDto>, List<SharedPost>> sharedPostDtoListMapper;
     private final Converter<List<SharedEventDto>, List<SharedEvent>> sharedEventDtoListMapper;
-    private final Converter<List<FriendDto>, List<Friend>> friendDtoListMapper;
     private final Converter<List<GroupDto>, List<Group>> groupDtoListMapper;
 
     @Autowired
@@ -24,13 +23,11 @@ public class UserActivityDtoMapper implements Converter<UserActivityDto, User> {
                                  Converter<List<CommentedPostDto>, List<Comment>> commentedPostDtoListMapper,
                                  Converter<List<SharedPostDto>, List<SharedPost>> sharedPostDtoListMapper,
                                  Converter<List<SharedEventDto>, List<SharedEvent>> sharedEventDtoListMapper,
-                                 Converter<List<FriendDto>, List<Friend>> friendDtoListMapper,
                                  Converter<List<GroupDto>, List<Group>> groupDtoListMapper) {
         this.postDtoListMapper = postDtoListMapper;
         this.commentedPostDtoListMapper = commentedPostDtoListMapper;
         this.sharedPostDtoListMapper = sharedPostDtoListMapper;
         this.sharedEventDtoListMapper = sharedEventDtoListMapper;
-        this.friendDtoListMapper = friendDtoListMapper;
         this.groupDtoListMapper = groupDtoListMapper;
     }
 
@@ -43,7 +40,7 @@ public class UserActivityDtoMapper implements Converter<UserActivityDto, User> {
                 .collect(Collectors.toList());
 
         List<Post> createdPosts = from.getPosts().stream()
-                .filter(el -> !sharingList.contains(el))
+                .filter(el -> !sharingList.contains(el) && !el.isDeleted())
                 .collect(Collectors.toList());
 
         List<Post> likedPosts = from.getLikedPosts().stream().map(LikedPost::getPost).collect(Collectors.toList()).stream()

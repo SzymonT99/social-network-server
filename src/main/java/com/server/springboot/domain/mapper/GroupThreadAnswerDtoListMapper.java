@@ -11,7 +11,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Component
 public class GroupThreadAnswerDtoListMapper implements Converter<List<GroupThreadAnswerDto>, List<ThreadAnswer>> {
@@ -30,12 +32,17 @@ public class GroupThreadAnswerDtoListMapper implements Converter<List<GroupThrea
     public List<GroupThreadAnswerDto> convert(List<ThreadAnswer> from) {
         List<GroupThreadAnswerDto> groupThreadAnswerDtoList = new ArrayList<>();
 
+        from = from.stream()
+                .sorted(Comparator.comparing(ThreadAnswer::getDate).reversed())
+                .collect(Collectors.toList());
+
         for (ThreadAnswer threadAnswer : from) {
             GroupThreadAnswerDto groupThreadAnswerDto = GroupThreadAnswerDto.builder()
                     .answerId(threadAnswer.getAnswerId())
                     .text(threadAnswer.getText())
-                    .averageRate(threadAnswer.getAverageRate())
+                    .averageRating(threadAnswer.getAverageRating())
                     .date(threadAnswer.getDate().toString())
+                    .isEdited(threadAnswer.isEdited())
                     .author(groupMemberDtoMapper.convert(threadAnswer.getAnswerAuthor()))
                     .reviews(groupThreadAnswerReviewDtoListMapper.convert(Lists.newArrayList((threadAnswer.getReviews()))))
                     .build();

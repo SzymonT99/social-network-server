@@ -29,7 +29,7 @@ public class SentFriendInvitationDtoListMapper implements Converter<List<SentFri
 
         for (Friend friend : from) {
 
-            List<User> currentFriends = friend.getUser().getFriends().stream()
+            List<User> currentFriends = friend.getUserFriend().getFriends().stream()
                     .filter(el -> el.getIsInvitationAccepted() != null && el.getIsInvitationAccepted())
                     .map(Friend::getUserFriend)
                     .collect(Collectors.toList());

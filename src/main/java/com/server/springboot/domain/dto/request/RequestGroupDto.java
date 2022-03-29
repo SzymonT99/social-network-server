@@ -1,9 +1,11 @@
 package com.server.springboot.domain.dto.request;
 
+import com.server.springboot.domain.dto.response.InterestDto;
 import lombok.*;
 
 import javax.validation.constraints.NotEmpty;
 import javax.validation.constraints.Size;
+import java.util.List;
 
 @AllArgsConstructor
 @NoArgsConstructor
@@ -23,4 +25,6 @@ public class RequestGroupDto {
 
     @NotEmpty
     private String isPublic;
+
+    private List<InterestDto> interests;
 }

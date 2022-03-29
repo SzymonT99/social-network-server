@@ -5,7 +5,9 @@ import com.server.springboot.domain.entity.Interest;
 import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Component
 public class InterestDtoListMapper implements Converter<List<InterestDto>, List<Interest>> {
@@ -22,6 +24,9 @@ public class InterestDtoListMapper implements Converter<List<InterestDto>, List<
 
             interestDtoList.add(interestDto);
         }
-        return interestDtoList;
+
+        return interestDtoList.stream()
+                .sorted(Comparator.comparing(InterestDto::getName))
+                .collect(Collectors.toList());
     }
 }

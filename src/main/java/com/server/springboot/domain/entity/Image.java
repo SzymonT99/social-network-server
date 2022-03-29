@@ -31,12 +31,8 @@ public class Image {
     @Column(name = "type", nullable = false)
     private String type;
 
-    @NotNull
-    @Column(name = "filePath", nullable = false)
+    @Column(name = "filePath")
     private String filePath;
-
-    @Column(name = "caption")
-    private String caption;
 
     @NotNull
     @Column(name = "added_in", nullable = false)
@@ -54,6 +50,9 @@ public class Image {
 
     @OneToOne(mappedBy = "image", fetch = FetchType.LAZY)
     private Group group;
+
+    @OneToOne(mappedBy = "image", fetch = FetchType.LAZY)
+    private Chat chat;
 
     @OneToOne(mappedBy = "image", fetch = FetchType.LAZY)
     private GroupThread groupThread;

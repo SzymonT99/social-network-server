@@ -32,6 +32,10 @@ public class GroupThread {
     @Column(name = "content", nullable = false)
     private String content;
 
+    @NotNull
+    @Column(name = "is_edited", nullable = false)
+    private boolean isEdited;
+
     @OneToOne(fetch = FetchType.LAZY, cascade = CascadeType.ALL)
     @JoinColumn(name = "image_id")
     private Image image;

@@ -23,19 +23,18 @@ public class ChatMember {
 
     @NotNull
     @Column(name = "added_in", nullable = false)
-    private LocalDateTime createdAt;
+    private LocalDateTime addedIn;
+
+    @NotNull
+    @Column(name = "last_activity_date", nullable = false)
+    private LocalDateTime lastActivityDate;
 
     @NotNull
     @Column(name = "has_muted_chat", nullable = false)
     private boolean hasMutedChat;
 
-    @NotNull
-    @Column(name = "has_unread_message", nullable = false)
-    private boolean hasUnreadMessage;
-
-    @NotNull
-    @Column(name = "can_add_others", nullable = false)
-    private boolean canAddOthers;
+    @Column(name = "can_add_others")
+    private Boolean canAddOthers;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "chat_id", nullable = false)
@@ -43,6 +42,6 @@ public class ChatMember {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", nullable = false)
-    private User chatMember;
+    private User userMember;
 
 }
