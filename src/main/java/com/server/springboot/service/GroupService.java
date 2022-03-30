@@ -20,7 +20,7 @@ public interface GroupService {
 
     List<GroupDto> findAllGroupsWithSimilarInterests();
 
-    GroupDetailsDto findGroup(Long groupId);
+    GroupDetailsDto findGroup(Long groupId, boolean onlyPublic);
 
     void addGroupRuleByGroupId(Long groupId, RequestGroupRuleDto requestGroupRuleDto);
 

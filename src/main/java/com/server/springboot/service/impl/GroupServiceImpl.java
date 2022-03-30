@@ -220,12 +220,16 @@ public class GroupServiceImpl implements GroupService {
     }
 
     @Override
-    public GroupDetailsDto findGroup(Long groupId) {
+    public GroupDetailsDto findGroup(Long groupId, boolean onlyPublic) {
         Group group = groupRepository.findById(groupId)
                 .orElseThrow(() -> new NotFoundException("Not found group with id: " + groupId));
 
         if (group.isDeleted()) {
             throw new ForbiddenException("The group has been deleted and is archived");
+        }
+
+        if (onlyPublic && !group.isPublic()) {
+            throw new ForbiddenException("No access to private group");
         }
 
         GroupDetailsDto groupDetailsDto = groupDetailsDtoMapper.convert(group);

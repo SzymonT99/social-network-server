@@ -61,7 +61,7 @@ public class GroupApiController {
         return new ResponseEntity<>(HttpStatus.OK);
     }
 
-    @ApiOperation(value = "Get all groups")
+    @ApiOperation(value = "Get all public groups")
     @GetMapping(value = "/groups")
     public ResponseEntity<List<GroupDto>> getAllGroups() {
         LOGGER.info("---- Get all public groups");
@@ -86,7 +86,14 @@ public class GroupApiController {
     @GetMapping(value = "/groups/{groupId}")
     public ResponseEntity<GroupDetailsDto> getGroupDetails(@PathVariable(value = "groupId") Long groupId) {
         LOGGER.info("---- Get group details with id: {}", groupId);
-        return new ResponseEntity<>(groupService.findGroup(groupId), HttpStatus.OK);
+        return new ResponseEntity<>(groupService.findGroup(groupId, false), HttpStatus.OK);
+    }
+
+    @ApiOperation(value = "Get public group details by id")
+    @GetMapping(value = "/public/groups/{groupId}")
+    public ResponseEntity<GroupDetailsDto> getPublicGroupDetails(@PathVariable(value = "groupId") Long groupId) {
+        LOGGER.info("---- Get group details with id: {}", groupId);
+        return new ResponseEntity<>(groupService.findGroup(groupId, true), HttpStatus.OK);
     }
 
     @ApiOperation(value = "Create group rule")

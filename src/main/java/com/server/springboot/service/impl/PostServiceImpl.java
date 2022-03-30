@@ -3,6 +3,7 @@ package com.server.springboot.service.impl;
 import com.server.springboot.domain.dto.request.RequestPostDto;
 import com.server.springboot.domain.dto.request.RequestSharePostDto;
 import com.server.springboot.domain.dto.response.PostDto;
+import com.server.springboot.domain.dto.response.PostsPageDto;
 import com.server.springboot.domain.dto.response.SharedPostDto;
 import com.server.springboot.domain.entity.*;
 import com.server.springboot.domain.entity.key.UserPostKey;
@@ -19,11 +20,15 @@ import com.server.springboot.service.FileService;
 import com.server.springboot.service.NotificationService;
 import com.server.springboot.service.PostService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -78,19 +83,27 @@ public class PostServiceImpl implements PostService {
     }
 
     @Override
-    public List<PostDto> findAllPublicPosts() {
-        List<Post> posts = postRepository.findByIsDeletedAndIsPublicOrderByCreatedAtDesc(false, true);
+    public PostsPageDto findAllPublicPosts(Integer page, Integer size) {
+        Pageable paging = PageRequest.of(page, size);
 
-        List<Post> postWithShares = sharedPostRepository.findAll().stream()
-                .map(SharedPost::getNewPost)
-                .collect(Collectors.toList());      // ignorowanie postów które są udostępnieniem
-        posts.removeAll(postWithShares);
+        Page<Post> pagePosts;
+        pagePosts = postRepository.findByIsDeletedAndIsPublicOrderByCreatedAtDesc(false, true, paging);
+        List<Post> posts = pagePosts.getContent();
 
-        List<Post> filteredPosts = posts.stream()
-                .filter(post -> post.getGroup() == null)    // ignorowanie postów które należa do grup
-                .collect(Collectors.toList());
+//        List<Post> postWithShares = sharedPostRepository.findAll().stream()
+//                .map(SharedPost::getNewPost)
+//                .collect(Collectors.toList());
+//
+//        posts.removeAll(postWithShares);    // ignorowanie postów które są udostępnieniem
 
-        return postDtoListMapper.convert(filteredPosts);
+        List<PostDto> postDtoList = postDtoListMapper.convert(posts);
+
+        return PostsPageDto.builder()
+                .posts(postDtoList)
+                .currentPage(pagePosts.getNumber())
+                .totalItems(pagePosts.getTotalElements())
+                .totalPages(pagePosts.getTotalPages())
+                .build();
     }
 
     @Override

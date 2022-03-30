@@ -289,6 +289,11 @@ public class EventServiceImpl implements EventService {
     public EventDto findEvent(Long eventId) {
         Event event = eventRepository.findById(eventId)
                 .orElseThrow(() -> new NotFoundException("Not found event with id: " + eventId));
+
+        if (event.isDeleted()) {
+            throw new ForbiddenException("The event has been deleted and is archived");
+        }
+
         return eventDtoMapper.convert(event);
     }
 }

@@ -5,6 +5,7 @@ import com.server.springboot.domain.dto.request.RequestPostDto;
 import com.server.springboot.domain.dto.request.RequestSharePostDto;
 import com.server.springboot.domain.dto.response.CommentDto;
 import com.server.springboot.domain.dto.response.PostDto;
+import com.server.springboot.domain.dto.response.PostsPageDto;
 import com.server.springboot.domain.dto.response.SharedPostDto;
 import com.server.springboot.service.PostCommentService;
 import com.server.springboot.service.PostService;
@@ -71,11 +72,12 @@ public class PostApiController {
         return new ResponseEntity<>(HttpStatus.OK);
     }
 
-    @ApiOperation(value = "Get all public posts")
+    @ApiOperation(value = "Get public posts")
     @GetMapping(value = "/posts")
-    public ResponseEntity<List<PostDto>> getAllPosts() {
-        LOGGER.info("---- Get all posts");
-        return new ResponseEntity<>(postService.findAllPublicPosts(), HttpStatus.OK);
+    public ResponseEntity<PostsPageDto> getPublicPosts(@RequestParam(value = "page", defaultValue = "8") int page,
+                                                    @RequestParam(value = "size", defaultValue = "8") int size) {
+        LOGGER.info("---- Get public posts");
+        return new ResponseEntity<>(postService.findAllPublicPosts(page, size), HttpStatus.OK);
     }
 
     @ApiOperation(value = "Get post by id")
