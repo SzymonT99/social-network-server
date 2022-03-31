@@ -66,9 +66,6 @@ public class User {
     @Column(name = "is_banned", nullable = false)
     private boolean isBanned;
 
-    @NotNull
-    @Column(name = "is_deleted", nullable = false)
-    private boolean isDeleted;
 
     @OneToOne(fetch = FetchType.LAZY, cascade = CascadeType.ALL)
     @JoinColumn(name = "user_profile_id", nullable = false)

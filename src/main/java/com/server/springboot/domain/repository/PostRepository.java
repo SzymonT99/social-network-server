@@ -16,16 +16,12 @@ import java.util.List;
 @Repository
 public interface PostRepository extends JpaRepository<Post, Long> {
 
-    boolean existsByPostId(Long id);
-
     @Transactional
     void deleteByPostId(Long id);
 
     Page<Post> findByIsDeletedAndIsPublicOrderByCreatedAtDesc(boolean isDeleted, boolean isPublic, Pageable pageable);
 
     List<Post> findByFavourites(User user);
-
-    List<Post> findByPostAuthor(User user);
 
     List<Post> findAllByPostAuthorInAndCreatedAtIsGreaterThanAndIsDeleted(List<User> users, LocalDateTime dateLimit, boolean isDeleted);
 

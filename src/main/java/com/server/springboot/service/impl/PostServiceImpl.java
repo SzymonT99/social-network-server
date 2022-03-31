@@ -90,13 +90,15 @@ public class PostServiceImpl implements PostService {
         pagePosts = postRepository.findByIsDeletedAndIsPublicOrderByCreatedAtDesc(false, true, paging);
         List<Post> posts = pagePosts.getContent();
 
-//        List<Post> postWithShares = sharedPostRepository.findAll().stream()
-//                .map(SharedPost::getNewPost)
-//                .collect(Collectors.toList());
-//
-//        posts.removeAll(postWithShares);    // ignorowanie postów które są udostępnieniem
+        List<Post> postWithShares = sharedPostRepository.findAll().stream()
+                .map(SharedPost::getNewPost)
+                .collect(Collectors.toList());
 
-        List<PostDto> postDtoList = postDtoListMapper.convert(posts);
+        List<Post> postsFiltered = posts.stream()
+                .filter(post -> !postWithShares.contains(post))  // ignorowanie postów które są udostępnieniem
+                .collect(Collectors.toList());
+
+        List<PostDto> postDtoList = postDtoListMapper.convert(postsFiltered);
 
         return PostsPageDto.builder()
                 .posts(postDtoList)
