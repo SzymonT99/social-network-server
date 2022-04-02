@@ -8,6 +8,7 @@ import com.server.springboot.domain.dto.response.SharedEventDto;
 import com.server.springboot.domain.entity.*;
 import com.server.springboot.domain.entity.key.UserEventKey;
 import com.server.springboot.domain.enumeration.ActionType;
+import com.server.springboot.domain.enumeration.AppRole;
 import com.server.springboot.domain.enumeration.EventParticipationStatus;
 import com.server.springboot.domain.mapper.Converter;
 import com.server.springboot.domain.repository.*;
@@ -19,7 +20,6 @@ import com.server.springboot.security.JwtUtils;
 import com.server.springboot.service.EventService;
 import com.server.springboot.service.FileService;
 import com.server.springboot.service.NotificationService;
-import com.server.springboot.service.UserActivityService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
@@ -49,6 +49,7 @@ public class EventServiceImpl implements EventService {
     private final Converter<List<EventInvitationDto>, List<EventMember>> eventInvitationDtoListMapper;
     private final Converter<List<SharedEventDto>, List<SharedEvent>> sharedEventDtoListMapper;
     private final NotificationService notificationService;
+    private final RoleRepository roleRepository;
 
     @Autowired
     public EventServiceImpl(FileService fileService, UserRepository userRepository, EventRepository eventRepository,
@@ -58,7 +59,8 @@ public class EventServiceImpl implements EventService {
                             Converter<List<EventDto>, List<Event>> eventDtoListMapper,
                             Converter<List<EventInvitationDto>, List<EventMember>> eventInvitationDtoListMapper,
                             Converter<List<SharedEventDto>, List<SharedEvent>> sharedEventDtoListMapper,
-                            NotificationService notificationService) {
+                            NotificationService notificationService,
+                            RoleRepository roleRepository) {
         this.fileService = fileService;
         this.userRepository = userRepository;
         this.eventRepository = eventRepository;
@@ -74,10 +76,11 @@ public class EventServiceImpl implements EventService {
         this.eventInvitationDtoListMapper = eventInvitationDtoListMapper;
         this.sharedEventDtoListMapper = sharedEventDtoListMapper;
         this.notificationService = notificationService;
+        this.roleRepository = roleRepository;
     }
 
     @Override
-    public void addEvent(RequestEventDto requestEventDto, MultipartFile imageFile) {
+    public EventDto addEvent(RequestEventDto requestEventDto, MultipartFile imageFile) {
         Long userId = jwtUtils.getLoggedUserId();
         User eventAuthor = userRepository.findById(userId)
                 .orElseThrow(() -> new NotFoundException("Not found user with id: " + userId));
@@ -93,16 +96,21 @@ public class EventServiceImpl implements EventService {
         addressRepository.save(eventAddress);
         createdEvent.setEventAddress(eventAddress);
 
-        eventRepository.save(createdEvent);
+       Event event = eventRepository.save(createdEvent);
+
+       return eventDtoMapper.convert(event);
     }
 
     @Override
     public void editEvent(Long eventId, RequestEventDto requestEventDto, MultipartFile imageFile) throws IOException {
         Long userId = jwtUtils.getLoggedUserId();
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new NotFoundException("Not found user with id: " + userId));
         Event event = eventRepository.findById(eventId)
                 .orElseThrow(() -> new NotFoundException("Not found event with id: " + eventId));
-        if (!event.getEventCreator().getUserId().equals(userId)) {
-            throw new ForbiddenException("Invalid event creator id - event editing access forbidden");
+        if (!event.getEventCreator().getUserId().equals(userId)
+                && !user.getRoles().contains(roleRepository.findByName(AppRole.ROLE_ADMIN).get())) {
+            throw new ForbiddenException("Event editing access forbidden");
         }
 
         if (event.getImage() != null) {
@@ -136,10 +144,13 @@ public class EventServiceImpl implements EventService {
     @Override
     public void deleteEventById(Long eventId, boolean archive) throws IOException {
         Long userId = jwtUtils.getLoggedUserId();
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new NotFoundException("Not found user with id: " + userId));
         Event event = eventRepository.findById(eventId)
                 .orElseThrow(() -> new NotFoundException("Not found event with id: " + eventId));
-        if (!event.getEventCreator().getUserId().equals(userId)) {
-            throw new ForbiddenException("Invalid event creator id - event deleting access forbidden");
+        if (!event.getEventCreator().getUserId().equals(userId)
+                && !user.getRoles().contains(roleRepository.findByName(AppRole.ROLE_ADMIN).get())) {
+            throw new ForbiddenException("Event deleting access forbidden");
         }
 
         if (archive) {
@@ -272,8 +283,13 @@ public class EventServiceImpl implements EventService {
                 .orElseThrow(() -> new NotFoundException("Not found user with id: " + userId));
         Event event = eventRepository.findById(eventId)
                 .orElseThrow(() -> new NotFoundException("Not found event with id: " + eventId));
-        SharedEvent sharedEvent = sharedEventRepository.findBySharedEventUserAndEvent(user, event)
-                .orElseThrow(() -> new NotFoundException("Not found shared event where:  user id: " + userId + " and event id: " + eventId));
+
+        if (!sharedEventRepository.existsBySharedEventUserAndEvent(user, event)
+                && !user.getRoles().contains(roleRepository.findByName(AppRole.ROLE_ADMIN).get())) {
+            throw new NotFoundException("Not found shared event where:  user id: " + userId + " and event id: " + eventId);
+        }
+
+        SharedEvent sharedEvent = sharedEventRepository.findBySharedEventUserAndEvent(user, event).get();
         sharedEventRepository.delete(sharedEvent);
     }
 

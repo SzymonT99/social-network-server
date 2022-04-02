@@ -36,11 +36,11 @@ public class UserProfileApiController {
     }
 
     @ApiOperation(value = "Update user basic profile information")
-    @PutMapping(value = "/profile/information")
-    public ResponseEntity<?> updateProfileInformation(@Valid @RequestBody UpdateUserProfileDto updateUserProfileDto) {
-        LOGGER.info("---- User edit profile information");
-        System.out.println(updateUserProfileDto);
-        profileService.editUserProfileInformation(updateUserProfileDto);
+    @PutMapping(value = "/profile/{userId}/information")
+    public ResponseEntity<?> updateProfileInformation(@PathVariable(value = "userId") Long userId,
+                                                      @Valid @RequestBody UpdateUserProfileDto updateUserProfileDto) {
+        LOGGER.info("---- Update profile information for user with id: {}", userId);
+        profileService.editUserProfileInformation(userId, updateUserProfileDto);
         return new ResponseEntity<>(HttpStatus.OK);
     }
 
@@ -98,18 +98,20 @@ public class UserProfileApiController {
     }
 
     @ApiOperation(value = "Add user interests")
-    @PostMapping(value = "/profile/interests/{interestId}")
-    public ResponseEntity<?> addUserInterest(@PathVariable(value = "interestId") Long interestId) {
+    @PostMapping(value = "/profile/{userId}/interests/{interestId}")
+    public ResponseEntity<?> addUserInterest(@PathVariable(value = "userId") Long userId,
+                                             @PathVariable(value = "interestId") Long interestId) {
         LOGGER.info("---- Add user interest");
-        profileService.addUserInterestById(interestId);
+        profileService.addUserInterestById(userId, interestId);
         return new ResponseEntity<>(HttpStatus.CREATED);
     }
 
     @ApiOperation(value = "Delete user interests")
-    @DeleteMapping(value = "/profile/interests/{interestId}")
-    public ResponseEntity<?> deleteUserInterest(@PathVariable(value = "interestId") Long interestId) {
+    @DeleteMapping(value = "/profile/{userId}/interests/{interestId}")
+    public ResponseEntity<?> deleteUserInterest(@PathVariable(value = "userId") Long userId,
+                                                @PathVariable(value = "interestId") Long interestId) {
         LOGGER.info("---- Delete user interest");
-        profileService.deleteUserInterestById(interestId);
+        profileService.deleteUserInterestById(userId, interestId);
         return new ResponseEntity<>(HttpStatus.OK);
     }
 
@@ -128,18 +130,19 @@ public class UserProfileApiController {
     }
 
     @ApiOperation(value = "Add user profile photo")
-    @PutMapping(value = "/profile/photo")
-    public ResponseEntity<?> addProfilePhoto(@RequestParam(value = "photo") MultipartFile photo) {
+    @PutMapping(value = "/profile/{userId}/photo")
+    public ResponseEntity<?> addProfilePhoto(@PathVariable(value = "userId") Long userId,
+                                             @RequestParam(value = "photo") MultipartFile photo) {
         LOGGER.info("---- Update user's profile photo");
-        profileService.updateUserProfilePhoto(photo);
+        profileService.updateUserProfilePhoto(userId, photo);
         return new ResponseEntity<>(HttpStatus.OK);
     }
 
     @ApiOperation(value = "Delete user profile photo")
-    @DeleteMapping(value = "/profile/photo")
-    public ResponseEntity<?> deleteProfilePhoto() {
+    @DeleteMapping(value = "/profile/{userId}/photo")
+    public ResponseEntity<?> deleteProfilePhoto(@PathVariable(value = "userId") Long userId) {
         LOGGER.info("---- Delete user's profile photo");
-        profileService.deleteUserProfilePhoto();
+        profileService.deleteUserProfilePhoto(userId);
         return new ResponseEntity<>(HttpStatus.OK);
     }
 

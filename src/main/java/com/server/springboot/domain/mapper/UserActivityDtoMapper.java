@@ -43,15 +43,20 @@ public class UserActivityDtoMapper implements Converter<UserActivityDto, User> {
                 .filter(el -> !sharingList.contains(el) && !el.isDeleted())
                 .collect(Collectors.toList());
 
-        List<Post> likedPosts = from.getLikedPosts().stream().map(LikedPost::getPost).collect(Collectors.toList()).stream()
-                .filter(el -> !sharingList.contains(el))
+        List<Post> likedPosts = from.getLikedPosts().stream()
+                .map(LikedPost::getPost)
+                .filter(el -> !sharingList.contains(el) && !el.isDeleted())
+                .collect(Collectors.toList());
+
+        List<Comment> comments = from.getComments().stream()
+                .filter(el -> !el.getCommentedPost().isDeleted())
                 .collect(Collectors.toList());
 
         return UserActivityDto.builder()
                 .userProfileId(from.getUserProfile().getUserProfileId())
                 .createdPosts(postDtoListMapper.convert(createdPosts))
                 .likes(postDtoListMapper.convert(likedPosts))
-                .comments(commentedPostDtoListMapper.convert(Lists.newArrayList(from.getComments())))
+                .comments(commentedPostDtoListMapper.convert(comments))
                 .sharedPosts(sharedPostDtoListMapper.convert(Lists.newArrayList(from.getSharedPosts())))
                 .sharedEvents(sharedEventDtoListMapper.convert(Lists.newArrayList(from.getSharedEvents())))
                 .groups(groupDtoListMapper.convert(Lists.newArrayList(from.getMemberOfGroups().stream()

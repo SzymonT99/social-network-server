@@ -34,11 +34,10 @@ public class EventApiController {
 
     @ApiOperation(value = "Create an event")
     @PostMapping(value = "/events", consumes = {MediaType.APPLICATION_JSON_VALUE, MediaType.MULTIPART_FORM_DATA_VALUE})
-    public ResponseEntity<?> createEvent(@RequestPart(value = "image", required = false) MultipartFile imageFile,
-                                         @Valid @RequestPart(value = "event") RequestEventDto requestEventDto) {
+    public ResponseEntity<EventDto> createEvent(@RequestPart(value = "image", required = false) MultipartFile imageFile,
+                                                @Valid @RequestPart(value = "event") RequestEventDto requestEventDto) {
         LOGGER.info("---- Create event with title: {}", requestEventDto.getTitle());
-        eventService.addEvent(requestEventDto, imageFile);
-        return new ResponseEntity<>(HttpStatus.CREATED);
+        return new ResponseEntity<>(eventService.addEvent(requestEventDto, imageFile), HttpStatus.CREATED);
     }
 
     @ApiOperation(value = "Update existing event by id")

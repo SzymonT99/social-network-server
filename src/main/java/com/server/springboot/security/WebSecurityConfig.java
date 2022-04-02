@@ -63,7 +63,6 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
                 .authorizeRequests().antMatchers("/api/auth/**").permitAll()
                 // Adresy nieautoryzowane
                 .antMatchers("/api/images/**").permitAll()
-                .antMatchers("/chat/**").permitAll()
                 .antMatchers("/api/users/reset-password/**").permitAll()
                 .antMatchers("/api/posts").permitAll()
                 .antMatchers("/api/events").permitAll()
@@ -75,6 +74,7 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
                 .antMatchers("/api/profile/{userId}/favourites").permitAll()
                 .antMatchers("/api/interests").permitAll()
                 .antMatchers("/api/profile/{userId}/interests").permitAll()
+                .antMatchers("/chat/**").permitAll()
                 .anyRequest().authenticated()
                 .and().exceptionHandling().authenticationEntryPoint(jwtAuthenticationEntryPoint)
                 .and().sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS)

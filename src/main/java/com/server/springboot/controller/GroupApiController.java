@@ -35,11 +35,10 @@ public class GroupApiController {
 
     @ApiOperation(value = "Create a group")
     @PostMapping(value = "/groups", consumes = {MediaType.APPLICATION_JSON_VALUE, MediaType.MULTIPART_FORM_DATA_VALUE})
-    public ResponseEntity<?> createGroup(@RequestPart(value = "image", required = false) MultipartFile imageFile,
-                                         @Valid @RequestPart(value = "group") RequestGroupDto requestGroupDto) {
+    public ResponseEntity<GroupDetailsDto> createGroup(@RequestPart(value = "image", required = false) MultipartFile imageFile,
+                                                @Valid @RequestPart(value = "group") RequestGroupDto requestGroupDto) {
         LOGGER.info("---- Create group with name: {}", requestGroupDto.getName());
-        groupService.addGroup(requestGroupDto, imageFile);
-        return new ResponseEntity<>(HttpStatus.CREATED);
+        return new ResponseEntity<>(groupService.addGroup(requestGroupDto, imageFile), HttpStatus.CREATED);
     }
 
     @ApiOperation(value = "Update existing group by id")
@@ -61,11 +60,11 @@ public class GroupApiController {
         return new ResponseEntity<>(HttpStatus.OK);
     }
 
-    @ApiOperation(value = "Get all public groups")
+    @ApiOperation(value = "Get all groups")
     @GetMapping(value = "/groups")
-    public ResponseEntity<List<GroupDto>> getAllGroups() {
+    public ResponseEntity<List<GroupDto>> getAllGroups(@RequestParam(value = "arePublic") boolean arePublic) {
         LOGGER.info("---- Get all public groups");
-        return new ResponseEntity<>(groupService.findAllGroups(true), HttpStatus.OK);
+        return new ResponseEntity<>(groupService.findAllGroups(arePublic), HttpStatus.OK);
     }
 
     @ApiOperation(value = "Get all groups with similar interests")

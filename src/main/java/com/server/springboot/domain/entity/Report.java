@@ -34,11 +34,14 @@ public class Report {
     @Column(name = "created_at", nullable = false)
     private LocalDateTime createdAt;
 
-    @Column(name = "confirmation")
-    private boolean confirmation;
+    @Column(name = "is_confirmed")
+    private Boolean isConfirmed;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "sesnder_id", nullable = false)
+    private User sender;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "suspect_id", nullable = false)
     private User suspect;
-
 }

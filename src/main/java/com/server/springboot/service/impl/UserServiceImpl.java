@@ -402,10 +402,14 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public void reportUserBySuspectId(RequestReportDto requestReportDto) {
+        Long loggedUserId = jwtUtils.getLoggedUserId();
+        User loggedUser = userRepository.findById(loggedUserId)
+                .orElseThrow(() -> new NotFoundException("Not found user with id: " + loggedUserId));
         User suspectUser = userRepository.findById(requestReportDto.getSuspectId())
                 .orElseThrow(() -> new NotFoundException("Not found user with given id: " + requestReportDto.getSuspectId()));
         Report report = reportMapper.convert(requestReportDto);
         report.setSuspect(suspectUser);
+        report.setSender(loggedUser);
         reportRepository.save(report);
     }
 
@@ -413,7 +417,7 @@ public class UserServiceImpl implements UserService {
     public void decideAboutReport(Long reportId, boolean confirmation) {
         Report report = reportRepository.findById(reportId)
                 .orElseThrow(() -> new NotFoundException("Not found report with given id: " + reportId));
-        report.setConfirmation(confirmation);
+        report.setIsConfirmed(confirmation);
         User punishedUser = report.getSuspect();
         punishedUser.setBanned(true);
 

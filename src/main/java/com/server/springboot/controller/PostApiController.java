@@ -58,17 +58,10 @@ public class PostApiController {
 
     @ApiOperation(value = "Delete a post by id")
     @DeleteMapping(value = "/posts/{postId}")
-    public ResponseEntity<?> deletePost(@PathVariable(value = "postId") Long postId) {
-        LOGGER.info("---- Delete post with id: {}", postId);
-        postService.deletePostById(postId, false);
-        return new ResponseEntity<>(HttpStatus.OK);
-    }
-
-    @ApiOperation(value = "Delete a post by id with archiving")
-    @DeleteMapping(value = "/posts/{postId}/archive")
-    public ResponseEntity<?> deletePostWithArchiving(@PathVariable(value = "postId") Long postId) {
-        LOGGER.info("---- Delete post by archiving with id: {}", postId);
-        postService.deletePostById(postId, true);
+    public ResponseEntity<?> deletePostWithArchiving(@PathVariable(value = "postId") Long postId,
+                                                     @RequestParam(value = "archive") boolean archive) {
+        LOGGER.info("---- Delete post id: {}, archiving: {}", postId, archive);
+        postService.deletePostById(postId, archive);
         return new ResponseEntity<>(HttpStatus.OK);
     }
 

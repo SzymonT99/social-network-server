@@ -17,6 +17,8 @@ public interface GroupRepository extends JpaRepository<Group, Long> {
 
     List<Group> findByIsDeletedAndIsPublicOrderByCreatedAtDesc(boolean isDeleted, boolean isPublic);
 
+    List<Group> findByIsDeletedOrderByCreatedAtDesc(boolean isDeleted);
+
     List<Group> findByGroupCreator(User user);
 
     List<Group> findByGroupInterestsInAndIsDeletedAndIsPublicOrderByCreatedAtDesc(List<Interest> interests, boolean isDeleted, boolean isPublic);

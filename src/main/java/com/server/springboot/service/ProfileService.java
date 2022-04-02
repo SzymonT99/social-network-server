@@ -24,7 +24,7 @@ public interface ProfileService {
 
     List<InterestDto> findAllInterests();
 
-    void editUserProfileInformation(UpdateUserProfileDto updateUserProfileDto);
+    void editUserProfileInformation(Long userId, UpdateUserProfileDto updateUserProfileDto);
 
     void addUserFavourite(RequestUserFavouriteDto requestUserFavouriteDto);
 
@@ -32,16 +32,16 @@ public interface ProfileService {
 
     void deleteUserFavouriteById(Long favouriteId);
 
-    void addUserInterestById(Long interestId);
+    void addUserInterestById(Long userId, Long interestId);
 
-    void deleteUserInterestById(Long interestId);
+    void deleteUserInterestById(Long userId, Long interestId);
 
     ProfilePhotoDto findProfilePhotoByUserId(Long userId);
 
     @Transactional
-    void updateUserProfilePhoto(MultipartFile photo);
+    void updateUserProfilePhoto(Long userId, MultipartFile photo);
 
-    void deleteUserProfilePhoto();
+    void deleteUserProfilePhoto(Long userId);
 
     void editUserAddress(Long addressId, RequestAddressDto requestAddressDto);
 

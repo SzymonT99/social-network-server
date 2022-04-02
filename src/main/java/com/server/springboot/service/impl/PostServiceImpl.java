@@ -8,6 +8,7 @@ import com.server.springboot.domain.dto.response.SharedPostDto;
 import com.server.springboot.domain.entity.*;
 import com.server.springboot.domain.entity.key.UserPostKey;
 import com.server.springboot.domain.enumeration.ActionType;
+import com.server.springboot.domain.enumeration.AppRole;
 import com.server.springboot.domain.enumeration.GroupPermissionType;
 import com.server.springboot.domain.mapper.Converter;
 import com.server.springboot.domain.repository.*;
@@ -28,7 +29,6 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -53,6 +53,7 @@ public class PostServiceImpl implements PostService {
     private final Converter<List<SharedPostDto>, List<SharedPost>> sharedPostDtoListMapper;
     private final Converter<SharedPostDto, SharedPost> sharedPostDtoMapper;
     private final NotificationService notificationService;
+    private final RoleRepository roleRepository;
 
     @Autowired
     public PostServiceImpl(Converter<Post, RequestPostDto> postMapper, UserRepository userRepository,
@@ -63,7 +64,7 @@ public class PostServiceImpl implements PostService {
                            Converter<PostDto, Post> postDtoMapper, Converter<Post, RequestSharePostDto> sharedPostMapper,
                            Converter<List<SharedPostDto>, List<SharedPost>> sharedPostDtoListMapper,
                            Converter<SharedPostDto, SharedPost> sharedPostDtoMapper,
-                           NotificationService notificationService) {
+                           NotificationService notificationService, RoleRepository roleRepository) {
         this.postMapper = postMapper;
         this.userRepository = userRepository;
         this.postRepository = postRepository;
@@ -80,6 +81,7 @@ public class PostServiceImpl implements PostService {
         this.sharedPostDtoListMapper = sharedPostDtoListMapper;
         this.sharedPostDtoMapper = sharedPostDtoMapper;
         this.notificationService = notificationService;
+        this.roleRepository = roleRepository;
     }
 
     @Override
@@ -121,19 +123,20 @@ public class PostServiceImpl implements PostService {
     @Override
     public PostDto addPost(RequestPostDto requestPostDto, List<MultipartFile> imageFiles, Long groupId) {
         Long userId = jwtUtils.getLoggedUserId();
-        User author = userRepository.findById(userId)
+        User user = userRepository.findById(userId)
                 .orElseThrow(() -> new NotFoundException("Not found user with id: " + userId));
         Post addedPost = postMapper.convert(requestPostDto);
-        addedPost.setPostAuthor(author);
+        addedPost.setPostAuthor(user);
         if (imageFiles != null) {
-            Set<Image> postImages = fileService.storageImages(imageFiles, author);
+            Set<Image> postImages = fileService.storageImages(imageFiles, user);
             addedPost.setImages(postImages);
         }
 
         if (groupId != null) {
             Group group = groupRepository.findById(groupId).get();
 
-            if (!groupMemberRepository.existsByMemberAndGroup(author, group)) {
+            if (!groupMemberRepository.existsByMemberAndGroup(user, group) &&
+                    !user.getRoles().contains(roleRepository.findByName(AppRole.ROLE_ADMIN).get())) {
                 throw new ForbiddenException("User does not contain to group with id: " + groupId);
             }
 
@@ -141,7 +144,7 @@ public class PostServiceImpl implements PostService {
             groupMemberRepository.setGroupMembersHasNewNotification(true, group);
 
             for (GroupMember groupMember : group.getGroupMembers()) {
-                notificationService.sendNotificationToUser(author, groupMember.getMember().getUserId(), ActionType.ACTIVITY_BOARD);
+                notificationService.sendNotificationToUser(user, groupMember.getMember().getUserId(), ActionType.ACTIVITY_BOARD);
             }
 
         }
@@ -165,11 +168,13 @@ public class PostServiceImpl implements PostService {
                             userId, post.getGroup().getGroupId())));
             if (userGroupMember.getGroupPermissionType() != GroupPermissionType.ADMINISTRATOR
                     && userGroupMember.getGroupPermissionType() != GroupPermissionType.ASSISTANT
-                    && userGroupMember.getGroupPermissionType() != GroupPermissionType.MODERATOR) {
+                    && userGroupMember.getGroupPermissionType() != GroupPermissionType.MODERATOR &&
+                    !loggedUser.getRoles().contains(roleRepository.findByName(AppRole.ROLE_ADMIN).get())) {
                 throw new ForbiddenException("No access to edit the post");
             }
         } else {
-            if (!post.getPostAuthor().getUserId().equals(userId)) {
+            if (!post.getPostAuthor().getUserId().equals(userId)
+                    && !loggedUser.getRoles().contains(roleRepository.findByName(AppRole.ROLE_ADMIN).get())) {
                 throw new ForbiddenException("Invalid post author id - post editing access forbidden");
             }
         }
@@ -214,12 +219,14 @@ public class PostServiceImpl implements PostService {
                             userId, post.getGroup().getGroupId())));
             if (userGroupMember.getGroupPermissionType() != GroupPermissionType.ADMINISTRATOR
                     && userGroupMember.getGroupPermissionType() != GroupPermissionType.ASSISTANT
-                    && userGroupMember.getGroupPermissionType() != GroupPermissionType.MODERATOR) {
+                    && userGroupMember.getGroupPermissionType() != GroupPermissionType.MODERATOR
+                    && !loggedUser.getRoles().contains(roleRepository.findByName(AppRole.ROLE_ADMIN).get())) {
                 throw new ForbiddenException("No access to edit the post");
             }
         } else {
-            if (!post.getPostAuthor().getUserId().equals(userId)) {
-                throw new ForbiddenException("Invalid post author id - post editing access forbidden");
+            if (!post.getPostAuthor().getUserId().equals(userId)
+                    && !loggedUser.getRoles().contains(roleRepository.findByName(AppRole.ROLE_ADMIN).get())) {
+                throw new ForbiddenException("Post editing access forbidden");
             }
         }
 
@@ -308,10 +315,13 @@ public class PostServiceImpl implements PostService {
     @Override
     public void deleteSharedPostById(Long sharedPostId) {
         Long userId = jwtUtils.getLoggedUserId();
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new NotFoundException("Not found user with id: " + userId));
         if (sharedPostRepository.existsBySharedPostId(sharedPostId)) {
             User postSharedAuthor = sharedPostRepository.findById(sharedPostId).get().getSharedPostUser();
-            if (!postSharedAuthor.getUserId().equals(userId)) {
-                throw new ForbiddenException("Invalid shared post author id - shared post deleting access forbidden");
+            if (!postSharedAuthor.getUserId().equals(userId)
+                    && !user.getRoles().contains(roleRepository.findByName(AppRole.ROLE_ADMIN).get())) {
+                throw new ForbiddenException("Shared post deleting access forbidden");
             }
             sharedPostRepository.deleteBySharedPostId(sharedPostId);
         } else {
@@ -379,11 +389,13 @@ public class PostServiceImpl implements PostService {
                             userId, post.getGroup().getGroupId())));
             if (userGroupMember.getGroupPermissionType() != GroupPermissionType.ADMINISTRATOR
                     && userGroupMember.getGroupPermissionType() != GroupPermissionType.ASSISTANT
-                    && userGroupMember.getGroupPermissionType() != GroupPermissionType.MODERATOR) {
+                    && userGroupMember.getGroupPermissionType() != GroupPermissionType.MODERATOR
+                    && !loggedUser.getRoles().contains(roleRepository.findByName(AppRole.ROLE_ADMIN).get())) {
                 throw new ForbiddenException("No access to edit the post");
             }
         } else {
-            if (!post.getPostAuthor().getUserId().equals(userId)) {
+            if (!post.getPostAuthor().getUserId().equals(userId)
+                    && !loggedUser.getRoles().contains(roleRepository.findByName(AppRole.ROLE_ADMIN).get())) {
                 throw new ForbiddenException("Invalid post author id - post editing access forbidden");
             }
         }
@@ -405,11 +417,13 @@ public class PostServiceImpl implements PostService {
                             userId, post.getGroup().getGroupId())));
             if (userGroupMember.getGroupPermissionType() != GroupPermissionType.ADMINISTRATOR
                     && userGroupMember.getGroupPermissionType() != GroupPermissionType.ASSISTANT
-                    && userGroupMember.getGroupPermissionType() != GroupPermissionType.MODERATOR) {
+                    && userGroupMember.getGroupPermissionType() != GroupPermissionType.MODERATOR
+                    && !loggedUser.getRoles().contains(roleRepository.findByName(AppRole.ROLE_ADMIN).get())) {
                 throw new ForbiddenException("No access to edit the post");
             }
         } else {
-            if (!post.getPostAuthor().getUserId().equals(userId)) {
+            if (!post.getPostAuthor().getUserId().equals(userId)
+                    && !loggedUser.getRoles().contains(roleRepository.findByName(AppRole.ROLE_ADMIN).get())) {
                 throw new ForbiddenException("Invalid post author id - post editing access forbidden");
             }
         }

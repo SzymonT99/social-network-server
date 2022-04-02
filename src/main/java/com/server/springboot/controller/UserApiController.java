@@ -148,7 +148,8 @@ public class UserApiController {
     }
 
     @ApiOperation(value = "Decide about report")
-    @PostMapping(value = "/users/reports/{reportId}")
+    @PreAuthorize("hasRole('ROLE_ADMIN')")
+    @PutMapping(value = "/users/reports/{reportId}")
     public ResponseEntity<?> decideAboutReport(@PathVariable(value = "reportId") Long reportId,
                                                @RequestParam(value = "confirmation") boolean confirmation) {
         LOGGER.info("---- Admin decides about user report id: {}, confirmation: {}", reportId, confirmation);
@@ -157,6 +158,7 @@ public class UserApiController {
     }
 
     @ApiOperation(value = "Get all reports")
+    @PreAuthorize("hasRole('ROLE_ADMIN')")
     @GetMapping(value = "/users/reports")
     public ResponseEntity<List<ReportDto>> getReports() {
         LOGGER.info("---- Admin gets all user reports");

@@ -1,5 +1,6 @@
 package com.server.springboot.domain.dto.response;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.server.springboot.domain.enumeration.ReportType;
 import lombok.*;
 
@@ -15,6 +16,8 @@ public class ReportDto {
     private ReportType reportType;
     private String description;
     private String createdAt;
-    private boolean confirmed;
+    @JsonProperty(value = "isConfirmed")
+    private Boolean isConfirmed;
+    private UserDto senderUser;
     private UserDto suspectUser;
 }
