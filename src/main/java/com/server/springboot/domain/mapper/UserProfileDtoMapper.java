@@ -32,6 +32,7 @@ public class UserProfileDtoMapper implements Converter<UserProfileDto, UserProfi
         return UserProfileDto.builder()
                 .userProfileId(from.getUserProfileId())
                 .isPublic(from.isPublic())
+                .userStatus(from.getUser().getActivityStatus())
                 .firstName(from.getFirstName())
                 .lastName(from.getLastName())
                 .email(from.getUser().getEmail())

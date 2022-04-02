@@ -66,9 +66,6 @@ public class User {
     @Column(name = "is_banned", nullable = false)
     private boolean isBanned;
 
-    @NotNull
-    @Column(name = "is_deleted", nullable = false)
-    private boolean isDeleted;
 
     @OneToOne(fetch = FetchType.LAZY, cascade = CascadeType.ALL)
     @JoinColumn(name = "user_profile_id", nullable = false)
@@ -133,9 +130,13 @@ public class User {
             cascade = CascadeType.ALL, orphanRemoval = true)
     private Set<SharedEvent> sharedEvents;
 
+    @OneToMany(mappedBy = "sender", fetch = FetchType.LAZY,
+            cascade = CascadeType.ALL, orphanRemoval = true)
+    private Set<Report> sentReports;
+
     @OneToMany(mappedBy = "suspect", fetch = FetchType.LAZY,
             cascade = CascadeType.ALL, orphanRemoval = true)
-    private Set<Report> reports;
+    private Set<Report> receivedReports;
 
     @OneToMany(mappedBy = "groupCreator", fetch = FetchType.LAZY,
             cascade = CascadeType.ALL, orphanRemoval = true)

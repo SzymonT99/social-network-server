@@ -39,7 +39,6 @@ public class UserMapper implements Converter<User, CreateUserDto>{
                 .incorrectLoginCounter(0)
                 .isBlocked(false)
                 .isBanned(false)
-                .isDeleted(false)
                 .userProfile(userProfile)
                 .build();
     }

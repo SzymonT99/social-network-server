@@ -33,7 +33,6 @@ public class JwtUtils {
                 .map(GrantedAuthority::getAuthority)
                 .collect(Collectors.joining(","));
         Map<String, Object> claims = new HashMap<>();
-        claims.put("Roles", authorities);
 
         return Jwts.builder()
                 .setClaims(claims)

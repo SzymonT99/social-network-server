@@ -19,7 +19,7 @@ public interface UserService {
 
     void resendActivationLink(String userEmail);
 
-    void deleteUser(DeleteUserDto deleteUserDto, boolean archive);
+    void deleteUser(DeleteUserDto deleteUserDto);
 
     JwtResponse changeUsername(Long userId, ChangeUsernameDto changeUsernameDto);
 
@@ -42,4 +42,10 @@ public interface UserService {
     List<UserDto> getAllUses();
 
     void changeActivityStatus(String status);
+
+    UserAccountPageDto getUsersAccounts(Integer page, Integer size);
+
+    void manageUserAccount(Long userId, UserAccountUpdateDto userAccountUpdateDto);
+
+    void deleteUserByAdmin(Long userId);
 }

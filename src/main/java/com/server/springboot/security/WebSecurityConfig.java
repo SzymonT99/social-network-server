@@ -6,8 +6,6 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationManager;
-import org.springframework.security.authentication.AuthenticationProvider;
-import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
 import org.springframework.security.config.annotation.method.configuration.EnableGlobalMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -17,7 +15,6 @@ import org.springframework.security.config.annotation.web.configuration.WebSecur
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.security.web.authentication.AuthenticationFailureHandler;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
 @Configuration
@@ -67,6 +64,16 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
                 // Adresy nieautoryzowane
                 .antMatchers("/api/images/**").permitAll()
                 .antMatchers("/api/users/reset-password/**").permitAll()
+                .antMatchers("/api/posts").permitAll()
+                .antMatchers("/api/events").permitAll()
+                .antMatchers("/api/events/{eventId}").permitAll()
+                .antMatchers("/api/groups").permitAll()
+                .antMatchers("/api/public/groups/*").permitAll()
+                .antMatchers("/api/users").permitAll()
+                .antMatchers("/api/profile/{userId}/information").permitAll() // publiczny dostęp
+                .antMatchers("/api/profile/{userId}/favourites").permitAll()
+                .antMatchers("/api/interests").permitAll()
+                .antMatchers("/api/profile/{userId}/interests").permitAll()
                 .antMatchers("/chat/**").permitAll()
                 .anyRequest().authenticated()
                 .and().exceptionHandling().authenticationEntryPoint(jwtAuthenticationEntryPoint)

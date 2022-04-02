@@ -15,6 +15,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.GrantedAuthority;
@@ -58,6 +61,7 @@ public class UserServiceImpl implements UserService {
     private final Converter<List<ReportDto>, List<Report>> reportDtoListMapper;
     private final Converter<List<UserDto>, List<User>> userDtoListMapper;
     private final NotificationService notificationService;
+    private final Converter<List<UserAccountDto>, List<User>> userAccountDtoListMapper;
 
     @Autowired
     public UserServiceImpl(UserRepository userRepository, RoleRepository roleRepository,
@@ -70,7 +74,8 @@ public class UserServiceImpl implements UserService {
                            Converter<Report, RequestReportDto> reportMapper,
                            Converter<List<ReportDto>, List<Report>> reportDtoListMapper,
                            Converter<List<UserDto>, List<User>> userDtoListMapper,
-                           NotificationService notificationService) {
+                           NotificationService notificationService,
+                           Converter<List<UserAccountDto>, List<User>> userAccountDtoListMapper) {
         this.userRepository = userRepository;
         this.roleRepository = roleRepository;
         this.reportRepository = reportRepository;
@@ -88,6 +93,7 @@ public class UserServiceImpl implements UserService {
         this.reportDtoListMapper = reportDtoListMapper;
         this.userDtoListMapper = userDtoListMapper;
         this.notificationService = notificationService;
+        this.userAccountDtoListMapper = userAccountDtoListMapper;
     }
 
     @Override
@@ -174,10 +180,6 @@ public class UserServiceImpl implements UserService {
         authorizedUser.setActivityStatus(ActivityStatus.ONLINE);
         userRepository.save(authorizedUser);
 
-        if (authorizedUser.isDeleted()) {
-            throw new LockedException("Account has been deleted and is archived");
-        }
-
         if (authorizedUser.isBanned()) {
             throw new ForbiddenException(String.format("User account with login: %s has been banned. " +
                     "In order to unblock the account, please contact the admin", userLoginDto.getLogin()));
@@ -263,18 +265,15 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public void deleteUser(DeleteUserDto deleteUserDto, boolean archive) {
+    public void deleteUser(DeleteUserDto deleteUserDto) {
         Authentication authentication = authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(deleteUserDto.getLogin(), deleteUserDto.getPassword()));
         SecurityContextHolder.getContext().setAuthentication(authentication);
         User user = userRepository.findByUsernameOrEmail(deleteUserDto.getLogin(), deleteUserDto.getLogin())
                 .orElseThrow(() -> new NotFoundException("Not found user with given login: " + deleteUserDto.getLogin()));
-        if (archive) {
-            user.setDeleted(true);
-            userRepository.save(user);
-        } else {
-            userRepository.delete(user);
-        }
+
+        userRepository.delete(user);
+
     }
 
     @Override
@@ -403,10 +402,14 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public void reportUserBySuspectId(RequestReportDto requestReportDto) {
+        Long loggedUserId = jwtUtils.getLoggedUserId();
+        User loggedUser = userRepository.findById(loggedUserId)
+                .orElseThrow(() -> new NotFoundException("Not found user with id: " + loggedUserId));
         User suspectUser = userRepository.findById(requestReportDto.getSuspectId())
                 .orElseThrow(() -> new NotFoundException("Not found user with given id: " + requestReportDto.getSuspectId()));
         Report report = reportMapper.convert(requestReportDto);
         report.setSuspect(suspectUser);
+        report.setSender(loggedUser);
         reportRepository.save(report);
     }
 
@@ -414,7 +417,7 @@ public class UserServiceImpl implements UserService {
     public void decideAboutReport(Long reportId, boolean confirmation) {
         Report report = reportRepository.findById(reportId)
                 .orElseThrow(() -> new NotFoundException("Not found report with given id: " + reportId));
-        report.setConfirmation(confirmation);
+        report.setIsConfirmed(confirmation);
         User punishedUser = report.getSuspect();
         punishedUser.setBanned(true);
 
@@ -483,6 +486,59 @@ public class UserServiceImpl implements UserService {
         userRepository.save(loggedUser);
 
         informUserFriendsAboutActivity(loggedUser);
+    }
+
+    @Override
+    public UserAccountPageDto getUsersAccounts(Integer page, Integer size) {
+        Role adminRole = roleRepository.findByName(AppRole.ROLE_ADMIN)
+                .orElseThrow(() -> new NotFoundException("Not found role: " + AppRole.ROLE_ADMIN));
+
+        Pageable paging = PageRequest.of(page, size);
+
+        Page<User> pageUsers = userRepository.findByRolesNotContaining(adminRole, paging);
+        List<User> users = pageUsers.getContent();
+
+        List<UserAccountDto> accountDtoList = userAccountDtoListMapper.convert(users);
+
+        return UserAccountPageDto.builder()
+                .userAccounts(accountDtoList)
+                .currentPage(pageUsers.getNumber())
+                .totalItems(pageUsers.getTotalElements())
+                .totalPages(pageUsers.getTotalPages())
+                .build();
+    }
+
+    @Override
+    public void manageUserAccount(Long userId, UserAccountUpdateDto userAccountUpdateDto) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new NotFoundException("Not found user with id: " + userId));
+
+        UserProfile userProfile = user.getUserProfile();
+
+
+        user.setUsername(userAccountUpdateDto.getUsername());
+        user.setEmail(userAccountUpdateDto.getEmail());
+        user.setPhoneNumber(userAccountUpdateDto.getPhoneNumber());
+        user.setIncorrectLoginCounter(userAccountUpdateDto.getIncorrectLoginCounter());
+        user.setVerifiedAccount(userAccountUpdateDto.isActivateAccount());
+        user.setBlocked(userAccountUpdateDto.isBlocked());
+        user.setBanned(userAccountUpdateDto.isBanned());
+
+        userProfile.setFirstName(userAccountUpdateDto.getFirstName());
+        userProfile.setLastName(userAccountUpdateDto.getLastName());
+        userProfile.setPublic(userAccountUpdateDto.isPublicProfile());
+
+        user.setUserProfile(userProfile);
+
+        userRepository.save(user);
+    }
+
+    @Override
+    public void deleteUserByAdmin(Long userId) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new NotFoundException("Not found user with id: " + userId));
+
+        userRepository.delete(user);
     }
 
     public void informUserFriendsAboutActivity(User user) {

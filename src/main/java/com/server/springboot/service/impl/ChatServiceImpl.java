@@ -5,6 +5,7 @@ import com.server.springboot.domain.dto.request.RequestChatMessageDto;
 import com.server.springboot.domain.dto.response.*;
 import com.server.springboot.domain.entity.*;
 import com.server.springboot.domain.enumeration.ActionType;
+import com.server.springboot.domain.enumeration.AppRole;
 import com.server.springboot.domain.enumeration.MessageType;
 import com.server.springboot.domain.mapper.Converter;
 import com.server.springboot.domain.repository.*;
@@ -45,6 +46,7 @@ public class ChatServiceImpl implements ChatService {
     private final Converter<List<ImageDto>, List<Image>> imageDtoListMapper;
     private final NotificationService notificationService;
     private final SimpMessagingTemplate simpMessagingTemplate;
+    private final RoleRepository roleRepository;
 
     @Autowired
     public ChatServiceImpl(JwtUtils jwtUtils, UserRepository userRepository, FileService fileService,
@@ -54,7 +56,8 @@ public class ChatServiceImpl implements ChatService {
                            Converter<ChatDetailsDto, Chat> chatDetailsDtoMapper,
                            Converter<UserDto, User> userDtoMapper, Converter<ChatMessageDto, ChatMessage> chatMessageDtoMapper,
                            Converter<ChatDto, Chat> chatDtoMapper, Converter<List<ImageDto>, List<Image>> imageDtoListMapper,
-                           NotificationService notificationService, SimpMessagingTemplate simpMessagingTemplate) {
+                           NotificationService notificationService, SimpMessagingTemplate simpMessagingTemplate,
+                           RoleRepository roleRepository) {
         this.jwtUtils = jwtUtils;
         this.userRepository = userRepository;
         this.fileService = fileService;
@@ -70,6 +73,7 @@ public class ChatServiceImpl implements ChatService {
         this.imageDtoListMapper = imageDtoListMapper;
         this.notificationService = notificationService;
         this.simpMessagingTemplate = simpMessagingTemplate;
+        this.roleRepository = roleRepository;
     }
 
     @Override
@@ -147,10 +151,13 @@ public class ChatServiceImpl implements ChatService {
     @Override
     public void editChatById(Long chatId, RequestChatDto requestChatDto, MultipartFile imageFile) {
         Long userId = jwtUtils.getLoggedUserId();
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new NotFoundException("Not found user with id: " + userId));
         Chat chat = chatRepository.findById(chatId)
                 .orElseThrow(() -> new NotFoundException("Not found chat with id: " + chatId));
 
-        if (!chat.getChatCreator().getUserId().equals(userId)) {
+        if (!chat.getChatCreator().getUserId().equals(userId)
+                && !user.getRoles().contains(roleRepository.findByName(AppRole.ROLE_ADMIN).get())) {
             throw new ForbiddenException("Invalid chat creator id - chat editing access forbidden");
         }
 
@@ -218,12 +225,12 @@ public class ChatServiceImpl implements ChatService {
         Chat chat = chatRepository.findById(chatId)
                 .orElseThrow(() -> new NotFoundException("Not found chat with id: " + chatId));
 
-        ChatMember chatMember = chatMemberRepository.findByUserMemberAndChat(loggedUser, chat)
-                .orElseThrow(() -> new NotFoundException("The logged user does not belong to chat with id: " + chatId));
-
-        chatMember.setLastActivityDate(LocalDateTime.now());
-
-        chatMemberRepository.save(chatMember);
+        if (!loggedUser.getRoles().contains(roleRepository.findByName(AppRole.ROLE_ADMIN).get())) {
+            ChatMember chatMember = chatMemberRepository.findByUserMemberAndChat(loggedUser, chat)
+                    .orElseThrow(() -> new NotFoundException("The logged user does not belong to chat with id: " + chatId));
+            chatMember.setLastActivityDate(LocalDateTime.now());
+            chatMemberRepository.save(chatMember);
+        }
 
         return chatDetailsDtoMapper.convert(chat);
     }
@@ -237,8 +244,9 @@ public class ChatServiceImpl implements ChatService {
         Chat chat = chatRepository.findById(chatId)
                 .orElseThrow(() -> new NotFoundException("Not found chat with id: " + chatId));
 
-        if (chat.getChatCreator() != loggedUser) {
-            throw new ForbiddenException("Only the author can delete the chat");
+        if (chat.getChatCreator() != loggedUser &&
+                !loggedUser.getRoles().contains(roleRepository.findByName(AppRole.ROLE_ADMIN).get())) {
+            throw new ForbiddenException("No access to delete the chat");
         }
 
         chatRepository.delete(chat);
@@ -256,8 +264,9 @@ public class ChatServiceImpl implements ChatService {
                 .collect(Collectors.toList());
 
         if (!chatMemberRepository.existsByChatAndUserMember(chat, senderUser)
-                && requestChatMessageDto.getMessageType() == MessageType.CHAT) {
-            throw new ForbiddenException("User does not belong to the chat");
+                && requestChatMessageDto.getMessageType() == MessageType.CHAT
+                && !senderUser.getRoles().contains(roleRepository.findByName(AppRole.ROLE_ADMIN).get())) {
+            throw new ForbiddenException("No access to edit chat message");
         }
 
         ChatMessage chatMessage = null;
@@ -316,8 +325,9 @@ public class ChatServiceImpl implements ChatService {
                 .map(ChatMember::getUserMember)
                 .collect(Collectors.toList());
 
-        if (!chatMemberRepository.existsByChatAndUserMember(chat, senderUser)) {
-            throw new ForbiddenException("User does not belong to the chat");
+        if (!chatMemberRepository.existsByChatAndUserMember(chat, senderUser)
+                && !senderUser.getRoles().contains(roleRepository.findByName(AppRole.ROLE_ADMIN).get())) {
+            throw new ForbiddenException("No access to add image to chat");
         }
 
         Set<Image> images = fileService.storageImages(imageFiles, senderUser);
@@ -360,8 +370,9 @@ public class ChatServiceImpl implements ChatService {
         Chat chat = chatRepository.findById(chatId)
                 .orElseThrow(() -> new NotFoundException("Not found chat with id: " + chatId));
 
-        if (!chatMemberRepository.existsByChatAndUserMember(chat, loggedUser)) {
-            throw new ForbiddenException("User does not belong to the chat");
+        if (!chatMemberRepository.existsByChatAndUserMember(chat, loggedUser)
+                && !loggedUser.getRoles().contains(roleRepository.findByName(AppRole.ROLE_ADMIN).get())) {
+            throw new ForbiddenException("No access to fetch chat images");
         }
 
         List<Image> chatImages = chat.getChatMessages().stream()
@@ -397,7 +408,8 @@ public class ChatServiceImpl implements ChatService {
         ChatMessage chatMessage = chatMessageRepository.findById(messageId)
                 .orElseThrow(() -> new NotFoundException("Not found chat message with id: " + messageId));
 
-        if (chatMessage.getMessageAuthor() != loggedUser || chatMessage.getMessageType() != MessageType.CHAT) {
+        if ((chatMessage.getMessageAuthor() != loggedUser || chatMessage.getMessageType() != MessageType.CHAT)
+                && !loggedUser.getRoles().contains(roleRepository.findByName(AppRole.ROLE_ADMIN).get())) {
             throw new ForbiddenException("Editing of messages is not allowed");
         }
 
@@ -417,8 +429,9 @@ public class ChatServiceImpl implements ChatService {
         ChatMessage chatMessage = chatMessageRepository.findById(messageId)
                 .orElseThrow(() -> new NotFoundException("Not found chat message with id: " + messageId));
 
-        if (chatMessage.getMessageAuthor() != loggedUser) {
-            throw new ForbiddenException("Only the author can delete a chat message");
+        if (chatMessage.getMessageAuthor() != loggedUser
+                && !loggedUser.getRoles().contains(roleRepository.findByName(AppRole.ROLE_ADMIN).get())) {
+            throw new ForbiddenException("No access to delete a chat message");
         }
 
         chatMessage.setDeleted(true);
@@ -434,12 +447,16 @@ public class ChatServiceImpl implements ChatService {
         Chat chat = chatRepository.findById(chatId)
                 .orElseThrow(() -> new NotFoundException("Not found chat with id: " + chatId));
 
-        ChatMember loggedUserMember = chatMemberRepository.findByUserMemberAndChat(loggedUser, chat)
-                .orElseThrow(() -> new NotFoundException("The logged user does not belong to chat with id: " + chatId));
+        if (!loggedUser.getRoles().contains(roleRepository.findByName(AppRole.ROLE_ADMIN).get())) {
 
-        if (!loggedUserMember.getCanAddOthers()) {
-            throw new ForbiddenException("The logged user cannot add new users to the chat");
+            ChatMember loggedUserMember = chatMemberRepository.findByUserMemberAndChat(loggedUser, chat)
+                    .orElseThrow(() -> new NotFoundException("The logged user does not belong to chat with id: " + chatId));
+
+            if (!loggedUserMember.getCanAddOthers()) {
+                throw new ForbiddenException("The logged user cannot add new users to the chat");
+            }
         }
+
 
         User addedUser = userRepository.findById(userId)
                 .orElseThrow(() -> new NotFoundException("Not found user with id: " + userId));
@@ -469,7 +486,8 @@ public class ChatServiceImpl implements ChatService {
         Chat chat = chatRepository.findById(chatId)
                 .orElseThrow(() -> new NotFoundException("Not found chat with id: " + chatId));
 
-        if (chat.getChatCreator() != loggedUser) {
+        if (chat.getChatCreator() != loggedUser
+                && !loggedUser.getRoles().contains(roleRepository.findByName(AppRole.ROLE_ADMIN).get())) {
             throw new ForbiddenException("The logged user cannot manage chat members permission");
         }
 

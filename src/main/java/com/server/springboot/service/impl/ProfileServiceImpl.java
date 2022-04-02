@@ -4,10 +4,7 @@ import com.google.common.collect.Lists;
 import com.server.springboot.domain.dto.request.*;
 import com.server.springboot.domain.dto.response.*;
 import com.server.springboot.domain.entity.*;
-import com.server.springboot.domain.enumeration.FavouriteType;
-import com.server.springboot.domain.enumeration.Gender;
-import com.server.springboot.domain.enumeration.RelationshipStatus;
-import com.server.springboot.domain.enumeration.SchoolType;
+import com.server.springboot.domain.enumeration.*;
 import com.server.springboot.domain.mapper.Converter;
 import com.server.springboot.domain.repository.*;
 import com.server.springboot.exception.BadRequestException;
@@ -21,8 +18,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
-import javax.persistence.*;
-import javax.validation.constraints.NotNull;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -54,6 +49,7 @@ public class ProfileServiceImpl implements ProfileService {
     private final Converter<WorkPlace, RequestWorkPlaceDto> workPlaceMapper;
     private final Converter<Address, RequestAddressDto> addressMapper;
     private final Converter<List<FriendDto>, List<Friend>> friendDtoListMapper;
+    private final RoleRepository roleRepository;
 
     @Autowired
     public ProfileServiceImpl(UserRepository userRepository, UserFavouriteRepository userFavouriteRepository,
@@ -70,7 +66,7 @@ public class ProfileServiceImpl implements ProfileService {
                               Converter<School, RequestSchoolDto> schoolMapper,
                               Converter<WorkPlace, RequestWorkPlaceDto> workPlaceMapper,
                               Converter<Address, RequestAddressDto> addressMapper,
-                              Converter<List<FriendDto>, List<Friend>> friendDtoListMapper) {
+                              Converter<List<FriendDto>, List<Friend>> friendDtoListMapper, RoleRepository roleRepository) {
         this.userRepository = userRepository;
         this.userFavouriteRepository = userFavouriteRepository;
         this.interestRepository = interestRepository;
@@ -92,6 +88,7 @@ public class ProfileServiceImpl implements ProfileService {
         this.workPlaceMapper = workPlaceMapper;
         this.addressMapper = addressMapper;
         this.friendDtoListMapper = friendDtoListMapper;
+        this.roleRepository = roleRepository;
     }
 
     @Override
@@ -144,11 +141,17 @@ public class ProfileServiceImpl implements ProfileService {
     }
 
     @Override
-    public void editUserProfileInformation(UpdateUserProfileDto updateUserProfileDto) {
-        System.out.println(updateUserProfileDto);
-        Long userId = jwtUtils.getLoggedUserId();
+    public void editUserProfileInformation(Long userId, UpdateUserProfileDto updateUserProfileDto) {
+        Long loggedUserId = jwtUtils.getLoggedUserId();
+        User loggedUser = userRepository.findById(loggedUserId)
+                .orElseThrow(() -> new NotFoundException("Not found user with id: " + loggedUserId));
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new NotFoundException("Not found user with id: " + userId));
+
+        if (!loggedUserId.equals(userId) && !loggedUser.getRoles().contains(roleRepository.findByName(AppRole.ROLE_ADMIN).get())) {
+            throw new NotFoundException("No access to edit user profile");
+        }
+
         UserProfile userProfile = userProfileRepository.findByUser(user)
                 .orElseThrow(() -> new NotFoundException("Not found user profile with user id: " + userId));
         userProfile.setPublic(updateUserProfileDto.isPublic());
@@ -180,10 +183,14 @@ public class ProfileServiceImpl implements ProfileService {
     @Override
     public void editUserFavouriteById(Long favouriteId, RequestUserFavouriteDto requestUserFavouriteDto) {
         Long userId = jwtUtils.getLoggedUserId();
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new NotFoundException("Not found user with id: " + userId));
         UserFavourite userFavourite = userFavouriteRepository.findById(favouriteId)
                 .orElseThrow(() -> new NotFoundException("Not found user favourite with id: " + favouriteId));
-        if (!userFavourite.getUserProfile().getUser().getUserId().equals(userId)) {
-            throw new ForbiddenException("Invalid favourite author id - favourite editing access forbidden");
+
+        if (!userFavourite.getUserProfile().getUser().getUserId().equals(userId)
+                && !user.getRoles().contains(roleRepository.findByName(AppRole.ROLE_ADMIN).get())) {
+            throw new ForbiddenException("User favourite editing access forbidden");
         }
         userFavourite.setName(requestUserFavouriteDto.getName());
         userFavourite.setFavouriteType(FavouriteType.valueOf(requestUserFavouriteDto.getFavouriteType()));
@@ -193,17 +200,19 @@ public class ProfileServiceImpl implements ProfileService {
     @Override
     public void deleteUserFavouriteById(Long favouriteId) {
         Long userId = jwtUtils.getLoggedUserId();
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new NotFoundException("Not found user with id: " + userId));
         UserFavourite userFavourite = userFavouriteRepository.findById(favouriteId)
                 .orElseThrow(() -> new NotFoundException("Not found user favourite with id: " + favouriteId));
-        if (!userFavourite.getUserProfile().getUser().getUserId().equals(userId)) {
-            throw new ForbiddenException("Invalid favourite author id - favourite deleting access forbidden");
+        if (!userFavourite.getUserProfile().getUser().getUserId().equals(userId)
+                && !user.getRoles().contains(roleRepository.findByName(AppRole.ROLE_ADMIN).get())) {
+            throw new ForbiddenException("User favourite deleting access forbidden");
         }
         userFavouriteRepository.deleteById(favouriteId);
     }
 
     @Override
-    public void addUserInterestById(Long interestId) {
-        Long userId = jwtUtils.getLoggedUserId();
+    public void addUserInterestById(Long userId, Long interestId) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new NotFoundException("Not found user with id: " + userId));
         Interest addedInterest = interestRepository.findById(interestId)
@@ -218,14 +227,14 @@ public class ProfileServiceImpl implements ProfileService {
     }
 
     @Override
-    public void deleteUserInterestById(Long interestId) {
-        Long userId = jwtUtils.getLoggedUserId();
+    public void deleteUserInterestById(Long userId, Long interestId) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new NotFoundException("Not found user with id: " + userId));
         Interest deletedInterest = interestRepository.findById(interestId)
                 .orElseThrow(() -> new NotFoundException("Not found interest with id: " + interestId));
         Set<Interest> userInterests = user.getUserInterests();
-        if (!userInterests.contains(deletedInterest)) {
+        if (!userInterests.contains(deletedInterest) &&
+                !user.getRoles().contains(roleRepository.findByName(AppRole.ROLE_ADMIN).get())) {
             throw new BadRequestException("The interest given does not belong to the interests of the user");
         }
         userInterests.remove(deletedInterest);
@@ -252,11 +261,10 @@ public class ProfileServiceImpl implements ProfileService {
     }
 
     @Override
-    public void updateUserProfilePhoto(MultipartFile photo) {
+    public void updateUserProfilePhoto(Long userId, MultipartFile photo) {
         if (photo.isEmpty()) {
             throw new BadRequestException("Profile photo not sent");
         }
-        Long userId = jwtUtils.getLoggedUserId();
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new NotFoundException("Not found user with id: " + userId));
         UserProfile userProfile = user.getUserProfile();
@@ -281,8 +289,7 @@ public class ProfileServiceImpl implements ProfileService {
     }
 
     @Override
-    public void deleteUserProfilePhoto() {
-        Long userId = jwtUtils.getLoggedUserId();
+    public void deleteUserProfilePhoto(Long userId) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new NotFoundException("Not found user with id: " + userId));
         UserProfile userProfile = userProfileRepository.findByUser(user)
@@ -291,7 +298,8 @@ public class ProfileServiceImpl implements ProfileService {
         Image userProfilePhoto = userProfile.getProfilePhoto();
         userProfile.setProfilePhoto(null);
         userProfileRepository.save(userProfile);
-        if (!userProfilePhoto.getUserProfile().getUser().getUserId().equals(userId)) {
+        if (!userProfilePhoto.getUserProfile().getUser().getUserId().equals(userId)
+                && !user.getRoles().contains(roleRepository.findByName(AppRole.ROLE_ADMIN).get())) {
             throw new ForbiddenException("Invalid logged user id - profile photo deleting access forbidden");
         }
         imageRepository.delete(userProfilePhoto);
@@ -300,9 +308,13 @@ public class ProfileServiceImpl implements ProfileService {
     @Override
     public void editUserAddress(Long addressId, RequestAddressDto requestAddressDto) {
         Long userId = jwtUtils.getLoggedUserId();
+        User loggedUser = userRepository.findById(userId)
+                .orElseThrow(() -> new NotFoundException("Not found user with id: " + userId));
+
         Address address = addressRepository.findById(addressId)
                 .orElseThrow(() -> new NotFoundException("Not found address with id: " + addressId));
-        if (!address.getUserProfile().getUser().getUserId().equals(userId)) {
+        if (!address.getUserProfile().getUser().getUserId().equals(userId)
+                && !loggedUser.getRoles().contains(roleRepository.findByName(AppRole.ROLE_ADMIN).get())) {
             throw new ForbiddenException("Invalid logged user id - address editing access forbidden");
         }
         address.setCountry(requestAddressDto.getCountry());
@@ -336,9 +348,12 @@ public class ProfileServiceImpl implements ProfileService {
     @Override
     public void editSchoolInformation(Long schoolId, RequestSchoolDto requestSchoolDto) {
         Long userId = jwtUtils.getLoggedUserId();
+        User loggedUser = userRepository.findById(userId)
+                .orElseThrow(() -> new NotFoundException("Not found user with id: " + userId));
         School school = schoolRepository.findById(schoolId)
                 .orElseThrow(() -> new NotFoundException("Not found school with id: " + schoolId));
-        if (!school.getUserProfile().getUser().getUserId().equals(userId)) {
+        if (!school.getUserProfile().getUser().getUserId().equals(userId)
+                && !loggedUser.getRoles().contains(roleRepository.findByName(AppRole.ROLE_ADMIN).get())) {
             throw new ForbiddenException("Invalid logged user id - school editing access forbidden");
         }
         school.setSchoolType(SchoolType.valueOf(requestSchoolDto.getSchoolType()));
@@ -354,9 +369,12 @@ public class ProfileServiceImpl implements ProfileService {
     @Override
     public void deleteSchoolInformation(Long schoolId) {
         Long userId = jwtUtils.getLoggedUserId();
+        User loggedUser = userRepository.findById(userId)
+                .orElseThrow(() -> new NotFoundException("Not found user with id: " + userId));
         School school = schoolRepository.findById(schoolId)
                 .orElseThrow(() -> new NotFoundException("Not found school with id: " + schoolId));
-        if (!school.getUserProfile().getUser().getUserId().equals(userId)) {
+        if (!school.getUserProfile().getUser().getUserId().equals(userId)
+                && !loggedUser.getRoles().contains(roleRepository.findByName(AppRole.ROLE_ADMIN).get())) {
             throw new ForbiddenException("Invalid logged user id - school deleting access forbidden");
         }
         schoolRepository.deleteById(schoolId);
@@ -375,9 +393,12 @@ public class ProfileServiceImpl implements ProfileService {
     @Override
     public void editUserWorkPlace(Long workId, RequestWorkPlaceDto requestWorkPlaceDto) {
         Long userId = jwtUtils.getLoggedUserId();
+        User loggedUser = userRepository.findById(userId)
+                .orElseThrow(() -> new NotFoundException("Not found user with id: " + userId));
         WorkPlace workPlace = workPlaceRepository.findById(workId)
                 .orElseThrow(() -> new NotFoundException("Not found work place with id: " + workId));
-        if (!workPlace.getUserProfile().getUser().getUserId().equals(userId)) {
+        if (!workPlace.getUserProfile().getUser().getUserId().equals(userId)
+                && !loggedUser.getRoles().contains(roleRepository.findByName(AppRole.ROLE_ADMIN).get())) {
             throw new ForbiddenException("Invalid logged user id - work place editing access forbidden");
         }
         workPlace.setCompany(requestWorkPlaceDto.getCompany());
@@ -393,9 +414,12 @@ public class ProfileServiceImpl implements ProfileService {
     @Override
     public void deleteUserWorkPlace(Long workId) {
         Long userId = jwtUtils.getLoggedUserId();
+        User loggedUser = userRepository.findById(userId)
+                .orElseThrow(() -> new NotFoundException("Not found user with id: " + userId));
         WorkPlace workPlace = workPlaceRepository.findById(workId)
                 .orElseThrow(() -> new NotFoundException("Not found work place with id: " + workId));
-        if (!workPlace.getUserProfile().getUser().getUserId().equals(userId)) {
+        if (!workPlace.getUserProfile().getUser().getUserId().equals(userId)
+                && !loggedUser.getRoles().contains(roleRepository.findByName(AppRole.ROLE_ADMIN).get())) {
             throw new ForbiddenException("Invalid logged user id - work place editing access forbidden");
         }
         workPlaceRepository.delete(workPlace);

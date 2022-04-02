@@ -10,17 +10,17 @@ import java.util.List;
 
 public interface GroupService {
 
-    void addGroup(RequestGroupDto requestGroupDto, MultipartFile imageFile);
+    GroupDetailsDto addGroup(RequestGroupDto requestGroupDto, MultipartFile imageFile);
 
     void editGroup(Long groupId, RequestGroupDto requestGroupDto, MultipartFile imageFile) throws IOException;
 
     void deleteGroupById(Long groupId, boolean archive) throws IOException;
 
-    List<GroupDto> findAllGroups(boolean isPublic);
+    List<GroupDto> findAllGroups(boolean arePublic);
 
     List<GroupDto> findAllGroupsWithSimilarInterests();
 
-    GroupDetailsDto findGroup(Long groupId);
+    GroupDetailsDto findGroup(Long groupId, boolean onlyPublic);
 
     void addGroupRuleByGroupId(Long groupId, RequestGroupRuleDto requestGroupRuleDto);
 

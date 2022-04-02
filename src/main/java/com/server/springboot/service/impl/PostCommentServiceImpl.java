@@ -8,12 +8,10 @@ import com.server.springboot.domain.entity.GroupMember;
 import com.server.springboot.domain.entity.Post;
 import com.server.springboot.domain.entity.User;
 import com.server.springboot.domain.enumeration.ActionType;
+import com.server.springboot.domain.enumeration.AppRole;
 import com.server.springboot.domain.enumeration.GroupPermissionType;
 import com.server.springboot.domain.mapper.Converter;
-import com.server.springboot.domain.repository.CommentRepository;
-import com.server.springboot.domain.repository.GroupMemberRepository;
-import com.server.springboot.domain.repository.PostRepository;
-import com.server.springboot.domain.repository.UserRepository;
+import com.server.springboot.domain.repository.*;
 import com.server.springboot.exception.BadRequestException;
 import com.server.springboot.exception.ConflictRequestException;
 import com.server.springboot.exception.ForbiddenException;
@@ -39,13 +37,15 @@ public class PostCommentServiceImpl implements PostCommentService {
     private final Converter<Comment, RequestCommentDto> commentMapper;
     private final Converter<CommentDto, Comment> commentDtoMapper;
     private final NotificationService notificationService;
+    private final RoleRepository roleRepository;
 
     @Autowired
     public PostCommentServiceImpl(UserRepository userRepository, PostRepository postRepository,
                                   CommentRepository commentRepository, GroupMemberRepository groupMemberRepository, JwtUtils jwtUtils,
                                   Converter<Comment, RequestCommentDto> commentMapper,
                                   Converter<CommentDto, Comment> commentDtoMapper,
-                                  NotificationService notificationService) {
+                                  NotificationService notificationService,
+                                  RoleRepository roleRepository) {
         this.userRepository = userRepository;
         this.postRepository = postRepository;
         this.commentRepository = commentRepository;
@@ -54,6 +54,7 @@ public class PostCommentServiceImpl implements PostCommentService {
         this.commentMapper = commentMapper;
         this.commentDtoMapper = commentDtoMapper;
         this.notificationService = notificationService;
+        this.roleRepository = roleRepository;
     }
 
     @Override
@@ -81,7 +82,8 @@ public class PostCommentServiceImpl implements PostCommentService {
         Comment comment = commentRepository.findById(commentId)
                 .orElseThrow(() -> new NotFoundException("Not found post comment with id: " + commentId));
 
-        if (comment.getCommentedPost().getGroup() != null) {
+        if (comment.getCommentedPost().getGroup() != null &&
+                !loggedUser.getRoles().contains(roleRepository.findByName(AppRole.ROLE_ADMIN).get())) {
             GroupMember userGroupMember = groupMemberRepository.findByGroupAndMember(comment.getCommentedPost().getGroup(), loggedUser)
                     .orElseThrow(() -> new NotFoundException(String.format("Not found user with id: %s in group with id: %s",
                             userId, comment.getCommentedPost().getGroup().getGroupId())));
@@ -91,8 +93,9 @@ public class PostCommentServiceImpl implements PostCommentService {
                 throw new ForbiddenException("No access to edit the post comment");
             }
         } else {
-            if (!comment.getCommentAuthor().getUserId().equals(userId)) {
-                throw new ForbiddenException("Invalid comment author id - comment editing access forbidden");
+            if (!comment.getCommentAuthor().getUserId().equals(userId)
+                    && !loggedUser.getRoles().contains(roleRepository.findByName(AppRole.ROLE_ADMIN).get())) {
+                throw new ForbiddenException("Comment editing access forbidden");
             }
         }
 
@@ -110,7 +113,8 @@ public class PostCommentServiceImpl implements PostCommentService {
         Comment comment = commentRepository.findById(commentId)
                 .orElseThrow(() -> new NotFoundException("Not found post comment with id: " + commentId));
 
-        if (comment.getCommentedPost().getGroup() != null) {
+        if (comment.getCommentedPost().getGroup() != null
+                && !loggedUser.getRoles().contains(roleRepository.findByName(AppRole.ROLE_ADMIN).get())) {
             GroupMember userGroupMember = groupMemberRepository.findByGroupAndMember(comment.getCommentedPost().getGroup(), loggedUser)
                     .orElseThrow(() -> new NotFoundException(String.format("Not found user with id: %s in group with id: %s",
                             userId, comment.getCommentedPost().getGroup().getGroupId())));
@@ -120,8 +124,9 @@ public class PostCommentServiceImpl implements PostCommentService {
                 throw new ForbiddenException("No access to delete the post comment");
             }
         } else {
-            if (!comment.getCommentAuthor().getUserId().equals(userId)) {
-                throw new ForbiddenException("Invalid comment author id - comment deleting access forbidden");
+            if (!comment.getCommentAuthor().getUserId().equals(userId)
+                    && !loggedUser.getRoles().contains(roleRepository.findByName(AppRole.ROLE_ADMIN).get())) {
+                throw new ForbiddenException("Comment deleting access forbidden");
             }
         }
 

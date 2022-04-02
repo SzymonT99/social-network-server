@@ -1,6 +1,7 @@
 package com.server.springboot.domain.dto.response;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.server.springboot.domain.enumeration.ActivityStatus;
 import com.server.springboot.domain.enumeration.Gender;
 import com.server.springboot.domain.enumeration.RelationshipStatus;
 import lombok.*;
@@ -18,6 +19,7 @@ public class UserProfileDto {
     private Long userProfileId;
     @JsonProperty(value = "isPublic")
     private boolean isPublic;
+    private ActivityStatus userStatus;
     private String firstName;
     private String lastName;
     private String email;

@@ -35,6 +35,11 @@ public class GroupDetailsDtoMapper implements Converter<GroupDetailsDto, Group>{
 
     @Override
     public GroupDetailsDto convert(Group from) {
+
+        List<Post> filteredPosts = from.getPosts().stream()
+                .filter(el -> !el.isDeleted())
+                .collect(Collectors.toList());
+
         return GroupDetailsDto.builder()
                 .groupId(from.getGroupId())
                 .name(from.getName())
@@ -46,7 +51,7 @@ public class GroupDetailsDtoMapper implements Converter<GroupDetailsDto, Group>{
                 .rules(groupRuleDtoListMapper.convert(Lists.newArrayList(from.getGroupRules().stream().
                         sorted(Comparator.comparing(GroupRule::getName))
                         .collect(Collectors.toList()))))
-                .posts(postDtoListMapper.convert(Lists.newArrayList(from.getPosts())))
+                .posts(postDtoListMapper.convert(filteredPosts))
                 .interests(interestDtoListMapper.convert(Lists.newArrayList(from.getGroupInterests().stream().
                         sorted(Comparator.comparing(Interest::getName))
                         .collect(Collectors.toList()))))

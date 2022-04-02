@@ -2,10 +2,7 @@ package com.server.springboot.controller;
 
 import com.server.springboot.domain.dto.request.*;
 
-import com.server.springboot.domain.dto.response.ActivatedAccountDto;
-import com.server.springboot.domain.dto.response.JwtResponse;
-import com.server.springboot.domain.dto.response.ReportDto;
-import com.server.springboot.domain.dto.response.UserDto;
+import com.server.springboot.domain.dto.response.*;
 import com.server.springboot.service.UserService;
 import io.swagger.annotations.ApiOperation;
 import org.slf4j.Logger;
@@ -14,6 +11,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import javax.validation.Valid;
@@ -79,12 +77,11 @@ public class UserApiController {
         return new ResponseEntity<>(HttpStatus.OK);
     }
 
-    @ApiOperation(value = "Delete user by id")
+    @ApiOperation(value = "Delete user")
     @DeleteMapping(value = "/users")
-    public ResponseEntity<?> deleteUser(@RequestParam(value = "archive") boolean archive,
-                                        @Valid @RequestBody DeleteUserDto deleteUserDto) {
-        LOGGER.info("---- Delete user account - archive: {}", archive);
-        userService.deleteUser(deleteUserDto, archive);
+    public ResponseEntity<?> deleteUser(@Valid @RequestBody DeleteUserDto deleteUserDto) {
+        LOGGER.info("---- Delete user account");
+        userService.deleteUser(deleteUserDto);
         return new ResponseEntity<>(HttpStatus.OK);
     }
 
@@ -151,7 +148,8 @@ public class UserApiController {
     }
 
     @ApiOperation(value = "Decide about report")
-    @PostMapping(value = "/users/reports/{reportId}")
+    @PreAuthorize("hasRole('ROLE_ADMIN')")
+    @PutMapping(value = "/users/reports/{reportId}")
     public ResponseEntity<?> decideAboutReport(@PathVariable(value = "reportId") Long reportId,
                                                @RequestParam(value = "confirmation") boolean confirmation) {
         LOGGER.info("---- Admin decides about user report id: {}, confirmation: {}", reportId, confirmation);
@@ -160,6 +158,7 @@ public class UserApiController {
     }
 
     @ApiOperation(value = "Get all reports")
+    @PreAuthorize("hasRole('ROLE_ADMIN')")
     @GetMapping(value = "/users/reports")
     public ResponseEntity<List<ReportDto>> getReports() {
         LOGGER.info("---- Admin gets all user reports");
@@ -178,6 +177,34 @@ public class UserApiController {
     public ResponseEntity<?> changeActivityStatus(@RequestParam(value = "activityStatus") String status) {
         LOGGER.info("---- User changes status on: {}", status);
         userService.changeActivityStatus(status);
+        return new ResponseEntity<>(HttpStatus.OK);
+    }
+
+    @ApiOperation(value = "Get users accounts by admin")
+    @PreAuthorize("hasRole('ROLE_ADMIN')")
+    @GetMapping(value = "/users/accounts")
+    public ResponseEntity<UserAccountPageDto> getUsersAccounts(@RequestParam(value = "page", defaultValue = "8") int page,
+                                                                 @RequestParam(value = "size", defaultValue = "8") int size) {
+        LOGGER.info("---- Admin get users accounts on panel");
+        return new ResponseEntity<>(userService.getUsersAccounts(page, size), HttpStatus.OK);
+    }
+
+    @ApiOperation(value = "Manage user accounts by admin")
+    @PreAuthorize("hasRole('ROLE_ADMIN')")
+    @PutMapping(value = "/users/{userId}/accounts")
+    public ResponseEntity<?> manageUserAccount(@PathVariable(value = "userId") Long userId,
+                                               @Valid @RequestBody UserAccountUpdateDto userAccountUpdateDto) {
+        LOGGER.info("---- Admin manage account user with id: {}", userId);
+        userService.manageUserAccount(userId, userAccountUpdateDto);
+        return new ResponseEntity<>(HttpStatus.OK);
+    }
+
+    @ApiOperation(value = "Delete user account by admin")
+    @PreAuthorize("hasRole('ROLE_ADMIN')")
+    @DeleteMapping(value = "/users/{userId}/accounts")
+    public ResponseEntity<?> deleteUserByAdmin(@PathVariable(value = "userId") Long userId) {
+        LOGGER.info("---- Delete user account with id: {} by admin", userId);
+        userService.deleteUserByAdmin(userId);
         return new ResponseEntity<>(HttpStatus.OK);
     }
 }
