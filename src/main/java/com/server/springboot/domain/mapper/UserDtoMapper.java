@@ -13,8 +13,8 @@ public class UserDtoMapper implements Converter<UserDto, User> {
     private final Converter<ProfilePhotoDto, Image> profilePhotoDtoMapper;
 
     @Autowired
-    public UserDtoMapper(Converter<ProfilePhotoDto, Image> profilePhotoDtoMapper) {
-        this.profilePhotoDtoMapper = profilePhotoDtoMapper;
+    public UserDtoMapper() {
+        this.profilePhotoDtoMapper = new ProfilePhotoDtoMapper();
     }
 
     @Override

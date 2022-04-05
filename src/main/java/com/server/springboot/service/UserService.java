@@ -35,7 +35,7 @@ public interface UserService {
 
     List<ReportDto> getAllUserReports();
 
-    void sendResetPasswordLink(String userEmail);
+    void sendResetPasswordToken(String userEmail);
 
     void resetPasswordNotLoggedUser(String token, ResetPasswordDto resetPasswordDto);
 

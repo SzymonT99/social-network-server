@@ -17,8 +17,8 @@ public class ReportDtoListMapper implements Converter<List<ReportDto>, List<Repo
     private final Converter<UserDto, User> userDtoMapper;
 
     @Autowired
-    public ReportDtoListMapper(Converter<UserDto, User> userDtoMapper) {
-        this.userDtoMapper = userDtoMapper;
+    public ReportDtoListMapper() {
+        this.userDtoMapper = new UserDtoMapper();
     }
 
     @Override

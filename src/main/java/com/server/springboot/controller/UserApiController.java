@@ -125,7 +125,7 @@ public class UserApiController {
     @PostMapping(value = "/users/reset-password/step1")
     public ResponseEntity<?> sendResetPasswordLink(@Email @RequestParam(value = "userEmail") String userEmail) {
         LOGGER.info("---- Send reset password link for user with email: {}", userEmail);
-        userService.sendResetPasswordLink(userEmail);
+        userService.sendResetPasswordToken(userEmail);
         return new ResponseEntity<>(HttpStatus.CREATED);
     }
 

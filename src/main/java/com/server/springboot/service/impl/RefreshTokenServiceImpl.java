@@ -25,7 +25,6 @@ public class RefreshTokenServiceImpl implements RefreshTokenService {
     @Value("${jwtRefreshExpirationMs}")
     private Long refreshTokenExpirationMs;
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(RefreshTokenServiceImpl.class);
     private final RefreshTokenRepository refreshTokenRepository;
     private final UserRepository userRepository;
     private final JwtUtils jwtUtils;

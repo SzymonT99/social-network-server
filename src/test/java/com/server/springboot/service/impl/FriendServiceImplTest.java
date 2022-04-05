@@ -38,7 +38,7 @@ public class FriendServiceImplTest {
         assertEquals(12L, (long) friendRepository.findById(12L).get().getUserFriend().getUserId());
     }
 
-    @Test
+    @Test()
     @DisplayName("Get invitations to friend")
     @Order(value = 2)
     void findAllUserInvitationsToFriends() {

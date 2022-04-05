@@ -16,8 +16,8 @@ public class UserDtoListMapper implements Converter<List<UserDto>, List<User>> {
     private final Converter<ProfilePhotoDto, Image> profilePhotoDtoMapper;
 
     @Autowired
-    public UserDtoListMapper(Converter<ProfilePhotoDto, Image> profilePhotoDtoMapper) {
-        this.profilePhotoDtoMapper = profilePhotoDtoMapper;
+    public UserDtoListMapper() {
+        this.profilePhotoDtoMapper = new ProfilePhotoDtoMapper();
     }
 
     @Override

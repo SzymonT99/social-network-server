@@ -30,7 +30,6 @@ public class UserMapper implements Converter<User, CreateUserDto>{
 
         return User.builder()
                 .username(from.getUsername())
-                .password(from.getPassword())
                 .email(from.getEmail())
                 .phoneNumber(from.getPhoneNumber())
                 .createdAt(LocalDateTime.now())

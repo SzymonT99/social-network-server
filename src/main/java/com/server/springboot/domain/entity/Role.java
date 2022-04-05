@@ -31,4 +31,8 @@ public class Role {
     @ManyToMany(mappedBy = "roles")
     private Set<User> users;
 
+    public Role(Integer roleId, AppRole name) {
+        this.roleId = roleId;
+        this.name = name;
+    }
 }
