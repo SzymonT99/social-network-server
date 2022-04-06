@@ -23,11 +23,10 @@ public class FriendDtoListMapper implements Converter<List<FriendDto>, List<Frie
     private final Converter<AddressDto, Address> addressDtoMapper;
 
     @Autowired
-    public FriendDtoListMapper(Converter<UserDto, User> userDtoMapper,
-                               Converter<List<UserDto>, List<User>> userDtoListMapper, Converter<AddressDto, Address> addressDtoMapper) {
-        this.userDtoMapper = userDtoMapper;
-        this.userDtoListMapper = userDtoListMapper;
-        this.addressDtoMapper = addressDtoMapper;
+    public FriendDtoListMapper() {
+        this.userDtoMapper = new UserDtoMapper();
+        this.userDtoListMapper = new UserDtoListMapper();
+        this.addressDtoMapper = new AddressDtoMapper();
     }
 
     @Override

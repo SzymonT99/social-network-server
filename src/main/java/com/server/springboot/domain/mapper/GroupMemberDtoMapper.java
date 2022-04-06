@@ -13,8 +13,8 @@ public class GroupMemberDtoMapper implements Converter<GroupMemberDto, GroupMemb
     private final Converter<UserDto, User> userDtoMapper;
 
     @Autowired
-    public GroupMemberDtoMapper(Converter<UserDto, User> userDtoMapper) {
-        this.userDtoMapper = userDtoMapper;
+    public GroupMemberDtoMapper() {
+        this.userDtoMapper = new UserDtoMapper();
     }
 
     @Override

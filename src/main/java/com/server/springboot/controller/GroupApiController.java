@@ -38,7 +38,7 @@ public class GroupApiController {
     public ResponseEntity<GroupDetailsDto> createGroup(@RequestPart(value = "image", required = false) MultipartFile imageFile,
                                                 @Valid @RequestPart(value = "group") RequestGroupDto requestGroupDto) {
         LOGGER.info("---- Create group with name: {}", requestGroupDto.getName());
-        return new ResponseEntity<>(groupService.addGroup(requestGroupDto, imageFile), HttpStatus.CREATED);
+        return new ResponseEntity<>(groupService.createGroup(requestGroupDto, imageFile), HttpStatus.CREATED);
     }
 
     @ApiOperation(value = "Update existing group by id")

@@ -113,13 +113,6 @@ public class PostApiController {
         return new ResponseEntity<>(HttpStatus.OK);
     }
 
-    @ApiOperation(value = "Get all shared post")
-    @GetMapping(value = "/posts/shared")
-    public ResponseEntity<List<SharedPostDto>> getAllSharedPosts() {
-        LOGGER.info("---- Get all shared posts");
-        return new ResponseEntity<>(postService.findAllSharedPosts(), HttpStatus.OK);
-    }
-
     @ApiOperation(value = "Add post to favourite")
     @PostMapping(value = "/posts/{postId}/favourite")
     public ResponseEntity<?> addToFavouritePost(@PathVariable(value = "postId") Long postId) {

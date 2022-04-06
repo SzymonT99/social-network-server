@@ -21,13 +21,11 @@ public class PostDtoMapper implements Converter<PostDto, Post> {
     private final Converter<LikedPostDto, LikedPost> likedPostDtoMapper;
 
     @Autowired
-    public PostDtoMapper(Converter<List<ImageDto>, List<Image>> imageDtoListMapper, Converter<UserDto, User> userDtoMapper,
-                         Converter<List<CommentDto>, List<Comment>> commentDtoListMapper,
-                         Converter<LikedPostDto, LikedPost> likedPostDtoMapper) {
-        this.imageDtoListMapper = imageDtoListMapper;
-        this.userDtoMapper = userDtoMapper;
-        this.commentDtoListMapper = commentDtoListMapper;
-        this.likedPostDtoMapper = likedPostDtoMapper;
+    public PostDtoMapper() {
+        this.imageDtoListMapper = new ImageDtoListMapper();
+        this.userDtoMapper = new UserDtoMapper();
+        this.commentDtoListMapper = new CommentDtoListMapper();
+        this.likedPostDtoMapper = new LikedPostDtoMapper();
     }
 
     @Override

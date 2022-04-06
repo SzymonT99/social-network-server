@@ -10,7 +10,7 @@ import com.server.springboot.domain.entity.key.UserPostKey;
 import com.server.springboot.domain.enumeration.ActionType;
 import com.server.springboot.domain.enumeration.AppRole;
 import com.server.springboot.domain.enumeration.GroupPermissionType;
-import com.server.springboot.domain.mapper.Converter;
+import com.server.springboot.domain.mapper.*;
 import com.server.springboot.domain.repository.*;
 import com.server.springboot.exception.BadRequestException;
 import com.server.springboot.exception.ConflictRequestException;
@@ -37,7 +37,7 @@ import java.util.stream.Collectors;
 @Service
 public class PostServiceImpl implements PostService {
 
-    private final Converter<Post, RequestPostDto> postMapper;
+    private final PostMapper postMapper;
     private final UserRepository userRepository;
     private final PostRepository postRepository;
     private final SharedPostRepository sharedPostRepository;
@@ -47,23 +47,22 @@ public class PostServiceImpl implements PostService {
     private final FileService fileService;
     private final GroupRepository groupRepository;
     private final GroupMemberRepository groupMemberRepository;
-    private final Converter<List<PostDto>, List<Post>> postDtoListMapper;
-    private final Converter<PostDto, Post> postDtoMapper;
-    private final Converter<Post, RequestSharePostDto> sharedPostMapper;
-    private final Converter<List<SharedPostDto>, List<SharedPost>> sharedPostDtoListMapper;
-    private final Converter<SharedPostDto, SharedPost> sharedPostDtoMapper;
+    private final PostDtoListMapper postDtoListMapper;
+    private final PostDtoMapper postDtoMapper;
+    private final SharedPostMapper sharedPostMapper;
+    private final SharedPostDtoListMapper sharedPostDtoListMapper;
+    private final SharedPostDtoMapper sharedPostDtoMapper;
     private final NotificationService notificationService;
     private final RoleRepository roleRepository;
 
     @Autowired
-    public PostServiceImpl(Converter<Post, RequestPostDto> postMapper, UserRepository userRepository,
+    public PostServiceImpl(PostMapper postMapper, UserRepository userRepository,
                            PostRepository postRepository, SharedPostRepository sharedPostRepository,
                            LikedPostRepository likedPostRepository, ImageRepository imageRepository,
                            JwtUtils jwtUtils, FileService fileService, GroupRepository groupRepository,
-                           GroupMemberRepository groupMemberRepository, Converter<List<PostDto>, List<Post>> postDtoListMapper,
-                           Converter<PostDto, Post> postDtoMapper, Converter<Post, RequestSharePostDto> sharedPostMapper,
-                           Converter<List<SharedPostDto>, List<SharedPost>> sharedPostDtoListMapper,
-                           Converter<SharedPostDto, SharedPost> sharedPostDtoMapper,
+                           GroupMemberRepository groupMemberRepository, PostDtoListMapper postDtoListMapper,
+                           PostDtoMapper postDtoMapper, SharedPostMapper sharedPostMapper,
+                           SharedPostDtoListMapper sharedPostDtoListMapper, SharedPostDtoMapper sharedPostDtoMapper,
                            NotificationService notificationService, RoleRepository roleRepository) {
         this.postMapper = postMapper;
         this.userRepository = userRepository;
@@ -328,12 +327,6 @@ public class PostServiceImpl implements PostService {
             throw new NotFoundException("Not found shared post with id: " + sharedPostId);
         }
 
-    }
-
-    @Override
-    public List<SharedPostDto> findAllSharedPosts() {
-        List<SharedPost> sharedPosts = sharedPostRepository.findAll();
-        return sharedPostDtoListMapper.convert(sharedPosts);
     }
 
     @Override

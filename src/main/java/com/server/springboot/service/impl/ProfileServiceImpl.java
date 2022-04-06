@@ -5,7 +5,7 @@ import com.server.springboot.domain.dto.request.*;
 import com.server.springboot.domain.dto.response.*;
 import com.server.springboot.domain.entity.*;
 import com.server.springboot.domain.enumeration.*;
-import com.server.springboot.domain.mapper.Converter;
+import com.server.springboot.domain.mapper.*;
 import com.server.springboot.domain.repository.*;
 import com.server.springboot.exception.BadRequestException;
 import com.server.springboot.exception.ConflictRequestException;
@@ -18,6 +18,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -39,16 +40,16 @@ public class ProfileServiceImpl implements ProfileService {
     private final FriendRepository friendRepository;
     private final JwtUtils jwtUtils;
     private final FileService fileService;
-    private final Converter<UserProfileDto, UserProfile> userProfileDtoMapper;
-    private final Converter<UserActivityDto, User> userActivityDtoMapper;
-    private final Converter<List<UserFavouriteDto>, List<UserFavourite>> userFavouriteDtoListMapper;
-    private final Converter<List<InterestDto>, List<Interest>> interestDtoListMapper;
-    private final Converter<List<ImageDto>, List<Image>> imageDtoListMapper;
-    private final Converter<UserFavourite, RequestUserFavouriteDto> userFavouriteMapper;
-    private final Converter<School, RequestSchoolDto> schoolMapper;
-    private final Converter<WorkPlace, RequestWorkPlaceDto> workPlaceMapper;
-    private final Converter<Address, RequestAddressDto> addressMapper;
-    private final Converter<List<FriendDto>, List<Friend>> friendDtoListMapper;
+    private final UserProfileDtoMapper userProfileDtoMapper;
+    private final UserActivityDtoMapper userActivityDtoMapper;
+    private final UserFavouriteDtoListMapper userFavouriteDtoListMapper;
+    private final InterestDtoListMapper interestDtoListMapper;
+    private final ImageDtoListMapper imageDtoListMapper;
+    private final UserFavouriteMapper userFavouriteMapper;
+    private final SchoolMapper schoolMapper;
+    private final WorkPlaceMapper workPlaceMapper;
+    private final AddressMapper addressMapper;
+    private final FriendDtoListMapper friendDtoListMapper;
     private final RoleRepository roleRepository;
 
     @Autowired
@@ -57,16 +58,12 @@ public class ProfileServiceImpl implements ProfileService {
                               ImageRepository imageRepository, AddressRepository addressRepository,
                               SchoolRepository schoolRepository, WorkPlaceRepository workPlaceRepository,
                               FriendRepository friendRepository, JwtUtils jwtUtils,
-                              FileService fileService, Converter<UserProfileDto, UserProfile> userProfileDtoMapper,
-                              Converter<UserActivityDto, User> userActivityDtoMapper,
-                              Converter<List<UserFavouriteDto>, List<UserFavourite>> userFavouriteDtoListMapper,
-                              Converter<List<InterestDto>, List<Interest>> interestDtoListMapper,
-                              Converter<List<ImageDto>, List<Image>> imageDtoListMapper,
-                              Converter<UserFavourite, RequestUserFavouriteDto> userFavouriteMapper,
-                              Converter<School, RequestSchoolDto> schoolMapper,
-                              Converter<WorkPlace, RequestWorkPlaceDto> workPlaceMapper,
-                              Converter<Address, RequestAddressDto> addressMapper,
-                              Converter<List<FriendDto>, List<Friend>> friendDtoListMapper, RoleRepository roleRepository) {
+                              FileService fileService, UserProfileDtoMapper userProfileDtoMapper,
+                              UserActivityDtoMapper userActivityDtoMapper, UserFavouriteDtoListMapper userFavouriteDtoListMapper,
+                              InterestDtoListMapper interestDtoListMapper, ImageDtoListMapper imageDtoListMapper,
+                              UserFavouriteMapper userFavouriteMapper, SchoolMapper schoolMapper,
+                              WorkPlaceMapper workPlaceMapper, AddressMapper addressMapper,
+                              FriendDtoListMapper friendDtoListMapper, RoleRepository roleRepository) {
         this.userRepository = userRepository;
         this.userFavouriteRepository = userFavouriteRepository;
         this.interestRepository = interestRepository;
@@ -270,6 +267,11 @@ public class ProfileServiceImpl implements ProfileService {
         UserProfile userProfile = user.getUserProfile();
         if (userProfile.getProfilePhoto() != null) {
             imageRepository.delete(userProfile.getProfilePhoto());
+            try {
+                fileService.deleteImage(userProfile.getProfilePhoto().getImageId());
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
         }
         Image image = fileService.storageOneImage(photo, user, true);
 
@@ -303,6 +305,22 @@ public class ProfileServiceImpl implements ProfileService {
             throw new ForbiddenException("Invalid logged user id - profile photo deleting access forbidden");
         }
         imageRepository.delete(userProfilePhoto);
+        try {
+            fileService.deleteImage(userProfilePhoto.getImageId());
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    @Override
+    public void addUserAddress(RequestAddressDto requestAddressDto) {
+        Long userId = jwtUtils.getLoggedUserId();
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new NotFoundException("Not found user with id: " + userId));
+        Address address = addressMapper.convert(requestAddressDto);
+        UserProfile userProfile = user.getUserProfile();
+        userProfile.setAddress(address);
+        addressRepository.save(address);
     }
 
     @Override
@@ -321,17 +339,6 @@ public class ProfileServiceImpl implements ProfileService {
         address.setCity(requestAddressDto.getCity());
         address.setStreet(requestAddressDto.getStreet());
         address.setZipCode(requestAddressDto.getZipCode());
-        addressRepository.save(address);
-    }
-
-    @Override
-    public void addUserAddress(RequestAddressDto requestAddressDto) {
-        Long userId = jwtUtils.getLoggedUserId();
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new NotFoundException("Not found user with id: " + userId));
-        Address address = addressMapper.convert(requestAddressDto);
-        UserProfile userProfile = user.getUserProfile();
-        userProfile.setAddress(address);
         addressRepository.save(address);
     }
 

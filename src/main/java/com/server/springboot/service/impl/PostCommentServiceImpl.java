@@ -10,7 +10,8 @@ import com.server.springboot.domain.entity.User;
 import com.server.springboot.domain.enumeration.ActionType;
 import com.server.springboot.domain.enumeration.AppRole;
 import com.server.springboot.domain.enumeration.GroupPermissionType;
-import com.server.springboot.domain.mapper.Converter;
+import com.server.springboot.domain.mapper.CommentDtoMapper;
+import com.server.springboot.domain.mapper.CommentMapper;
 import com.server.springboot.domain.repository.*;
 import com.server.springboot.exception.BadRequestException;
 import com.server.springboot.exception.ConflictRequestException;
@@ -34,17 +35,15 @@ public class PostCommentServiceImpl implements PostCommentService {
     private final CommentRepository commentRepository;
     private final GroupMemberRepository groupMemberRepository;
     private final JwtUtils jwtUtils;
-    private final Converter<Comment, RequestCommentDto> commentMapper;
-    private final Converter<CommentDto, Comment> commentDtoMapper;
+    private final CommentMapper commentMapper;
+    private final CommentDtoMapper commentDtoMapper;
     private final NotificationService notificationService;
     private final RoleRepository roleRepository;
 
     @Autowired
     public PostCommentServiceImpl(UserRepository userRepository, PostRepository postRepository,
                                   CommentRepository commentRepository, GroupMemberRepository groupMemberRepository, JwtUtils jwtUtils,
-                                  Converter<Comment, RequestCommentDto> commentMapper,
-                                  Converter<CommentDto, Comment> commentDtoMapper,
-                                  NotificationService notificationService,
+                                  CommentMapper commentMapper, CommentDtoMapper commentDtoMapper, NotificationService notificationService,
                                   RoleRepository roleRepository) {
         this.userRepository = userRepository;
         this.postRepository = postRepository;

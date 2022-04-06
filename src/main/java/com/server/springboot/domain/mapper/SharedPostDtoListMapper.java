@@ -20,13 +20,11 @@ public class SharedPostDtoListMapper implements Converter<List<SharedPostDto>, L
     private final Converter<List<CommentDto>, List<Comment>> commentDtoListMapper;
 
     @Autowired
-    public SharedPostDtoListMapper(Converter<PostDto, Post> postDtoMapper, Converter<UserDto, User> userDtoMapper,
-                                   Converter<LikedPostDto, LikedPost> likedPostDtoMapper,
-                                   Converter<List<CommentDto>, List<Comment>> commentDtoListMapper) {
-        this.postDtoMapper = postDtoMapper;
-        this.userDtoMapper = userDtoMapper;
-        this.likedPostDtoMapper = likedPostDtoMapper;
-        this.commentDtoListMapper = commentDtoListMapper;
+    public SharedPostDtoListMapper() {
+        this.postDtoMapper = new PostDtoMapper();
+        this.userDtoMapper = new UserDtoMapper();
+        this.commentDtoListMapper = new CommentDtoListMapper();
+        this.likedPostDtoMapper = new LikedPostDtoMapper();
     }
 
     @Override

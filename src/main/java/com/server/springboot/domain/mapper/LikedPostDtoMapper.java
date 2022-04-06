@@ -15,8 +15,8 @@ public class LikedPostDtoMapper implements Converter<LikedPostDto, LikedPost> {
     private final Converter<UserDto, User> userDtoMapper;
 
     @Autowired
-    public LikedPostDtoMapper(Converter<UserDto, User> userDtoMapper) {
-        this.userDtoMapper = userDtoMapper;
+    public LikedPostDtoMapper() {
+        this.userDtoMapper = new UserDtoMapper();
     }
 
     @Override

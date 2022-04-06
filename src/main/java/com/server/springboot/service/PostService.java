@@ -31,8 +31,6 @@ public interface PostService {
 
     void deleteSharedPostById(Long sharedPostId);
 
-    List<SharedPostDto> findAllSharedPosts();
-
     void addPostToFavourite(Long postId);
 
     void deletePostFromFavourite(Long postId);

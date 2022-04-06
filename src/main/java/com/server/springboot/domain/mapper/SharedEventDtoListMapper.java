@@ -23,9 +23,9 @@ public class SharedEventDtoListMapper implements Converter<List<SharedEventDto>,
     private final Converter<UserDto, User> userDtoMapper;
 
     @Autowired
-    public SharedEventDtoListMapper(Converter<EventDto, Event> eventDtoMapper, Converter<UserDto, User> userDtoMapper) {
-        this.eventDtoMapper = eventDtoMapper;
-        this.userDtoMapper = userDtoMapper;
+    public SharedEventDtoListMapper() {
+        this.eventDtoMapper = new EventDtoMapper();
+        this.userDtoMapper = new UserDtoMapper();
     }
 
     @Override

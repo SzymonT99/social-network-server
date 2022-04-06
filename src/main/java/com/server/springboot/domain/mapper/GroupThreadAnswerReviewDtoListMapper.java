@@ -16,8 +16,8 @@ public class GroupThreadAnswerReviewDtoListMapper implements Converter<List<Grou
     private final Converter<GroupMemberDto, GroupMember> groupMemberDtoMapper;
 
     @Autowired
-    public GroupThreadAnswerReviewDtoListMapper(Converter<GroupMemberDto, GroupMember> groupMemberDtoMapper) {
-        this.groupMemberDtoMapper = groupMemberDtoMapper;
+    public GroupThreadAnswerReviewDtoListMapper() {
+        this.groupMemberDtoMapper = new GroupMemberDtoMapper();
     }
 
     @Override

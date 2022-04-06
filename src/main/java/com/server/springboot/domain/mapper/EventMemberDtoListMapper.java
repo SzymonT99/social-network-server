@@ -17,8 +17,8 @@ public class EventMemberDtoListMapper implements Converter<List<EventMemberDto>,
     private final Converter<UserDto, User> userDtoMapper;
 
     @Autowired
-    public EventMemberDtoListMapper(Converter<UserDto, User> userDtoMapper) {
-        this.userDtoMapper = userDtoMapper;
+    public EventMemberDtoListMapper() {
+        this.userDtoMapper = new UserDtoMapper();
     }
 
     @Override

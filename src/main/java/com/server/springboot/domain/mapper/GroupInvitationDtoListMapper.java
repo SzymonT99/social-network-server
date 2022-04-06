@@ -20,14 +20,11 @@ public class GroupInvitationDtoListMapper implements Converter<List<GroupInvitat
     private final Converter<List<GroupMemberDto>, List<GroupMember>> groupMemberDtoListMapper;
 
     @Autowired
-    public GroupInvitationDtoListMapper(Converter<ImageDto, Image> imageDtoMapper,
-                                        Converter<List<InterestDto>, List<Interest>> interestDtoListMapper,
-                                        Converter<UserDto, User> userDtoMapper,
-                                        Converter<List<GroupMemberDto>, List<GroupMember>> groupMemberDtoListMapper) {
-        this.imageDtoMapper = imageDtoMapper;
-        this.interestDtoListMapper = interestDtoListMapper;
-        this.userDtoMapper = userDtoMapper;
-        this.groupMemberDtoListMapper = groupMemberDtoListMapper;
+    public GroupInvitationDtoListMapper() {
+        this.imageDtoMapper = new ImageDtoMapper();
+        this.interestDtoListMapper = new InterestDtoListMapper();
+        this.userDtoMapper = new UserDtoMapper();
+        this.groupMemberDtoListMapper = new GroupMemberDtoListMapper();
     }
 
     @Override
