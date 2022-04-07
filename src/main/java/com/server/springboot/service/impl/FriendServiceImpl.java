@@ -1,19 +1,16 @@
 package com.server.springboot.service.impl;
 
 import com.server.springboot.domain.dto.response.*;
-import com.server.springboot.domain.entity.Address;
 import com.server.springboot.domain.entity.Friend;
-import com.server.springboot.domain.entity.Image;
 import com.server.springboot.domain.entity.User;
 import com.server.springboot.domain.enumeration.ActionType;
-import com.server.springboot.domain.mapper.Converter;
+import com.server.springboot.domain.mapper.*;
 import com.server.springboot.domain.repository.FriendRepository;
 import com.server.springboot.domain.repository.UserRepository;
 import com.server.springboot.exception.*;
 import com.server.springboot.security.JwtUtils;
 import com.server.springboot.service.FriendService;
 import com.server.springboot.service.NotificationService;
-import com.server.springboot.service.UserActivityService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -29,23 +26,21 @@ public class FriendServiceImpl implements FriendService {
     private final UserRepository userRepository;
     private final FriendRepository friendRepository;
     private final JwtUtils jwtUtils;
-    private final Converter<List<FriendInvitationDto>, List<Friend>> friendInvitationDtoListMapper;
-    private final Converter<List<SentFriendInvitationDto>, List<Friend>> sentFriendInvitationDtoListMapper;
-    private final Converter<List<FriendDto>, List<Friend>> friendDtoListMapper;
-    private final Converter<ProfilePhotoDto, Image> profilePhotoDtoMapper;
-    private final Converter<AddressDto, Address> addressDtoMapper;
-    private final Converter<List<UserDto>, List<User>> userDtoListMapper;
+    private final FriendInvitationDtoListMapper friendInvitationDtoListMapper;
+    private final SentFriendInvitationDtoListMapper sentFriendInvitationDtoListMapper;
+    private final FriendDtoListMapper friendDtoListMapper;
+    private final ProfilePhotoDtoMapper profilePhotoDtoMapper;
+    private final AddressDtoMapper addressDtoMapper;
+    private final UserDtoListMapper userDtoListMapper;
     private final NotificationService notificationService;
-
 
     @Autowired
     public FriendServiceImpl(UserRepository userRepository, FriendRepository friendRepository, JwtUtils jwtUtils,
-                             Converter<List<FriendInvitationDto>, List<Friend>> friendInvitationDtoListMapper,
-                             Converter<List<SentFriendInvitationDto>, List<Friend>> sentFriendInvitationDtoListMapper,
-                             Converter<List<FriendDto>, List<Friend>> friendDtoListMapper,
-                             Converter<ProfilePhotoDto, Image> profilePhotoDtoMapper,
-                             Converter<AddressDto, Address> addressDtoMapper,
-                             Converter<List<UserDto>, List<User>> userDtoListMapper,
+
+                             FriendInvitationDtoListMapper friendInvitationDtoListMapper,
+                             SentFriendInvitationDtoListMapper sentFriendInvitationDtoListMapper,
+                             FriendDtoListMapper friendDtoListMapper, ProfilePhotoDtoMapper profilePhotoDtoMapper,
+                             AddressDtoMapper addressDtoMapper, UserDtoListMapper userDtoListMapper,
                              NotificationService notificationService) {
         this.userRepository = userRepository;
         this.friendRepository = friendRepository;
@@ -189,7 +184,6 @@ public class FriendServiceImpl implements FriendService {
                         && !friendRepository.existsByUserAndUserFriend(loggedUser, userEl)
                         && !friendRepository.existsByUserAndUserFriend(userEl, loggedUser))
                 .collect(Collectors.toList());
-
         List<FriendSuggestionDto> friendSuggestionList = new ArrayList<>();
 
         for (User currentUser : users) {

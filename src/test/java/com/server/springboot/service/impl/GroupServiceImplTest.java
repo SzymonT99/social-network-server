@@ -95,7 +95,6 @@ public class GroupServiceImplTest {
 
     @BeforeEach
     void setUp() {
-
         groupMapper = new GroupMapper();
         groupDtoListMapper = new GroupDtoListMapper();
         groupDetailsDtoMapper = new GroupDetailsDtoMapper();

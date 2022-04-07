@@ -28,7 +28,6 @@ public class EventDtoMapper implements Converter<EventDto, Event> {
 
     @Override
     public EventDto convert(Event from) {
-
         return EventDto.builder()
                 .eventId(from.getEventId())
                 .title(from.getTitle())

@@ -58,7 +58,7 @@ public class ChatApiController {
     public ResponseEntity<?> createChat(@RequestPart(value = "image", required = false) MultipartFile imageFile,
                                         @Valid @RequestPart(value = "chat") RequestChatDto requestChatDto) {
         LOGGER.info("---- Create new chat: {}", requestChatDto.getName());
-        chatService.addChat(requestChatDto, imageFile);
+        chatService.createChat(requestChatDto, imageFile);
         return new ResponseEntity<>(HttpStatus.CREATED);
     }
 
@@ -116,12 +116,11 @@ public class ChatApiController {
     }
 
     @ApiOperation(value = "Update message on chat")
-    @PutMapping(value = "/chats/messages/{messageId}", consumes = {MediaType.APPLICATION_JSON_VALUE, MediaType.MULTIPART_FORM_DATA_VALUE})
+    @PutMapping(value = "/chats/messages/{messageId}")
     public ResponseEntity<?> updateMessageOnChat(@PathVariable(value = "messageId") Long messageId,
-                                                 @RequestPart(value = "image", required = false) MultipartFile image,
-                                                 @RequestPart(value = "message") RequestChatMessageDto requestChatMessageDto) {
+                                                 @RequestBody RequestChatMessageDto requestChatMessageDto) {
         LOGGER.info("---- Edit chat message with id: {}", messageId);
-        chatService.editChatMessageById(messageId, requestChatMessageDto, image);
+        chatService.editChatMessageById(messageId, requestChatMessageDto);
         return new ResponseEntity<>(HttpStatus.OK);
     }
 

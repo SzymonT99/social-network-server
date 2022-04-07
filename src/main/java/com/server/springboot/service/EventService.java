@@ -12,7 +12,7 @@ import java.util.List;
 
 public interface EventService {
 
-    EventDto addEvent(RequestEventDto requestEventDto, MultipartFile imageFile);
+    EventDto createEvent(RequestEventDto requestEventDto, MultipartFile imageFile);
 
     @Transactional
     void editEvent(Long eventId, RequestEventDto requestEventDto, MultipartFile imageFile) throws IOException;

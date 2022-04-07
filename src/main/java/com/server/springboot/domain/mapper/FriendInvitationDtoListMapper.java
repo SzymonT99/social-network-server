@@ -19,9 +19,9 @@ public class FriendInvitationDtoListMapper implements Converter<List<FriendInvit
     private final Converter<List<UserDto>, List<User>> userDtoListMapper;
 
     @Autowired
-    public FriendInvitationDtoListMapper(Converter<UserDto, User> userDtoMapper, Converter<List<UserDto>, List<User>> userDtoListMapper) {
-        this.userDtoMapper = userDtoMapper;
-        this.userDtoListMapper = userDtoListMapper;
+    public FriendInvitationDtoListMapper() {
+        this.userDtoMapper = new UserDtoMapper();
+        this.userDtoListMapper = new UserDtoListMapper();
     }
 
     @Override

@@ -37,7 +37,7 @@ public class EventApiController {
     public ResponseEntity<EventDto> createEvent(@RequestPart(value = "image", required = false) MultipartFile imageFile,
                                                 @Valid @RequestPart(value = "event") RequestEventDto requestEventDto) {
         LOGGER.info("---- Create event with title: {}", requestEventDto.getTitle());
-        return new ResponseEntity<>(eventService.addEvent(requestEventDto, imageFile), HttpStatus.CREATED);
+        return new ResponseEntity<>(eventService.createEvent(requestEventDto, imageFile), HttpStatus.CREATED);
     }
 
     @ApiOperation(value = "Update existing event by id")

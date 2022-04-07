@@ -7,7 +7,7 @@ import com.server.springboot.domain.entity.*;
 import com.server.springboot.domain.enumeration.ActionType;
 import com.server.springboot.domain.enumeration.AppRole;
 import com.server.springboot.domain.enumeration.MessageType;
-import com.server.springboot.domain.mapper.Converter;
+import com.server.springboot.domain.mapper.*;
 import com.server.springboot.domain.repository.*;
 import com.server.springboot.exception.ConflictRequestException;
 import com.server.springboot.exception.ForbiddenException;
@@ -38,12 +38,12 @@ public class ChatServiceImpl implements ChatService {
     private final ChatMemberRepository chatMemberRepository;
     private final ChatMessageRepository chatMessageRepository;
     private final ImageRepository imageRepository;
-    private final Converter<List<ChatDto>, List<Chat>> chatDtoListMapper;
-    private final Converter<ChatDetailsDto, Chat> chatDetailsDtoMapper;
-    private final Converter<UserDto, User> userDtoMapper;
-    private final Converter<ChatMessageDto, ChatMessage> chatMessageDtoMapper;
-    private final Converter<ChatDto, Chat> chatDtoMapper;
-    private final Converter<List<ImageDto>, List<Image>> imageDtoListMapper;
+    private final ChatDtoListMapper chatDtoListMapper;
+    private final ChatDetailsDtoMapper chatDetailsDtoMapper;
+    private final UserDtoMapper userDtoMapper;
+    private final ChatMessageDtoMapper chatMessageDtoMapper;
+    private final ChatDtoMapper chatDtoMapper;
+    private final ImageDtoListMapper imageDtoListMapper;
     private final NotificationService notificationService;
     private final SimpMessagingTemplate simpMessagingTemplate;
     private final RoleRepository roleRepository;
@@ -52,10 +52,9 @@ public class ChatServiceImpl implements ChatService {
     public ChatServiceImpl(JwtUtils jwtUtils, UserRepository userRepository, FileService fileService,
                            ChatRepository chatRepository, ChatMemberRepository chatMemberRepository,
                            ChatMessageRepository chatMessageRepository, ImageRepository imageRepository,
-                           Converter<List<ChatDto>, List<Chat>> chatDtoListMapper,
-                           Converter<ChatDetailsDto, Chat> chatDetailsDtoMapper,
-                           Converter<UserDto, User> userDtoMapper, Converter<ChatMessageDto, ChatMessage> chatMessageDtoMapper,
-                           Converter<ChatDto, Chat> chatDtoMapper, Converter<List<ImageDto>, List<Image>> imageDtoListMapper,
+                           ChatDtoListMapper chatDtoListMapper, ChatDetailsDtoMapper chatDetailsDtoMapper,
+                           UserDtoMapper userDtoMapper, ChatMessageDtoMapper chatMessageDtoMapper,
+                           ChatDtoMapper chatDtoMapper, ImageDtoListMapper imageDtoListMapper,
                            NotificationService notificationService, SimpMessagingTemplate simpMessagingTemplate,
                            RoleRepository roleRepository) {
         this.jwtUtils = jwtUtils;
@@ -77,7 +76,7 @@ public class ChatServiceImpl implements ChatService {
     }
 
     @Override
-    public void addChat(RequestChatDto requestChatDto, MultipartFile imageFile) {
+    public void createChat(RequestChatDto requestChatDto, MultipartFile imageFile) {
         Long userId = jwtUtils.getLoggedUserId();
         User chatCreator = userRepository.findById(userId)
                 .orElseThrow(() -> new NotFoundException("Not found user with id: " + userId));
@@ -192,7 +191,7 @@ public class ChatServiceImpl implements ChatService {
         List<ChatDto> userChatExtendDtoList = userChatDtoList.stream().map(chatDto -> {
             Chat currentChat = chatRepository.findById(chatDto.getChatId()).get();
             List<ChatMessage> chatMessages = currentChat.getChatMessages().stream()
-                    .sorted(Comparator.comparing(ChatMessage::getCreatedAt).reversed())
+                    .sorted(Comparator.comparing(ChatMessage::getMessageId).reversed())
                     .collect(Collectors.toList());
             ChatMember chatMember = chatMemberRepository.findByUserMemberAndChat(user, currentChat).get();
 
@@ -274,7 +273,7 @@ public class ChatServiceImpl implements ChatService {
         if (requestChatMessageDto.getMessageType() != MessageType.TYPING
                 && requestChatMessageDto.getMessageType() != MessageType.MESSAGE_EDIT
                 && requestChatMessageDto.getMessageType() != MessageType.MESSAGE_DELETE) {
-            chatMessage = ChatMessage.builder()
+            ChatMessage createdMessage = ChatMessage.builder()
                     .text(requestChatMessageDto.getMessage())
                     .messageType(requestChatMessageDto.getMessageType())
                     .image(null)
@@ -286,7 +285,7 @@ public class ChatServiceImpl implements ChatService {
                     .messageChat(chat)
                     .build();
 
-            chatMessageRepository.save(chatMessage);
+            chatMessage = chatMessageRepository.save(createdMessage);
 
             for (User userMember : userChatMembersList) {
                 notificationService.sendNotificationToUser(senderUser, userMember.getUserId(), ActionType.CHAT);
@@ -295,20 +294,18 @@ public class ChatServiceImpl implements ChatService {
 
         UserDto messageAuthor = userDtoMapper.convert(senderUser);
 
-        if (requestChatMessageDto.getMessageType() != MessageType.MESSAGE_EDIT
-                && requestChatMessageDto.getMessageType() != MessageType.MESSAGE_DELETE) {
+        if (requestChatMessageDto.getMessageType() == MessageType.TYPING) {
             return ChatMessageNotificationDto.builder()
                     .messageType(requestChatMessageDto.getMessageType())
                     .typingMessage(requestChatMessageDto.getMessage())
                     .chatId(requestChatMessageDto.getChatId())
-                    .messageId(chatMessage != null ? chatMessage.getMessageId() : null)
                     .author(messageAuthor)
                     .build();
         } else {
             return ChatMessageNotificationDto.builder()
                     .messageType(requestChatMessageDto.getMessageType())
                     .chatId(requestChatMessageDto.getChatId())
-                    .messageId(requestChatMessageDto.getEditedMessageId())
+                    .messageId(chatMessage != null ? chatMessage.getMessageId() : null)
                     .author(messageAuthor)
                     .build();
         }
@@ -400,7 +397,7 @@ public class ChatServiceImpl implements ChatService {
     }
 
     @Override
-    public void editChatMessageById(Long messageId, RequestChatMessageDto requestChatMessageDto, MultipartFile image) {
+    public void editChatMessageById(Long messageId, RequestChatMessageDto requestChatMessageDto) {
         Long userId = jwtUtils.getLoggedUserId();
         User loggedUser = userRepository.findById(userId)
                 .orElseThrow(() -> new NotFoundException("Not found user with id: " + userId));
@@ -456,7 +453,6 @@ public class ChatServiceImpl implements ChatService {
                 throw new ForbiddenException("The logged user cannot add new users to the chat");
             }
         }
-
 
         User addedUser = userRepository.findById(userId)
                 .orElseThrow(() -> new NotFoundException("Not found user with id: " + userId));
@@ -515,7 +511,6 @@ public class ChatServiceImpl implements ChatService {
         User userFriend = userRepository.findById(userFriendId)
                 .orElseThrow(() -> new NotFoundException("Not found user with id: " + userFriendId));
 
-        // Gdy czat prywatny nie istnieje
         List<ChatMember> chatMemberList = chatMemberRepository.findByUserMember(loggedUser);
         List<Chat> allUserPrivateChats = chatRepository.findByChatMembersInAndIsPrivate(chatMemberList, true);
 
@@ -564,9 +559,7 @@ public class ChatServiceImpl implements ChatService {
 
             chat.setChatMembers(privateChatMembers);
 
-            chatRepository.save(chat);
-
-            return chatDtoMapper.convert(chat);
+            return chatDtoMapper.convert(chatRepository.save(chat));
         } else {
             return chatDtoMapper.convert(chatWithFriend);
         }
