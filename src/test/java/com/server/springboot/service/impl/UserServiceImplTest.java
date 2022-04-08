@@ -426,7 +426,7 @@ public class UserServiceImplTest {
         when(authentication.getPrincipal()).thenReturn(UserDetailsImpl.build(user));
 
         when(userRepository.existsByUsername(changeUsernameDto.getNewUsername())).thenReturn(false);
-        when(userRepository.save(user)).thenReturn(user);
+        when(userRepository.save(any(User.class))).thenReturn(user);
         when(refreshTokenService.createRefreshToken(changeUsernameDto.getNewUsername()))
                 .thenReturn(RefreshToken.builder().token(UUID.randomUUID().toString()).build());
 
@@ -456,7 +456,7 @@ public class UserServiceImplTest {
         when(authentication.getPrincipal()).thenReturn(UserDetailsImpl.build(user));
 
         when(userRepository.existsByEmail(changeEmailDto.getNewEmail())).thenReturn(false);
-        when(userRepository.save(user)).thenReturn(user);
+        when(userRepository.save(any(User.class))).thenReturn(user);
         when(refreshTokenService.createRefreshToken(anyString()))
                 .thenReturn(RefreshToken.builder().token(UUID.randomUUID().toString()).build());
 
@@ -486,7 +486,7 @@ public class UserServiceImplTest {
         ).thenReturn(authentication);
         when(authentication.getPrincipal()).thenReturn(UserDetailsImpl.build(user));
 
-        when(userRepository.save(user)).thenReturn(user);
+        when(userRepository.save(any(User.class))).thenReturn(user);
         when(refreshTokenService.createRefreshToken(anyString()))
                 .thenReturn(RefreshToken.builder().token(UUID.randomUUID().toString()).build());
 
@@ -515,7 +515,7 @@ public class UserServiceImplTest {
                 new UsernamePasswordAuthenticationToken(user.getUsername(), user.getPassword()))
         ).thenReturn(authentication);
 
-        when(userRepository.save(user)).thenReturn(user);
+        when(userRepository.save(any(User.class))).thenReturn(user);
 
         userService.changePhoneNumber(userId, changePhoneNumberDto);
         String updatedPhoneNumber = userRepository.findById(userId).get().getPhoneNumber();
@@ -579,7 +579,7 @@ public class UserServiceImplTest {
         boolean confirmation = true;
 
         when(reportRepository.findById(reportId)).thenReturn(Optional.of(report));
-        when(reportRepository.save(report)).thenReturn(report);
+        when(reportRepository.save(any(Report.class))).thenReturn(report);
         report.setIsConfirmed(confirmation);
 
         userService.decideAboutReport(reportId, confirmation);

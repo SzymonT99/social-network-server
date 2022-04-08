@@ -269,7 +269,7 @@ public class PostServiceImplTest {
     }
 
     @Test
-    public void shouldThrowErrorWhenPostNotFound() {
+    public void shouldThrowErrorWhenEditedPostNotFound() {
         Long postId = 1L;
         RequestPostDto requestPostDto = RequestPostDto.builder()
                 .text("Tresc edytowana")

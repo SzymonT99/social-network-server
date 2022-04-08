@@ -482,7 +482,6 @@ public class UserServiceImpl implements UserService {
     @Override
     public List<UserDto> getAllUses() {
         List<User> users = userRepository.findAll();
-        System.out.println(userDtoListMapper);
         return userDtoListMapper.convert(users);
     }
 
@@ -523,7 +522,6 @@ public class UserServiceImpl implements UserService {
                 .orElseThrow(() -> new NotFoundException("Not found user with id: " + userId));
 
         UserProfile userProfile = user.getUserProfile();
-
 
         user.setUsername(userAccountUpdateDto.getUsername());
         user.setEmail(userAccountUpdateDto.getEmail());

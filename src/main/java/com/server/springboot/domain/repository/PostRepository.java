@@ -28,4 +28,6 @@ public interface PostRepository extends JpaRepository<Post, Long> {
     List<Post> findAllByGroupInAndCreatedAtIsGreaterThanAndIsDeleted(List<Group> groups, LocalDateTime dateLimit, boolean isDeleted);
 
     List<Post> findAllByGroupIn(List<Group> groups);
+
+    List<Post> findAllByPostAuthor(User user);
 }

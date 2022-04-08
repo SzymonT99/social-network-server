@@ -184,7 +184,7 @@ public class UserApiController {
     @PreAuthorize("hasRole('ROLE_ADMIN')")
     @GetMapping(value = "/users/accounts")
     public ResponseEntity<UserAccountPageDto> getUsersAccounts(@RequestParam(value = "page", defaultValue = "8") int page,
-                                                                 @RequestParam(value = "size", defaultValue = "8") int size) {
+                                                               @RequestParam(value = "size", defaultValue = "8") int size) {
         LOGGER.info("---- Admin get users accounts on panel");
         return new ResponseEntity<>(userService.getUsersAccounts(page, size), HttpStatus.OK);
     }

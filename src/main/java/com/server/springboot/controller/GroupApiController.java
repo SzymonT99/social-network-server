@@ -36,7 +36,7 @@ public class GroupApiController {
     @ApiOperation(value = "Create a group")
     @PostMapping(value = "/groups", consumes = {MediaType.APPLICATION_JSON_VALUE, MediaType.MULTIPART_FORM_DATA_VALUE})
     public ResponseEntity<GroupDetailsDto> createGroup(@RequestPart(value = "image", required = false) MultipartFile imageFile,
-                                                @Valid @RequestPart(value = "group") RequestGroupDto requestGroupDto) {
+                                                       @Valid @RequestPart(value = "group") RequestGroupDto requestGroupDto) {
         LOGGER.info("---- Create group with name: {}", requestGroupDto.getName());
         return new ResponseEntity<>(groupService.createGroup(requestGroupDto, imageFile), HttpStatus.CREATED);
     }
