@@ -120,7 +120,7 @@ public class EventServiceImplTest {
                 .description("Opis")
                 .eventCreator(user)
                 .createdAt(LocalDateTime.now())
-                .eventDate(LocalDateTime.now().plusMonths(1L))
+                .eventDate(LocalDateTime.now())
                 .members(new HashSet<>())
                 .sharing(new HashSet<>())
                 .eventAddress(Address.builder()
@@ -149,7 +149,7 @@ public class EventServiceImplTest {
                 .build();
         MockMultipartFile eventImage = new MockMultipartFile("image", new byte[1]);
 
-        when(jwtUtils.getLoggedUserId()).thenReturn(1L);
+        when(jwtUtils.getLoggedInUserId()).thenReturn(1L);
         when(userRepository.findById(1L)).thenReturn(Optional.of(user));
         when(fileService.storageOneImage(eventImage, user, false)).thenReturn(new Image());
 
@@ -179,7 +179,7 @@ public class EventServiceImplTest {
                 .build();
         MockMultipartFile eventImage = new MockMultipartFile("image", new byte[1]);
 
-        when(jwtUtils.getLoggedUserId()).thenReturn(1L);
+        when(jwtUtils.getLoggedInUserId()).thenReturn(1L);
         when(userRepository.findById(1L)).thenReturn(Optional.of(user));
         when(eventRepository.findById(eventId)).thenReturn(Optional.of(event));
         when(fileService.storageOneImage(eventImage, user, false)).thenReturn(new Image());
@@ -215,7 +215,7 @@ public class EventServiceImplTest {
                 .build();
         MockMultipartFile eventImage = new MockMultipartFile("image", new byte[1]);
 
-        when(jwtUtils.getLoggedUserId()).thenReturn(1L);
+        when(jwtUtils.getLoggedInUserId()).thenReturn(1L);
         when(userRepository.findById(1L)).thenReturn(Optional.of(user));
         when(eventRepository.findById(eventId)).thenReturn(Optional.of(event));
         when(roleRepository.findByName(AppRole.ROLE_ADMIN)).thenReturn(Optional.of(new Role(2, AppRole.ROLE_ADMIN)));
@@ -232,7 +232,7 @@ public class EventServiceImplTest {
     public void shouldDeleteEventById() throws IOException {
         Long eventId = 1L;
 
-        when(jwtUtils.getLoggedUserId()).thenReturn(1L);
+        when(jwtUtils.getLoggedInUserId()).thenReturn(1L);
         when(userRepository.findById(1L)).thenReturn(Optional.of(user));
         when(eventRepository.findById(eventId)).thenReturn(Optional.of(event));
 
@@ -262,7 +262,7 @@ public class EventServiceImplTest {
         Long eventId = 1L;
         Long invitedUserId = 2L;
 
-        when(jwtUtils.getLoggedUserId()).thenReturn(1L);
+        when(jwtUtils.getLoggedInUserId()).thenReturn(1L);
         when(userRepository.findById(1L)).thenReturn(Optional.of(user));
         when(userRepository.findById(invitedUserId)).thenReturn(Optional.of(user2));
         when(eventRepository.findById(eventId)).thenReturn(Optional.of(event));
@@ -287,7 +287,7 @@ public class EventServiceImplTest {
         Long eventId = 1L;
         Long invitedUserId = 2L;
 
-        when(jwtUtils.getLoggedUserId()).thenReturn(1L);
+        when(jwtUtils.getLoggedInUserId()).thenReturn(1L);
         when(userRepository.findById(1L)).thenReturn(Optional.of(user));
         when(userRepository.findById(invitedUserId)).thenReturn(Optional.of(user2));
         when(eventRepository.findById(eventId)).thenReturn(Optional.of(event));
@@ -316,7 +316,7 @@ public class EventServiceImplTest {
                 .build();
         memberOfEvents.add(eventMember);
 
-        when(jwtUtils.getLoggedUserId()).thenReturn(2L);
+        when(jwtUtils.getLoggedInUserId()).thenReturn(2L);
         when(userRepository.findById(2L)).thenReturn(Optional.of(user2));
         when(eventMemberRepository.findByEventMemberAndParticipationStatus(user2, EventParticipationStatus.INVITED))
                 .thenReturn(memberOfEvents);
@@ -331,7 +331,7 @@ public class EventServiceImplTest {
         Long eventId = 1L;
         String reactionToEvent = EventParticipationStatus.TAKE_PART.toString();
 
-        when(jwtUtils.getLoggedUserId()).thenReturn(1L);
+        when(jwtUtils.getLoggedInUserId()).thenReturn(1L);
         when(userRepository.findById(1L)).thenReturn(Optional.of(user));
         when(eventRepository.findById(eventId)).thenReturn(Optional.of(event));
         when(eventMemberRepository.existsByEventMemberAndEvent(user, event)).thenReturn(false);
@@ -351,7 +351,7 @@ public class EventServiceImplTest {
     public void shouldShareEvent() {
         Long eventId = 1L;
 
-        when(jwtUtils.getLoggedUserId()).thenReturn(1L);
+        when(jwtUtils.getLoggedInUserId()).thenReturn(1L);
         when(userRepository.findById(1L)).thenReturn(Optional.of(user));
         when(eventRepository.findById(eventId)).thenReturn(Optional.of(event));
         when(sharedEventRepository.existsBySharedEventUserAndEvent(user, event)).thenReturn(false);
@@ -378,7 +378,7 @@ public class EventServiceImplTest {
                 .date(LocalDateTime.now())
                 .build();
 
-        when(jwtUtils.getLoggedUserId()).thenReturn(1L);
+        when(jwtUtils.getLoggedInUserId()).thenReturn(1L);
         when(userRepository.findById(1L)).thenReturn(Optional.of(user));
         when(eventRepository.findById(eventId)).thenReturn(Optional.of(event));
         when(sharedEventRepository.existsBySharedEventUserAndEvent(user, event)).thenReturn(true);

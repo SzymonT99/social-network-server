@@ -77,7 +77,7 @@ public class ChatServiceImpl implements ChatService {
 
     @Override
     public void createChat(RequestChatDto requestChatDto, MultipartFile imageFile) {
-        Long userId = jwtUtils.getLoggedUserId();
+        Long userId = jwtUtils.getLoggedInUserId();
         User chatCreator = userRepository.findById(userId)
                 .orElseThrow(() -> new NotFoundException("Not found user with id: " + userId));
 
@@ -149,7 +149,7 @@ public class ChatServiceImpl implements ChatService {
 
     @Override
     public void editChatById(Long chatId, RequestChatDto requestChatDto, MultipartFile imageFile) {
-        Long userId = jwtUtils.getLoggedUserId();
+        Long userId = jwtUtils.getLoggedInUserId();
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new NotFoundException("Not found user with id: " + userId));
         Chat chat = chatRepository.findById(chatId)
@@ -217,7 +217,7 @@ public class ChatServiceImpl implements ChatService {
 
     @Override
     public ChatDetailsDto findChatById(Long chatId) {
-        Long userId = jwtUtils.getLoggedUserId();
+        Long userId = jwtUtils.getLoggedInUserId();
         User loggedUser = userRepository.findById(userId)
                 .orElseThrow(() -> new NotFoundException("Not found user with id: " + userId));
 
@@ -236,7 +236,7 @@ public class ChatServiceImpl implements ChatService {
 
     @Override
     public void deleteChatById(Long chatId) {
-        Long userId = jwtUtils.getLoggedUserId();
+        Long userId = jwtUtils.getLoggedInUserId();
         User loggedUser = userRepository.findById(userId)
                 .orElseThrow(() -> new NotFoundException("Not found user with id: " + userId));
 
@@ -252,30 +252,29 @@ public class ChatServiceImpl implements ChatService {
     }
 
     @Override
-    public ChatMessageNotificationDto manageChatMessage(RequestChatMessageDto requestChatMessageDto) {
-        User senderUser = userRepository.findById(requestChatMessageDto.getUserId())
-                .orElseThrow(() -> new NotFoundException("Not found user with id: " + requestChatMessageDto.getUserId()));
-        Chat chat = chatRepository.findById(requestChatMessageDto.getChatId())
-                .orElseThrow(() -> new NotFoundException("Not found chat with id: " + requestChatMessageDto.getChatId()));
+    public ChatMessageNotificationDto manageChatMessage(RequestChatMessageDto messageDto) {
+        User senderUser = userRepository.findById(messageDto.getUserId()).get();
+        Chat chat = chatRepository.findById(messageDto.getChatId())
+                .orElseThrow(() -> new NotFoundException("Not found chat with id: " + messageDto.getChatId()));
 
         List<User> userChatMembersList = chat.getChatMembers().stream()
                 .map(ChatMember::getUserMember)
                 .collect(Collectors.toList());
 
         if (!chatMemberRepository.existsByChatAndUserMember(chat, senderUser)
-                && requestChatMessageDto.getMessageType() == MessageType.CHAT
+                && messageDto.getMessageType() == MessageType.CHAT
                 && !senderUser.getRoles().contains(roleRepository.findByName(AppRole.ROLE_ADMIN).get())) {
             throw new ForbiddenException("No access to edit chat message");
         }
 
         ChatMessage chatMessage = null;
 
-        if (requestChatMessageDto.getMessageType() != MessageType.TYPING
-                && requestChatMessageDto.getMessageType() != MessageType.MESSAGE_EDIT
-                && requestChatMessageDto.getMessageType() != MessageType.MESSAGE_DELETE) {
+        if (messageDto.getMessageType() != MessageType.TYPING
+                && messageDto.getMessageType() != MessageType.MESSAGE_EDIT
+                && messageDto.getMessageType() != MessageType.MESSAGE_DELETE) {
             ChatMessage createdMessage = ChatMessage.builder()
-                    .text(requestChatMessageDto.getMessage())
-                    .messageType(requestChatMessageDto.getMessageType())
+                    .text(messageDto.getMessage())
+                    .messageType(messageDto.getMessageType())
                     .image(null)
                     .createdAt(LocalDateTime.now())
                     .editedAt(null)
@@ -294,17 +293,17 @@ public class ChatServiceImpl implements ChatService {
 
         UserDto messageAuthor = userDtoMapper.convert(senderUser);
 
-        if (requestChatMessageDto.getMessageType() == MessageType.TYPING) {
+        if (messageDto.getMessageType() == MessageType.TYPING) {
             return ChatMessageNotificationDto.builder()
-                    .messageType(requestChatMessageDto.getMessageType())
-                    .typingMessage(requestChatMessageDto.getMessage())
-                    .chatId(requestChatMessageDto.getChatId())
+                    .messageType(messageDto.getMessageType())
+                    .typingMessage(messageDto.getMessage())
+                    .chatId(messageDto.getChatId())
                     .author(messageAuthor)
                     .build();
         } else {
             return ChatMessageNotificationDto.builder()
-                    .messageType(requestChatMessageDto.getMessageType())
-                    .chatId(requestChatMessageDto.getChatId())
+                    .messageType(messageDto.getMessageType())
+                    .chatId(messageDto.getChatId())
                     .messageId(chatMessage != null ? chatMessage.getMessageId() : null)
                     .author(messageAuthor)
                     .build();
@@ -361,7 +360,7 @@ public class ChatServiceImpl implements ChatService {
 
     @Override
     public List<ImageDto> findChatImages(Long chatId) {
-        Long loggedUserId = jwtUtils.getLoggedUserId();
+        Long loggedUserId = jwtUtils.getLoggedInUserId();
         User loggedUser = userRepository.findById(loggedUserId)
                 .orElseThrow(() -> new NotFoundException("Not found user with id: " + loggedUserId));
         Chat chat = chatRepository.findById(chatId)
@@ -398,7 +397,7 @@ public class ChatServiceImpl implements ChatService {
 
     @Override
     public void editChatMessageById(Long messageId, RequestChatMessageDto requestChatMessageDto) {
-        Long userId = jwtUtils.getLoggedUserId();
+        Long userId = jwtUtils.getLoggedInUserId();
         User loggedUser = userRepository.findById(userId)
                 .orElseThrow(() -> new NotFoundException("Not found user with id: " + userId));
 
@@ -419,7 +418,7 @@ public class ChatServiceImpl implements ChatService {
 
     @Override
     public void deleteChatMessageById(Long messageId) {
-        Long userId = jwtUtils.getLoggedUserId();
+        Long userId = jwtUtils.getLoggedInUserId();
         User loggedUser = userRepository.findById(userId)
                 .orElseThrow(() -> new NotFoundException("Not found user with id: " + userId));
 
@@ -437,7 +436,7 @@ public class ChatServiceImpl implements ChatService {
 
     @Override
     public void addUserToChat(Long chatId, Long userId) {
-        Long loggedUserId = jwtUtils.getLoggedUserId();
+        Long loggedUserId = jwtUtils.getLoggedInUserId();
         User loggedUser = userRepository.findById(loggedUserId)
                 .orElseThrow(() -> new NotFoundException("Not found user with id: " + loggedUserId));
 
@@ -475,7 +474,7 @@ public class ChatServiceImpl implements ChatService {
 
     @Override
     public void manageChatMemberPermission(Long chatId, Long chatMemberId, boolean canAddMembers) {
-        Long loggedUserId = jwtUtils.getLoggedUserId();
+        Long loggedUserId = jwtUtils.getLoggedInUserId();
         User loggedUser = userRepository.findById(loggedUserId)
                 .orElseThrow(() -> new NotFoundException("Not found user with id: " + loggedUserId));
 
@@ -504,7 +503,7 @@ public class ChatServiceImpl implements ChatService {
 
     @Override
     public ChatDto getPrivateChatWithFriend(Long userFriendId) {
-        Long loggedUserId = jwtUtils.getLoggedUserId();
+        Long loggedUserId = jwtUtils.getLoggedInUserId();
         User loggedUser = userRepository.findById(loggedUserId)
                 .orElseThrow(() -> new NotFoundException("Not found user with id: " + loggedUserId));
 

@@ -3,7 +3,6 @@ package com.server.springboot.service.impl;
 import com.google.common.collect.Lists;
 import com.server.springboot.domain.dto.response.*;
 import com.server.springboot.domain.entity.*;
-import com.server.springboot.domain.enumeration.ActionType;
 import com.server.springboot.domain.enumeration.ActivityType;
 import com.server.springboot.domain.enumeration.GroupMemberStatus;
 import com.server.springboot.domain.enumeration.NotificationType;
@@ -15,9 +14,7 @@ import com.server.springboot.service.EventService;
 import com.server.springboot.service.GroupService;
 import com.server.springboot.service.UserActivityService;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.*;
@@ -105,7 +102,7 @@ public class UserActivityServiceImpl implements UserActivityService {
 
     @Override
     public List<BoardActivityItemDto> findUserActivityBoard() {
-        Long loggedUserId = jwtUtils.getLoggedUserId();
+        Long loggedUserId = jwtUtils.getLoggedInUserId();
         User user = userRepository.findById(loggedUserId)
                 .orElseThrow(() -> new NotFoundException("Not found user with given id: " + loggedUserId));
 
@@ -305,7 +302,7 @@ public class UserActivityServiceImpl implements UserActivityService {
 
     @Override
     public List<NotificationDto> findUserNotifications(boolean isDisplayed) {
-        Long loggedUserId = jwtUtils.getLoggedUserId();
+        Long loggedUserId = jwtUtils.getLoggedInUserId();
         User user = userRepository.findById(loggedUserId)
                 .orElseThrow(() -> new NotFoundException("Not found user with given id: " + loggedUserId));
 

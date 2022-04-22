@@ -79,7 +79,7 @@ public class EventServiceImpl implements EventService {
 
     @Override
     public EventDto createEvent(RequestEventDto requestEventDto, MultipartFile imageFile) {
-        Long userId = jwtUtils.getLoggedUserId();
+        Long userId = jwtUtils.getLoggedInUserId();
         User eventAuthor = userRepository.findById(userId)
                 .orElseThrow(() -> new NotFoundException("Not found user with id: " + userId));
         Event createdEvent = eventMapper.convert(requestEventDto);
@@ -101,7 +101,7 @@ public class EventServiceImpl implements EventService {
 
     @Override
     public void editEvent(Long eventId, RequestEventDto requestEventDto, MultipartFile imageFile) throws IOException {
-        Long userId = jwtUtils.getLoggedUserId();
+        Long userId = jwtUtils.getLoggedInUserId();
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new NotFoundException("Not found user with id: " + userId));
         Event event = eventRepository.findById(eventId)
@@ -141,7 +141,7 @@ public class EventServiceImpl implements EventService {
 
     @Override
     public void deleteEventById(Long eventId, boolean archive) throws IOException {
-        Long userId = jwtUtils.getLoggedUserId();
+        Long userId = jwtUtils.getLoggedInUserId();
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new NotFoundException("Not found user with id: " + userId));
         Event event = eventRepository.findById(eventId)
@@ -170,7 +170,7 @@ public class EventServiceImpl implements EventService {
 
     @Override
     public void inviteUser(Long eventId, Long invitedUserId) {
-        Long loggedUserId = jwtUtils.getLoggedUserId();
+        Long loggedUserId = jwtUtils.getLoggedInUserId();
         User loggedUser = userRepository.findById(loggedUserId)
                 .orElseThrow(() -> new NotFoundException("Not found user with id: " + loggedUserId));
 
@@ -197,7 +197,7 @@ public class EventServiceImpl implements EventService {
 
     @Override
     public List<EventInvitationDto> findAllUserEventInvitation(boolean isDisplayed) {
-        Long loggedUserId = jwtUtils.getLoggedUserId();
+        Long loggedUserId = jwtUtils.getLoggedInUserId();
         User user = userRepository.findById(loggedUserId)
                 .orElseThrow(() -> new NotFoundException("Not found user with id: " + loggedUserId));
         List<EventMember> eventMembers = eventMemberRepository.findByEventMemberAndParticipationStatus(user, EventParticipationStatus.INVITED);
@@ -217,7 +217,7 @@ public class EventServiceImpl implements EventService {
             throw new BadRequestException("Unknown reaction to event");
         }
 
-        Long userId = jwtUtils.getLoggedUserId();
+        Long userId = jwtUtils.getLoggedInUserId();
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new NotFoundException("Not found user with id: " + userId));
         Event event = eventRepository.findById(eventId)
@@ -255,7 +255,7 @@ public class EventServiceImpl implements EventService {
 
     @Override
     public void shareEvent(Long eventId) {
-        Long userId = jwtUtils.getLoggedUserId();
+        Long userId = jwtUtils.getLoggedInUserId();
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new NotFoundException("Not found user with id: " + userId));
         Event event = eventRepository.findById(eventId)
@@ -276,7 +276,7 @@ public class EventServiceImpl implements EventService {
 
     @Override
     public void deleteSharedEvent(Long eventId) {
-        Long userId = jwtUtils.getLoggedUserId();
+        Long userId = jwtUtils.getLoggedInUserId();
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new NotFoundException("Not found user with id: " + userId));
         Event event = eventRepository.findById(eventId)

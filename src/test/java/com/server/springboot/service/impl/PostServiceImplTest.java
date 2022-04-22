@@ -198,7 +198,7 @@ public class PostServiceImplTest {
         imageFiles.add(uploadedImage);
         Long groupId = null;
 
-        when(jwtUtils.getLoggedUserId()).thenReturn(1L);
+        when(jwtUtils.getLoggedInUserId()).thenReturn(1L);
         when(userRepository.findById(1L)).thenReturn(Optional.of(user));
         when(fileService.storageImages(imageFiles, user)).thenReturn(new HashSet<Image>() {{
             add(new Image());
@@ -225,7 +225,7 @@ public class PostServiceImplTest {
         List<MultipartFile> imageFiles = new ArrayList<>();
         imageFiles.add(uploadedImage);
 
-        when(jwtUtils.getLoggedUserId()).thenReturn(1L);
+        when(jwtUtils.getLoggedInUserId()).thenReturn(1L);
         when(userRepository.findById(1L)).thenReturn(Optional.of(user));
         when(postRepository.findById(postId)).thenReturn(Optional.of(post));
 
@@ -251,7 +251,7 @@ public class PostServiceImplTest {
         postAuthor.setUserId(2L);
         post.setPostAuthor(postAuthor);
 
-        when(jwtUtils.getLoggedUserId()).thenReturn(1L);
+        when(jwtUtils.getLoggedInUserId()).thenReturn(1L);
         when(userRepository.findById(1L)).thenReturn(Optional.of(user));
         when(postRepository.findById(postId)).thenReturn(Optional.of(post));
         when(roleRepository.findByName(AppRole.ROLE_ADMIN)).thenReturn(Optional.of(new Role(2, AppRole.ROLE_ADMIN)));
@@ -278,7 +278,7 @@ public class PostServiceImplTest {
                 .build();
         List<MultipartFile> imageFiles = new ArrayList<>();
 
-        when(jwtUtils.getLoggedUserId()).thenReturn(1L);
+        when(jwtUtils.getLoggedInUserId()).thenReturn(1L);
         when(userRepository.findById(1L)).thenReturn(Optional.of(user));
         when(postRepository.findById(postId)).thenReturn(Optional.empty());
 
@@ -293,7 +293,7 @@ public class PostServiceImplTest {
     public void shouldDeletePostById() {
         Long postId = 1L;
 
-        when(jwtUtils.getLoggedUserId()).thenReturn(1L);
+        when(jwtUtils.getLoggedInUserId()).thenReturn(1L);
         when(userRepository.findById(1L)).thenReturn(Optional.of(user));
         when(postRepository.findById(postId)).thenReturn(Optional.of(post));
         doNothing().when(postRepository).deleteByPostId(postId);
@@ -307,7 +307,7 @@ public class PostServiceImplTest {
     public void shouldDeletePostByIdWithArchiving() {
         Long postId = 1L;
 
-        when(jwtUtils.getLoggedUserId()).thenReturn(1L);
+        when(jwtUtils.getLoggedInUserId()).thenReturn(1L);
         when(userRepository.findById(1L)).thenReturn(Optional.of(user));
         when(postRepository.findById(postId)).thenReturn(Optional.of(post));
 
@@ -321,7 +321,7 @@ public class PostServiceImplTest {
     public void shouldLikePost() {
         Long postId = 1L;
 
-        when(jwtUtils.getLoggedUserId()).thenReturn(1L);
+        when(jwtUtils.getLoggedInUserId()).thenReturn(1L);
         when(userRepository.findById(1L)).thenReturn(Optional.of(user));
         when(postRepository.findById(postId)).thenReturn(Optional.of(post));
         when(likedPostRepository.existsByPostAndLikedPostUser(post, user)).thenReturn(false);
@@ -335,7 +335,7 @@ public class PostServiceImplTest {
     public void shouldThrowErrorWhenPostWasLikedEarlier() {
         Long postId = 1L;
 
-        when(jwtUtils.getLoggedUserId()).thenReturn(1L);
+        when(jwtUtils.getLoggedInUserId()).thenReturn(1L);
         when(userRepository.findById(1L)).thenReturn(Optional.of(user));
         when(postRepository.findById(postId)).thenReturn(Optional.of(post));
 
@@ -363,7 +363,7 @@ public class PostServiceImplTest {
                 .date(LocalDateTime.now().minusDays(1L))
                 .build();
 
-        when(jwtUtils.getLoggedUserId()).thenReturn(1L);
+        when(jwtUtils.getLoggedInUserId()).thenReturn(1L);
         when(userRepository.findById(1L)).thenReturn(Optional.of(user));
         when(postRepository.findById(postId)).thenReturn(Optional.of(post));
 
@@ -383,7 +383,7 @@ public class PostServiceImplTest {
                 .isCommentingBlocked(false)
                 .build();
 
-        when(jwtUtils.getLoggedUserId()).thenReturn(1L);
+        when(jwtUtils.getLoggedInUserId()).thenReturn(1L);
         when(userRepository.findById(1L)).thenReturn(Optional.of(user));
         when(postRepository.findById(basePostId)).thenReturn(Optional.of(post));
 
@@ -405,7 +405,7 @@ public class PostServiceImplTest {
                 .date(LocalDateTime.now().minusDays(1L))
                 .build();
 
-        when(jwtUtils.getLoggedUserId()).thenReturn(1L);
+        when(jwtUtils.getLoggedInUserId()).thenReturn(1L);
         when(userRepository.findById(1L)).thenReturn(Optional.of(user));
 
         when(sharedPostRepository.existsBySharedPostId(sharedPostId)).thenReturn(true);
@@ -421,7 +421,7 @@ public class PostServiceImplTest {
         Long postId = 1L;
         user.setFavouritePosts(new HashSet<>());
 
-        when(jwtUtils.getLoggedUserId()).thenReturn(1L);
+        when(jwtUtils.getLoggedInUserId()).thenReturn(1L);
         when(userRepository.findById(1L)).thenReturn(Optional.of(user));
         when(postRepository.findById(postId)).thenReturn(Optional.of(post));
 
@@ -437,7 +437,7 @@ public class PostServiceImplTest {
         favouritePosts.add(post);
         user.setFavouritePosts(favouritePosts);
 
-        when(jwtUtils.getLoggedUserId()).thenReturn(1L);
+        when(jwtUtils.getLoggedInUserId()).thenReturn(1L);
         when(userRepository.findById(1L)).thenReturn(Optional.of(user));
         when(postRepository.findById(postId)).thenReturn(Optional.of(post));
 
@@ -460,7 +460,7 @@ public class PostServiceImplTest {
         favouritePosts.add(post);
         user.setFavouritePosts(favouritePosts);
 
-        when(jwtUtils.getLoggedUserId()).thenReturn(1L);
+        when(jwtUtils.getLoggedInUserId()).thenReturn(1L);
         when(userRepository.findById(1L)).thenReturn(Optional.of(user));
 
         assertDoesNotThrow(() -> postService.deletePostFromFavourite(postId));
@@ -474,7 +474,7 @@ public class PostServiceImplTest {
         Set<Post> favouritePosts = new HashSet<>();
         user.setFavouritePosts(favouritePosts);
 
-        when(jwtUtils.getLoggedUserId()).thenReturn(1L);
+        when(jwtUtils.getLoggedInUserId()).thenReturn(1L);
         when(userRepository.findById(1L)).thenReturn(Optional.of(user));
 
         Exception exception = assertThrows(BadRequestException.class, () ->
@@ -526,7 +526,7 @@ public class PostServiceImplTest {
         Long postId = 1L;
         boolean isBlocked = true;
 
-        when(jwtUtils.getLoggedUserId()).thenReturn(1L);
+        when(jwtUtils.getLoggedInUserId()).thenReturn(1L);
         when(userRepository.findById(1L)).thenReturn(Optional.of(user));
         when(postRepository.findById(postId)).thenReturn(Optional.of(post));
 
@@ -540,7 +540,7 @@ public class PostServiceImplTest {
         Long postId = 1L;
         boolean isPublic = true;
 
-        when(jwtUtils.getLoggedUserId()).thenReturn(1L);
+        when(jwtUtils.getLoggedInUserId()).thenReturn(1L);
         when(userRepository.findById(1L)).thenReturn(Optional.of(user));
         when(postRepository.findById(postId)).thenReturn(Optional.of(post));
 
@@ -557,7 +557,7 @@ public class PostServiceImplTest {
         postAuthor.setUserId(2L);
         post.setPostAuthor(postAuthor);
 
-        when(jwtUtils.getLoggedUserId()).thenReturn(1L);
+        when(jwtUtils.getLoggedInUserId()).thenReturn(1L);
         when(userRepository.findById(1L)).thenReturn(Optional.of(user));
         when(postRepository.findById(postId)).thenReturn(Optional.of(post));
         when(roleRepository.findByName(AppRole.ROLE_ADMIN)).thenReturn(Optional.of(new Role(2, AppRole.ROLE_ADMIN)));

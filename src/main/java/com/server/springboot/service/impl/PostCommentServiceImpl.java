@@ -58,7 +58,7 @@ public class PostCommentServiceImpl implements PostCommentService {
 
     @Override
     public CommentDto addComment(Long postId, RequestCommentDto requestCommentDto) {
-        Long userId = jwtUtils.getLoggedUserId();
+        Long userId = jwtUtils.getLoggedInUserId();
         User commentAuthor = userRepository.findById(userId)
                 .orElseThrow(() -> new NotFoundException("Not found user with id: " + userId));
         Post post = postRepository.findById(postId)
@@ -75,7 +75,7 @@ public class PostCommentServiceImpl implements PostCommentService {
 
     @Override
     public void editCommentById(Long commentId, RequestCommentDto requestCommentDto) {
-        Long userId = jwtUtils.getLoggedUserId();
+        Long userId = jwtUtils.getLoggedInUserId();
         User loggedUser = userRepository.findById(userId)
                 .orElseThrow(() -> new NotFoundException("Not found user with id: " + userId));
         Comment comment = commentRepository.findById(commentId)
@@ -106,7 +106,7 @@ public class PostCommentServiceImpl implements PostCommentService {
 
     @Override
     public void deleteCommentById(Long commentId) {
-        Long userId = jwtUtils.getLoggedUserId();
+        Long userId = jwtUtils.getLoggedInUserId();
         User loggedUser = userRepository.findById(userId)
                 .orElseThrow(() -> new NotFoundException("Not found user with id: " + userId));
         Comment comment = commentRepository.findById(commentId)
@@ -140,7 +140,7 @@ public class PostCommentServiceImpl implements PostCommentService {
 
     @Override
     public void likeCommentById(Long commentId) {
-        Long userId = jwtUtils.getLoggedUserId();
+        Long userId = jwtUtils.getLoggedInUserId();
         Comment comment = commentRepository.findById(commentId)
                 .orElseThrow(() -> new NotFoundException("Not found post comment with id: " + commentId));
         User user = userRepository.findById(userId)
@@ -156,7 +156,7 @@ public class PostCommentServiceImpl implements PostCommentService {
 
     @Override
     public void dislikeCommentById(Long commentId) {
-        Long userId = jwtUtils.getLoggedUserId();
+        Long userId = jwtUtils.getLoggedInUserId();
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new NotFoundException("Not found user with id: " + userId));
         Comment deletedLikeFromComment = user.getLikedComments().stream()

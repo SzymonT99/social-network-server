@@ -171,7 +171,7 @@ public class GroupServiceImplTest {
                 .build();
         MockMultipartFile groupImage = new MockMultipartFile("image", new byte[1]);
 
-        when(jwtUtils.getLoggedUserId()).thenReturn(1L);
+        when(jwtUtils.getLoggedInUserId()).thenReturn(1L);
         when(userRepository.findById(1L)).thenReturn(Optional.of(user));
         when(fileService.storageOneImage(groupImage, user, false)).thenReturn(new Image());
 
@@ -194,7 +194,7 @@ public class GroupServiceImplTest {
                 .build();
         MockMultipartFile groupImage = new MockMultipartFile("image", new byte[1]);
 
-        when(jwtUtils.getLoggedUserId()).thenReturn(1L);
+        when(jwtUtils.getLoggedInUserId()).thenReturn(1L);
         when(userRepository.findById(1L)).thenReturn(Optional.of(user));
         when(groupRepository.findById(groupId)).thenReturn(Optional.of(group));
         when(roleRepository.findByName(AppRole.ROLE_ADMIN)).thenReturn(Optional.of(new Role(2, AppRole.ROLE_ADMIN)));
@@ -223,7 +223,7 @@ public class GroupServiceImplTest {
         MockMultipartFile groupImage = new MockMultipartFile("image", new byte[1]);
         group.setGroupMembers(new HashSet<>());
 
-        when(jwtUtils.getLoggedUserId()).thenReturn(1L);
+        when(jwtUtils.getLoggedInUserId()).thenReturn(1L);
         when(userRepository.findById(1L)).thenReturn(Optional.of(user));
         when(groupRepository.findById(groupId)).thenReturn(Optional.of(group));
         when(roleRepository.findByName(AppRole.ROLE_ADMIN)).thenReturn(Optional.of(new Role(2, AppRole.ROLE_ADMIN)));
@@ -249,7 +249,7 @@ public class GroupServiceImplTest {
         MockMultipartFile groupImage = new MockMultipartFile("image", new byte[1]);
         groupMember.setGroupPermissionType(GroupPermissionType.MODERATOR);  // Moderator nie może edytować informacji
 
-        when(jwtUtils.getLoggedUserId()).thenReturn(1L);
+        when(jwtUtils.getLoggedInUserId()).thenReturn(1L);
         when(userRepository.findById(1L)).thenReturn(Optional.of(user));
         when(groupRepository.findById(groupId)).thenReturn(Optional.of(group));
         when(roleRepository.findByName(AppRole.ROLE_ADMIN)).thenReturn(Optional.of(new Role(2, AppRole.ROLE_ADMIN)));
@@ -281,7 +281,7 @@ public class GroupServiceImplTest {
         roles.add(roleAdmin);
         user.setRoles(roles);
 
-        when(jwtUtils.getLoggedUserId()).thenReturn(1L);
+        when(jwtUtils.getLoggedInUserId()).thenReturn(1L);
         when(userRepository.findById(1L)).thenReturn(Optional.of(user));
         when(groupRepository.findById(groupId)).thenReturn(Optional.of(group));
         when(roleRepository.findByName(AppRole.ROLE_ADMIN)).thenReturn(Optional.of(roleAdmin));
@@ -301,7 +301,7 @@ public class GroupServiceImplTest {
     public void shouldDeleteGroupById() throws IOException {
         Long groupId = 1L;
 
-        when(jwtUtils.getLoggedUserId()).thenReturn(1L);
+        when(jwtUtils.getLoggedInUserId()).thenReturn(1L);
         when(userRepository.findById(1L)).thenReturn(Optional.of(user));
         when(groupRepository.findById(groupId)).thenReturn(Optional.of(group));
         when(roleRepository.findByName(AppRole.ROLE_ADMIN)).thenReturn(Optional.of(new Role(2, AppRole.ROLE_ADMIN)));
@@ -355,7 +355,7 @@ public class GroupServiceImplTest {
         List<Group> groups = new ArrayList<>();
         groups.add(group);
 
-        when(jwtUtils.getLoggedUserId()).thenReturn(1L);
+        when(jwtUtils.getLoggedInUserId()).thenReturn(1L);
         when(userRepository.findById(1L)).thenReturn(Optional.of(user));
         when(groupRepository.findByGroupInterestsInAndIsDeletedAndIsPublicOrderByCreatedAtDesc(anyList(), eq(false), eq(true)))
                 .thenReturn(groups);
@@ -388,7 +388,7 @@ public class GroupServiceImplTest {
                 .description("Opis")
                 .build();
 
-        when(jwtUtils.getLoggedUserId()).thenReturn(1L);
+        when(jwtUtils.getLoggedInUserId()).thenReturn(1L);
         when(userRepository.findById(1L)).thenReturn(Optional.of(user));
         when(groupRepository.findById(groupId)).thenReturn(Optional.of(group));
         when(roleRepository.findByName(AppRole.ROLE_ADMIN)).thenReturn(Optional.of(new Role(2, AppRole.ROLE_ADMIN)));
@@ -422,7 +422,7 @@ public class GroupServiceImplTest {
                 .description("Opis")
                 .build();
 
-        when(jwtUtils.getLoggedUserId()).thenReturn(1L);
+        when(jwtUtils.getLoggedInUserId()).thenReturn(1L);
         when(userRepository.findById(1L)).thenReturn(Optional.of(user));
         when(groupRepository.findById(groupId)).thenReturn(Optional.of(group));
         when(roleRepository.findByName(AppRole.ROLE_ADMIN)).thenReturn(Optional.of(new Role(2, AppRole.ROLE_ADMIN)));
@@ -445,7 +445,7 @@ public class GroupServiceImplTest {
         Long groupId = 1L;
         Long ruleId = 1L;
 
-        when(jwtUtils.getLoggedUserId()).thenReturn(1L);
+        when(jwtUtils.getLoggedInUserId()).thenReturn(1L);
         when(userRepository.findById(1L)).thenReturn(Optional.of(user));
         when(groupRepository.findById(groupId)).thenReturn(Optional.of(group));
         when(roleRepository.findByName(AppRole.ROLE_ADMIN)).thenReturn(Optional.of(new Role(2, AppRole.ROLE_ADMIN)));
@@ -465,7 +465,7 @@ public class GroupServiceImplTest {
                 .name("Programowanie")
                 .build();
 
-        when(jwtUtils.getLoggedUserId()).thenReturn(1L);
+        when(jwtUtils.getLoggedInUserId()).thenReturn(1L);
         when(userRepository.findById(1L)).thenReturn(Optional.of(user));
         when(groupRepository.findById(groupId)).thenReturn(Optional.of(group));
         when(roleRepository.findByName(AppRole.ROLE_ADMIN)).thenReturn(Optional.of(new Role(2, AppRole.ROLE_ADMIN)));
@@ -495,7 +495,7 @@ public class GroupServiceImplTest {
         groupInterests.add(interest);
         group.setGroupInterests(groupInterests);
 
-        when(jwtUtils.getLoggedUserId()).thenReturn(1L);
+        when(jwtUtils.getLoggedInUserId()).thenReturn(1L);
         when(userRepository.findById(1L)).thenReturn(Optional.of(user));
         when(groupRepository.findById(groupId)).thenReturn(Optional.of(group));
         when(roleRepository.findByName(AppRole.ROLE_ADMIN)).thenReturn(Optional.of(new Role(2, AppRole.ROLE_ADMIN)));
@@ -517,7 +517,7 @@ public class GroupServiceImplTest {
         User user2 = new User(user);
         user2.setUserId(2L);
 
-        when(jwtUtils.getLoggedUserId()).thenReturn(1L);
+        when(jwtUtils.getLoggedInUserId()).thenReturn(1L);
         when(userRepository.findById(1L)).thenReturn(Optional.of(user));
         when(groupRepository.findById(groupId)).thenReturn(Optional.of(group));
         when(roleRepository.findByName(AppRole.ROLE_ADMIN)).thenReturn(Optional.of(new Role(2, AppRole.ROLE_ADMIN)));
@@ -549,7 +549,7 @@ public class GroupServiceImplTest {
                 .build();
         invitedMembers.add(groupMember);
 
-        when(jwtUtils.getLoggedUserId()).thenReturn(1L);
+        when(jwtUtils.getLoggedInUserId()).thenReturn(1L);
         when(userRepository.findById(1L)).thenReturn(Optional.of(user));
         when(groupMemberRepository.findByMemberAndGroupMemberStatus(user, GroupMemberStatus.INVITED))
                 .thenReturn(invitedMembers);
@@ -578,7 +578,7 @@ public class GroupServiceImplTest {
         invitedMembers.add(groupMember);
         group.setGroupMembers(new HashSet<>(invitedMembers));
 
-        when(jwtUtils.getLoggedUserId()).thenReturn(1L);
+        when(jwtUtils.getLoggedInUserId()).thenReturn(1L);
         when(userRepository.findById(1L)).thenReturn(Optional.of(user));
         when(groupRepository.findById(groupId)).thenReturn(Optional.of(group));
         when(groupMemberRepository.findByGroupAndMember(group, user)).thenReturn(Optional.of(groupMember));
@@ -604,7 +604,7 @@ public class GroupServiceImplTest {
                 .build();
         MockMultipartFile threadImage = new MockMultipartFile("image", new byte[1]);
 
-        when(jwtUtils.getLoggedUserId()).thenReturn(1L);
+        when(jwtUtils.getLoggedInUserId()).thenReturn(1L);
         when(userRepository.findById(1L)).thenReturn(Optional.of(user));
         when(groupRepository.findById(groupId)).thenReturn(Optional.of(group));
         when(groupMemberRepository.findByGroupAndMember(group, user)).thenReturn(Optional.of(groupMember));
@@ -640,7 +640,7 @@ public class GroupServiceImplTest {
                 .answers(new HashSet<>())
                 .build();
 
-        when(jwtUtils.getLoggedUserId()).thenReturn(1L);
+        when(jwtUtils.getLoggedInUserId()).thenReturn(1L);
         when(userRepository.findById(1L)).thenReturn(Optional.of(user));
         when(groupThreadRepository.findById(threadId)).thenReturn(Optional.of(savedGroupThread));
 
@@ -674,7 +674,7 @@ public class GroupServiceImplTest {
                 .answers(new HashSet<>())
                 .build();
 
-        when(jwtUtils.getLoggedUserId()).thenReturn(1L);
+        when(jwtUtils.getLoggedInUserId()).thenReturn(1L);
         when(userRepository.findById(1L)).thenReturn(Optional.of(user));
         when(groupThreadRepository.findById(threadId)).thenReturn(Optional.of(savedGroupThread));
 
@@ -690,7 +690,7 @@ public class GroupServiceImplTest {
     public void shouldSendRequestToJoinToGroup() {
         Long groupId = 1L;
 
-        when(jwtUtils.getLoggedUserId()).thenReturn(1L);
+        when(jwtUtils.getLoggedInUserId()).thenReturn(1L);
         when(userRepository.findById(1L)).thenReturn(Optional.of(user));
         when(groupRepository.findById(groupId)).thenReturn(Optional.of(group));
 
@@ -721,7 +721,7 @@ public class GroupServiceImplTest {
                 .groupMemberStatus(GroupMemberStatus.WANT_TO_JOIN)
                 .build();
 
-        when(jwtUtils.getLoggedUserId()).thenReturn(1L);
+        when(jwtUtils.getLoggedInUserId()).thenReturn(1L);
         when(userRepository.findById(1L)).thenReturn(Optional.of(user));
         when(groupRepository.findById(groupId)).thenReturn(Optional.of(group));
         when(groupMemberRepository.findByGroupAndMember(group, user)).thenReturn(Optional.of(groupMember));
@@ -759,7 +759,7 @@ public class GroupServiceImplTest {
         Long groupMemberId = 2L;
         String permission = GroupPermissionType.ASSISTANT.toString();
 
-        when(jwtUtils.getLoggedUserId()).thenReturn(1L);
+        when(jwtUtils.getLoggedInUserId()).thenReturn(1L);
         when(userRepository.findById(1L)).thenReturn(Optional.of(user));
         when(groupRepository.findById(groupId)).thenReturn(Optional.of(group));
         when(groupMemberRepository.findByGroupAndMember(group, user)).thenReturn(Optional.of(groupMember));
@@ -782,7 +782,7 @@ public class GroupServiceImplTest {
     public void shouldLeaveGroupByUser() {
         Long groupId = 1L;
 
-        when(jwtUtils.getLoggedUserId()).thenReturn(1L);
+        when(jwtUtils.getLoggedInUserId()).thenReturn(1L);
         when(userRepository.findById(1L)).thenReturn(Optional.of(user));
         when(groupRepository.findById(groupId)).thenReturn(Optional.of(group));
         when(groupMemberRepository.existsByMemberAndGroup(user, group)).thenReturn(true);
@@ -810,7 +810,7 @@ public class GroupServiceImplTest {
         groupThreads.add(savedGroupThread);
         group.setGroupThreads(new HashSet<>(groupThreads));
 
-        when(jwtUtils.getLoggedUserId()).thenReturn(1L);
+        when(jwtUtils.getLoggedInUserId()).thenReturn(1L);
         when(userRepository.findById(1L)).thenReturn(Optional.of(user));
         when(groupRepository.findById(groupId)).thenReturn(Optional.of(group));
         when(groupMemberRepository.existsByMemberAndGroup(user, group)).thenReturn(true);

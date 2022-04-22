@@ -94,7 +94,7 @@ public class GroupServiceImpl implements GroupService {
 
     @Override
     public GroupDetailsDto createGroup(RequestGroupDto requestGroupDto, MultipartFile imageFile) {
-        Long userId = jwtUtils.getLoggedUserId();
+        Long userId = jwtUtils.getLoggedInUserId();
         User creator = userRepository.findById(userId)
                 .orElseThrow(() -> new NotFoundException("Not found user with id: " + (userId)));
 
@@ -129,7 +129,7 @@ public class GroupServiceImpl implements GroupService {
 
     @Override
     public void editGroup(Long groupId, RequestGroupDto requestGroupDto, MultipartFile imageFile) throws IOException {
-        Long userId = jwtUtils.getLoggedUserId();
+        Long userId = jwtUtils.getLoggedInUserId();
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new NotFoundException("Not found user with id: " + userId));
         Group group = groupRepository.findById(groupId)
@@ -173,7 +173,7 @@ public class GroupServiceImpl implements GroupService {
 
     @Override
     public void deleteGroupById(Long groupId, boolean archive) throws IOException {
-        Long userId = jwtUtils.getLoggedUserId();
+        Long userId = jwtUtils.getLoggedInUserId();
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new NotFoundException("Not found user with id: " + userId));
         Group group = groupRepository.findById(groupId)
@@ -213,7 +213,7 @@ public class GroupServiceImpl implements GroupService {
 
     @Override
     public List<GroupDto> findAllGroupsWithSimilarInterests() {
-        Long userId = jwtUtils.getLoggedUserId();
+        Long userId = jwtUtils.getLoggedInUserId();
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new NotFoundException("Not found user with id: " + userId));
 
@@ -252,7 +252,7 @@ public class GroupServiceImpl implements GroupService {
 
     @Override
     public void addGroupRuleByGroupId(Long groupId, RequestGroupRuleDto requestGroupRuleDto) {
-        Long userId = jwtUtils.getLoggedUserId();
+        Long userId = jwtUtils.getLoggedInUserId();
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new NotFoundException("Not found user with id: " + userId));
         Group group = groupRepository.findById(groupId)
@@ -277,7 +277,7 @@ public class GroupServiceImpl implements GroupService {
 
     @Override
     public void editGroupRuleByGroupId(Long groupId, Long ruleId, RequestGroupRuleDto requestGroupRuleDto) {
-        Long userId = jwtUtils.getLoggedUserId();
+        Long userId = jwtUtils.getLoggedInUserId();
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new NotFoundException("Not found user with id: " + userId));
         Group group = groupRepository.findById(groupId)
@@ -306,7 +306,7 @@ public class GroupServiceImpl implements GroupService {
 
     @Override
     public void deleteGroupRuleByGroupId(Long groupId, Long ruleId) {
-        Long userId = jwtUtils.getLoggedUserId();
+        Long userId = jwtUtils.getLoggedInUserId();
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new NotFoundException("Not found user with id: " + userId));
         Group group = groupRepository.findById(groupId)
@@ -328,7 +328,7 @@ public class GroupServiceImpl implements GroupService {
 
     @Override
     public void addGroupInterest(Long groupId, Long interestId) {
-        Long userId = jwtUtils.getLoggedUserId();
+        Long userId = jwtUtils.getLoggedInUserId();
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new NotFoundException("Not found user with id: " + userId));
         Group group = groupRepository.findById(groupId)
@@ -357,7 +357,7 @@ public class GroupServiceImpl implements GroupService {
 
     @Override
     public void deleteGroupInterest(Long groupId, Long interestId) {
-        Long userId = jwtUtils.getLoggedUserId();
+        Long userId = jwtUtils.getLoggedInUserId();
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new NotFoundException("Not found user with id: " + userId));
         Group group = groupRepository.findById(groupId)
@@ -388,7 +388,7 @@ public class GroupServiceImpl implements GroupService {
 
     @Override
     public void inviteUserToGroup(Long groupId, Long invitedUserId) {
-        Long loggedUserId = jwtUtils.getLoggedUserId();
+        Long loggedUserId = jwtUtils.getLoggedInUserId();
         User loggedUser = userRepository.findById(loggedUserId)
                 .orElseThrow(() -> new NotFoundException("Not found user with id: " + loggedUserId));
         Group group = groupRepository.findById(groupId)
@@ -432,7 +432,7 @@ public class GroupServiceImpl implements GroupService {
 
     @Override
     public List<GroupInvitationDto> findAllUserGroupInvitations(boolean isDisplayed) {
-        Long userId = jwtUtils.getLoggedUserId();
+        Long userId = jwtUtils.getLoggedInUserId();
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new NotFoundException("Not found user with id: " + userId));
         List<GroupMember> groupMembers = groupMemberRepository.findByMemberAndGroupMemberStatus(user, GroupMemberStatus.INVITED);
@@ -444,7 +444,7 @@ public class GroupServiceImpl implements GroupService {
 
     @Override
     public void respondToGroupInvitation(Long groupId, boolean isInvitationAccepted) {
-        Long userId = jwtUtils.getLoggedUserId();
+        Long userId = jwtUtils.getLoggedInUserId();
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new NotFoundException("Not found user with id: " + userId));
         Group group = groupRepository.findById(groupId)
@@ -478,7 +478,7 @@ public class GroupServiceImpl implements GroupService {
 
     @Override
     public void addGroupThread(Long groupId, RequestThreadDto requestThreadDto, MultipartFile imageFile) {
-        Long userId = jwtUtils.getLoggedUserId();
+        Long userId = jwtUtils.getLoggedInUserId();
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new NotFoundException("Not found user with id: " + userId));
         Group group = groupRepository.findById(groupId)
@@ -501,7 +501,7 @@ public class GroupServiceImpl implements GroupService {
 
     @Override
     public void editGroupThreadById(Long threadId, RequestThreadDto requestThreadDto, MultipartFile imageFile) {
-        Long userId = jwtUtils.getLoggedUserId();
+        Long userId = jwtUtils.getLoggedInUserId();
         User loggedUser = userRepository.findById(userId)
                 .orElseThrow(() -> new NotFoundException("Not found user with id: " + userId));
         GroupThread groupThread = groupThreadRepository.findById(threadId)
@@ -541,7 +541,7 @@ public class GroupServiceImpl implements GroupService {
 
     @Override
     public void deleteGroupThreadById(Long threadId) {
-        Long userId = jwtUtils.getLoggedUserId();
+        Long userId = jwtUtils.getLoggedInUserId();
         User loggedUser = userRepository.findById(userId)
                 .orElseThrow(() -> new NotFoundException("Not found user with id: " + userId));
         GroupThread groupThread = groupThreadRepository.findById(threadId)
@@ -566,7 +566,7 @@ public class GroupServiceImpl implements GroupService {
 
     @Override
     public void addThreadAnswer(Long threadId, RequestThreadAnswerDto requestThreadAnswerDto) {
-        Long userId = jwtUtils.getLoggedUserId();
+        Long userId = jwtUtils.getLoggedInUserId();
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new NotFoundException("Not found user with id: " + userId));
         GroupThread groupThread = groupThreadRepository.findById(threadId)
@@ -588,7 +588,7 @@ public class GroupServiceImpl implements GroupService {
 
     @Override
     public void editThreadAnswerById(Long answerId, RequestThreadAnswerDto requestThreadAnswerDto) {
-        Long userId = jwtUtils.getLoggedUserId();
+        Long userId = jwtUtils.getLoggedInUserId();
         User loggedUser = userRepository.findById(userId)
                 .orElseThrow(() -> new NotFoundException("Not found user with id: " + userId));
 
@@ -615,7 +615,7 @@ public class GroupServiceImpl implements GroupService {
 
     @Override
     public void deleteThreadAnswerById(Long answerId) {
-        Long userId = jwtUtils.getLoggedUserId();
+        Long userId = jwtUtils.getLoggedInUserId();
         User loggedUser = userRepository.findById(userId)
                 .orElseThrow(() -> new NotFoundException("Not found user with id: " + userId));
 
@@ -640,7 +640,7 @@ public class GroupServiceImpl implements GroupService {
 
     @Override
     public void addThreadAnswerReview(Long answerId, RequestThreadAnswerReviewDto requestThreadAnswerReviewDto) {
-        Long userId = jwtUtils.getLoggedUserId();
+        Long userId = jwtUtils.getLoggedInUserId();
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new NotFoundException("Not found user with id: " + userId));
 
@@ -677,7 +677,7 @@ public class GroupServiceImpl implements GroupService {
 
     @Override
     public void editThreadAnswerReviewById(Long reviewId, RequestThreadAnswerReviewDto requestThreadAnswerReviewDto) {
-        Long userId = jwtUtils.getLoggedUserId();
+        Long userId = jwtUtils.getLoggedInUserId();
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new NotFoundException("Not found user with id: " + userId));
 
@@ -710,7 +710,7 @@ public class GroupServiceImpl implements GroupService {
 
     @Override
     public void wantToJoinGroup(Long groupId) {
-        Long userId = jwtUtils.getLoggedUserId();
+        Long userId = jwtUtils.getLoggedInUserId();
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new NotFoundException("Not found user with id: " + userId));
 
@@ -749,7 +749,7 @@ public class GroupServiceImpl implements GroupService {
 
     @Override
     public void decideAboutRequestToJoin(Long groupId, Long requesterId, boolean isApproved) {
-        Long loggedUserId = jwtUtils.getLoggedUserId();
+        Long loggedUserId = jwtUtils.getLoggedInUserId();
         User loggedUser = userRepository.findById(loggedUserId)
                 .orElseThrow(() -> new NotFoundException("Not found user with id: " + loggedUserId));
         Group group = groupRepository.findById(groupId)
@@ -796,7 +796,7 @@ public class GroupServiceImpl implements GroupService {
             throw new BadRequestException("Unknown permission type");
         }
 
-        Long userId = jwtUtils.getLoggedUserId();
+        Long userId = jwtUtils.getLoggedInUserId();
         User loggedUser = userRepository.findById(userId)
                 .orElseThrow(() -> new NotFoundException("Not found user with id: " + userId));
         Group group = groupRepository.findById(groupId)
@@ -835,7 +835,7 @@ public class GroupServiceImpl implements GroupService {
 
     @Override
     public void leaveGroupByUser(Long groupId) {
-        Long userId = jwtUtils.getLoggedUserId();
+        Long userId = jwtUtils.getLoggedInUserId();
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new NotFoundException("Not found user with id: " + userId));
         Group group = groupRepository.findById(groupId)
@@ -850,7 +850,7 @@ public class GroupServiceImpl implements GroupService {
 
     @Override
     public void deleteGroupMemberById(Long memberId, Long groupId) {
-        Long userId = jwtUtils.getLoggedUserId();
+        Long userId = jwtUtils.getLoggedInUserId();
         User loggedUser = userRepository.findById(userId)
                 .orElseThrow(() -> new NotFoundException("Not found user with id: " + userId));
         Group group = groupRepository.findById(groupId)
@@ -877,7 +877,7 @@ public class GroupServiceImpl implements GroupService {
 
     @Override
     public List<GroupMemberForumStatsDto> getGroupForumStatsById(Long groupId) {
-        Long userId = jwtUtils.getLoggedUserId();
+        Long userId = jwtUtils.getLoggedInUserId();
         User loggedUser = userRepository.findById(userId)
                 .orElseThrow(() -> new NotFoundException("Not found user with id: " + userId));
         Group group = groupRepository.findById(groupId)
@@ -916,7 +916,7 @@ public class GroupServiceImpl implements GroupService {
 
     @Override
     public List<GroupThreadDto> findGroupThreadsById(Long groupId) {
-        Long userId = jwtUtils.getLoggedUserId();
+        Long userId = jwtUtils.getLoggedInUserId();
         User loggedUser = userRepository.findById(userId)
                 .orElseThrow(() -> new NotFoundException("Not found user with id: " + userId));
         Group group = groupRepository.findById(groupId)

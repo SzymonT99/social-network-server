@@ -14,7 +14,6 @@ import com.server.springboot.service.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -168,25 +167,23 @@ public class UserServiceImpl implements UserService {
             userRepository.save(authorizedUser);
 
             if (authorizedUser.getIncorrectLoginCounter() >= MAX_LOGIN_ATTEMPTS + 1 && authorizedUser.isBlocked()) {
-                throw new ForbiddenException(String.format("User account with login: %s is blocked", userLoginDto.getLogin()));
+                throw new ForbiddenException("User account is blocked");
             }
         }
 
         Authentication authentication = authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(userLoginDto.getLogin(), userLoginDto.getPassword()));
 
-        // Gdy autentykacja jest pomyślna, wykonywany jest poniższy kod
         authorizedUser.setIncorrectLoginCounter(0);
         authorizedUser.setActivityStatus(ActivityStatus.ONLINE);
         userRepository.save(authorizedUser);
 
         if (authorizedUser.isBanned()) {
-            throw new ForbiddenException(String.format("User account with login: %s has been banned. " +
-                    "In order to unblock the account, please contact the admin", userLoginDto.getLogin()));
+            throw new ForbiddenException("User account with login has been banned.");
         }
 
         if (!authorizedUser.isVerifiedAccount()) {
-            throw new ConflictRequestException(String.format("User account with login: %s has not been activated", userLoginDto.getLogin()));
+            throw new ConflictRequestException("User account with login: %s has not been activated");
         }
 
         SecurityContextHolder.getContext().setAuthentication(authentication);
@@ -410,7 +407,7 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public void reportUserBySuspectId(RequestReportDto requestReportDto) {
-        Long loggedUserId = jwtUtils.getLoggedUserId();
+        Long loggedUserId = jwtUtils.getLoggedInUserId();
         User loggedUser = userRepository.findById(loggedUserId)
                 .orElseThrow(() -> new NotFoundException("Not found user with id: " + loggedUserId));
         User suspectUser = userRepository.findById(requestReportDto.getSuspectId())
@@ -487,7 +484,7 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public void changeActivityStatus(String status) {
-        Long loggedUserId = jwtUtils.getLoggedUserId();
+        Long loggedUserId = jwtUtils.getLoggedInUserId();
         User loggedUser = userRepository.findById(loggedUserId)
                 .orElseThrow(() -> new NotFoundException("Not found user with id: " + loggedUserId));
         loggedUser.setActivityStatus(ActivityStatus.valueOf(status));

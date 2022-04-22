@@ -122,7 +122,7 @@ public class FriendServiceImplTest {
     public void shouldInviteToFriendsByUserId() {
         Long invitedUserId = 2L;
 
-        when(jwtUtils.getLoggedUserId()).thenReturn(1L);
+        when(jwtUtils.getLoggedInUserId()).thenReturn(1L);
         when(userRepository.findById(1L)).thenReturn(Optional.of(user1));
         when(userRepository.findById(invitedUserId)).thenReturn(Optional.of(user2));
         when(friendRepository.existsByUserAndUserFriend(user1, user2)).thenReturn(false);
@@ -175,7 +175,7 @@ public class FriendServiceImplTest {
         Long inviterId = 2L;
         String reactionToInvitation = "accept";
 
-        when(jwtUtils.getLoggedUserId()).thenReturn(1L);
+        when(jwtUtils.getLoggedInUserId()).thenReturn(1L);
         when(userRepository.findById(1L)).thenReturn(Optional.of(user1));
         when(userRepository.findById(inviterId)).thenReturn(Optional.of(user2));
         when(friendRepository.findByUserAndUserFriend(user2, user1))
@@ -206,7 +206,7 @@ public class FriendServiceImplTest {
         Long inviterId = 2L;
         String reactionToInvitation = "reject";
 
-        when(jwtUtils.getLoggedUserId()).thenReturn(1L);
+        when(jwtUtils.getLoggedInUserId()).thenReturn(1L);
         when(userRepository.findById(1L)).thenReturn(Optional.of(user1));
         when(userRepository.findById(inviterId)).thenReturn(Optional.of(user2));
         when(friendRepository.findByUserAndUserFriend(user2, user1))
@@ -236,7 +236,7 @@ public class FriendServiceImplTest {
                 .isInvitationAccepted(true)
                 .build();
 
-        when(jwtUtils.getLoggedUserId()).thenReturn(1L);
+        when(jwtUtils.getLoggedInUserId()).thenReturn(1L);
         when(userRepository.findById(1L)).thenReturn(Optional.of(user1));
         when(friendRepository.findById(friendId)).thenReturn(Optional.of(userFriend));
 
@@ -342,7 +342,7 @@ public class FriendServiceImplTest {
         users.add(user2);
         users.add(user3);
 
-        when(jwtUtils.getLoggedUserId()).thenReturn(1L);
+        when(jwtUtils.getLoggedInUserId()).thenReturn(1L);
         when(userRepository.findById(1L)).thenReturn(Optional.of(user1));
         when(userRepository.findAll()).thenReturn(users);
         when(friendRepository.existsByUserAndUserFriend(any(), any())).thenReturn(false);

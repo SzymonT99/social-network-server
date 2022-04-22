@@ -149,7 +149,7 @@ public class ChatServiceImplTest {
                 .build();
         MockMultipartFile chatImage = new MockMultipartFile("image", new byte[1]);
 
-        when(jwtUtils.getLoggedUserId()).thenReturn(1L);
+        when(jwtUtils.getLoggedInUserId()).thenReturn(1L);
         when(userRepository.findById(1L)).thenReturn(Optional.of(user));
         when(fileService.storageOneImage(chatImage, user, false)).thenReturn(new Image());
 
@@ -183,7 +183,7 @@ public class ChatServiceImplTest {
                 .build();
         MockMultipartFile chatImage = new MockMultipartFile("image", new byte[1]);
 
-        when(jwtUtils.getLoggedUserId()).thenReturn(1L);
+        when(jwtUtils.getLoggedInUserId()).thenReturn(1L);
         when(userRepository.findById(1L)).thenReturn(Optional.of(user));
         when(chatRepository.findById(chatId)).thenReturn(Optional.of(chat));
         when(fileService.storageOneImage(chatImage, user, false)).thenReturn(new Image());
@@ -265,7 +265,7 @@ public class ChatServiceImplTest {
                 .build();
         Long chatId = 1L;
 
-        when(jwtUtils.getLoggedUserId()).thenReturn(1L);
+        when(jwtUtils.getLoggedInUserId()).thenReturn(1L);
         when(userRepository.findById(1L)).thenReturn(Optional.of(user));
         when(chatRepository.findById(chatId)).thenReturn(Optional.of(chat));
         when(roleRepository.findByName(AppRole.ROLE_ADMIN)).thenReturn(Optional.of(new Role(2, AppRole.ROLE_ADMIN)));
@@ -282,7 +282,7 @@ public class ChatServiceImplTest {
     public void shouldDeleteChatById() {
         Long chatId = 1L;
 
-        when(jwtUtils.getLoggedUserId()).thenReturn(1L);
+        when(jwtUtils.getLoggedInUserId()).thenReturn(1L);
         when(userRepository.findById(1L)).thenReturn(Optional.of(user));
         when(chatRepository.findById(chatId)).thenReturn(Optional.of(chat));
 
@@ -299,7 +299,7 @@ public class ChatServiceImplTest {
 
         Long chatId = 1L;
 
-        when(jwtUtils.getLoggedUserId()).thenReturn(1L);
+        when(jwtUtils.getLoggedInUserId()).thenReturn(1L);
         when(userRepository.findById(1L)).thenReturn(Optional.of(user));
         when(chatRepository.findById(chatId)).thenReturn(Optional.of(chat));
         when(roleRepository.findByName(AppRole.ROLE_ADMIN)).thenReturn(Optional.of(new Role(2, AppRole.ROLE_ADMIN)));
@@ -441,7 +441,7 @@ public class ChatServiceImplTest {
                 .message("Wiadomość edytowana")     // zmiana
                 .build();
 
-        when(jwtUtils.getLoggedUserId()).thenReturn(1L);
+        when(jwtUtils.getLoggedInUserId()).thenReturn(1L);
         when(userRepository.findById(1L)).thenReturn(Optional.of(user));
         when(chatMessageRepository.findById(messageId)).thenReturn(Optional.of(chatMessage));
 
@@ -461,7 +461,7 @@ public class ChatServiceImplTest {
     public void shouldDeleteChatMessageById() {
         Long messageId = 1L;
 
-        when(jwtUtils.getLoggedUserId()).thenReturn(1L);
+        when(jwtUtils.getLoggedInUserId()).thenReturn(1L);
         when(userRepository.findById(1L)).thenReturn(Optional.of(user));
         when(chatMessageRepository.findById(messageId)).thenReturn(Optional.of(chatMessage));
 
@@ -496,7 +496,7 @@ public class ChatServiceImplTest {
         Long chatId = 1L;
         Long addedUserId = 2L;
 
-        when(jwtUtils.getLoggedUserId()).thenReturn(1L);
+        when(jwtUtils.getLoggedInUserId()).thenReturn(1L);
         when(userRepository.findById(1L)).thenReturn(Optional.of(user));
         when(chatRepository.findById(chatId)).thenReturn(Optional.of(chat));
         when(roleRepository.findByName(AppRole.ROLE_ADMIN)).thenReturn(Optional.of(new Role(2, AppRole.ROLE_ADMIN)));
@@ -537,7 +537,7 @@ public class ChatServiceImplTest {
         Long chatId = 1L;
         Long addedUserId = 2L;
 
-        when(jwtUtils.getLoggedUserId()).thenReturn(1L);
+        when(jwtUtils.getLoggedInUserId()).thenReturn(1L);
         when(userRepository.findById(1L)).thenReturn(Optional.of(user));
         when(chatRepository.findById(chatId)).thenReturn(Optional.of(chat));
         when(roleRepository.findByName(AppRole.ROLE_ADMIN)).thenReturn(Optional.of(new Role(2, AppRole.ROLE_ADMIN)));
@@ -580,7 +580,7 @@ public class ChatServiceImplTest {
         Long chatMemberId = 2L;
         boolean canAddMembers = true;
 
-        when(jwtUtils.getLoggedUserId()).thenReturn(1L);
+        when(jwtUtils.getLoggedInUserId()).thenReturn(1L);
         when(userRepository.findById(1L)).thenReturn(Optional.of(user));
         when(chatRepository.findById(chatId)).thenReturn(Optional.of(chat));
 
@@ -666,7 +666,7 @@ public class ChatServiceImplTest {
         privateChatMembers.add(privateMember2);
         privateChat.setChatMembers(new HashSet<>(privateChatMembers));
 
-        when(jwtUtils.getLoggedUserId()).thenReturn(1L);
+        when(jwtUtils.getLoggedInUserId()).thenReturn(1L);
         when(userRepository.findById(1L)).thenReturn(Optional.of(user));
         when(userRepository.findById(userFriendId)).thenReturn(Optional.of(userFriend));
 

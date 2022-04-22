@@ -543,7 +543,7 @@ public class UserServiceImplTest {
                 .description("Opis")
                 .build();
 
-        when(jwtUtils.getLoggedUserId()).thenReturn(1L);
+        when(jwtUtils.getLoggedInUserId()).thenReturn(1L);
         when(userRepository.findById(1L)).thenReturn(Optional.of(user));
         when(userRepository.findById(2L)).thenReturn(Optional.of(suspectUser));
 
@@ -717,7 +717,7 @@ public class UserServiceImplTest {
     public void shouldChangeActivityStatus() {
         String status = ActivityStatus.BE_RIGHT_BACK.toString();
 
-        when(jwtUtils.getLoggedUserId()).thenReturn(1L);
+        when(jwtUtils.getLoggedInUserId()).thenReturn(1L);
         when(userRepository.findById(1L)).thenReturn(Optional.of(user));
         user.setActivityStatus(ActivityStatus.BE_RIGHT_BACK);
 

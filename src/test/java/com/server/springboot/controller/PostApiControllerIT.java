@@ -1,10 +1,8 @@
 package com.server.springboot.controller;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.server.springboot.domain.dto.request.RequestCommentDto;
 import com.server.springboot.domain.dto.request.RequestPostDto;
-import com.server.springboot.domain.dto.response.*;
 import com.server.springboot.domain.entity.Post;
 import com.server.springboot.domain.entity.User;
 import com.server.springboot.domain.mapper.UserDtoMapper;
@@ -17,7 +15,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.MediaType;

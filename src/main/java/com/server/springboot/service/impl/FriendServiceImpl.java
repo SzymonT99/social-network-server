@@ -56,16 +56,15 @@ public class FriendServiceImpl implements FriendService {
 
     @Override
     public void inviteToFriendsByUserId(Long userId) {
-        Long loggedUserId = jwtUtils.getLoggedUserId();
-        User user = userRepository.findById(loggedUserId)
-                .orElseThrow(() -> new NotFoundException("Not found user with id: " + loggedUserId));
+        Long loggedInUserId = jwtUtils.getLoggedInUserId();
+        User loggedInUser = userRepository.findById(loggedInUserId).get();
         User invitedUser = userRepository.findById(userId)
-                .orElseThrow(() -> new NotFoundException("Not found user with id: " + userId));
-        if (friendRepository.existsByUserAndUserFriend(user, invitedUser)) {
-            throw new ConflictRequestException("Friend request has already been sent to user with id: " + userId);
+                .orElseThrow(() -> new NotFoundException("Not found invited loggedInUser with id: " + userId));
+        if (friendRepository.existsByUserAndUserFriend(loggedInUser, invitedUser)) {
+            throw new ConflictRequestException("Friend request has already been sent to loggedInUser with id: " + userId);
         }
         Friend friend = Friend.builder()
-                .user(user)
+                .user(loggedInUser)
                 .userFriend(invitedUser)
                 .isInvitationAccepted(null)
                 .invitationDate(LocalDateTime.now())
@@ -74,7 +73,7 @@ public class FriendServiceImpl implements FriendService {
                 .build();
         friendRepository.save(friend);
 
-        notificationService.sendNotificationToUser(user, invitedUser.getUserId(), ActionType.FRIEND_INVITATION);
+        notificationService.sendNotificationToUser(loggedInUser, invitedUser.getUserId(), ActionType.FRIEND_INVITATION);
     }
 
     @Override
@@ -90,7 +89,7 @@ public class FriendServiceImpl implements FriendService {
 
     @Override
     public void respondToFriendInvitation(Long inviterId, String reactionToInvitation) {
-        Long loggedUserId = jwtUtils.getLoggedUserId();
+        Long loggedUserId = jwtUtils.getLoggedInUserId();
         User currentUser = userRepository.findById(loggedUserId)
                 .orElseThrow(() -> new NotFoundException("Not found user with id: " + loggedUserId));
         User inviter = userRepository.findById(inviterId)
@@ -130,7 +129,7 @@ public class FriendServiceImpl implements FriendService {
     @Override
     @Transactional
     public void deleteFriendById(Long friendId, boolean isDeletedInvitation) {
-        Long loggedUserId = jwtUtils.getLoggedUserId();
+        Long loggedUserId = jwtUtils.getLoggedInUserId();
         User currentUser = userRepository.findById(loggedUserId)
                 .orElseThrow(() -> new NotFoundException("Not found user with id: " + loggedUserId));
         Friend friend = friendRepository.findById(friendId)
@@ -169,7 +168,7 @@ public class FriendServiceImpl implements FriendService {
 
     @Override
     public List<FriendSuggestionDto> findAllFriendsSuggestions() {
-        Long loggedUserId = jwtUtils.getLoggedUserId();
+        Long loggedUserId = jwtUtils.getLoggedInUserId();
         User loggedUser = userRepository.findById(loggedUserId)
                 .orElseThrow(() -> new NotFoundException("Not found user with id: " + loggedUserId));
         List<User> loggedUserFriends = loggedUser.getFriends().stream()

@@ -3,14 +3,13 @@ package com.server.springboot.controller;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.server.springboot.domain.dto.request.*;
 import com.server.springboot.domain.enumeration.Gender;
-import com.server.springboot.service.EmailService;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -22,9 +21,6 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @SpringBootTest
 @AutoConfigureMockMvc
 public class UserApiControllerIT {
-
-    @MockBean
-    private EmailService emailService;
 
     @Autowired
     private MockMvc mockMvc;
@@ -45,9 +41,10 @@ public class UserApiControllerIT {
                 .dateOfBirth("1989-01-05")
                 .build();
 
-        mockMvc.perform(post("/api/auth/register")
-                .content(objectMapper.writeValueAsString(createUserDto))
-                .contentType(MediaType.APPLICATION_JSON))
+        mockMvc.perform(MockMvcRequestBuilders
+                    .post("/api/auth/register")
+                    .content(objectMapper.writeValueAsString(createUserDto))
+                    .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isCreated())
                 .andDo(print());
     }

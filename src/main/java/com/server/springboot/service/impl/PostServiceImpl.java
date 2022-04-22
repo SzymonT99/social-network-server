@@ -121,9 +121,8 @@ public class PostServiceImpl implements PostService {
 
     @Override
     public PostDto addPost(RequestPostDto requestPostDto, List<MultipartFile> imageFiles, Long groupId) {
-        Long userId = jwtUtils.getLoggedUserId();
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new NotFoundException("Not found user with id: " + userId));
+        Long loggedInUserId = jwtUtils.getLoggedInUserId();
+        User user = userRepository.findById(loggedInUserId).get();
         Post addedPost = postMapper.convert(requestPostDto);
         addedPost.setPostAuthor(user);
         if (imageFiles != null) {
@@ -155,7 +154,7 @@ public class PostServiceImpl implements PostService {
 
     @Override
     public PostDto editPost(Long postId, RequestPostDto requestPostDto, List<MultipartFile> imageFiles) {
-        Long userId = jwtUtils.getLoggedUserId();
+        Long userId = jwtUtils.getLoggedInUserId();
         User loggedUser = userRepository.findById(userId)
                 .orElseThrow(() -> new NotFoundException("Not found user with id: " + userId));
         Post post = postRepository.findById(postId)
@@ -207,7 +206,7 @@ public class PostServiceImpl implements PostService {
 
     @Override
     public void deletePostById(Long postId, boolean archive) {
-        Long userId = jwtUtils.getLoggedUserId();
+        Long userId = jwtUtils.getLoggedInUserId();
         User loggedUser = userRepository.findById(userId)
                 .orElseThrow(() -> new NotFoundException("Not found user with id: " + userId));
         Post post = postRepository.findById(postId)
@@ -251,7 +250,7 @@ public class PostServiceImpl implements PostService {
 
     @Override
     public void likePost(Long postId) {
-        Long userId = jwtUtils.getLoggedUserId();
+        Long userId = jwtUtils.getLoggedInUserId();
         Post post = postRepository.findById(postId)
                 .orElseThrow(() -> new NotFoundException("Not found post with id: " + postId));
         User likedUser = userRepository.findById(userId)
@@ -276,7 +275,7 @@ public class PostServiceImpl implements PostService {
 
     @Override
     public void deleteLikeFromPost(Long postId) {
-        Long userId = jwtUtils.getLoggedUserId();
+        Long userId = jwtUtils.getLoggedInUserId();
         Post post = postRepository.findById(postId)
                 .orElseThrow(() -> new NotFoundException("Not found post with id: " + postId));
         User user = userRepository.findById(userId)
@@ -289,7 +288,7 @@ public class PostServiceImpl implements PostService {
 
     @Override
     public SharedPostDto sharePost(Long basePostId, RequestSharePostDto requestSharePostDto) {
-        Long userId = jwtUtils.getLoggedUserId();
+        Long userId = jwtUtils.getLoggedInUserId();
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new NotFoundException("Not found user with id: " + userId));
         Post basePost = postRepository.findById(basePostId)
@@ -313,7 +312,7 @@ public class PostServiceImpl implements PostService {
 
     @Override
     public void deleteSharedPostById(Long sharedPostId) {
-        Long userId = jwtUtils.getLoggedUserId();
+        Long userId = jwtUtils.getLoggedInUserId();
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new NotFoundException("Not found user with id: " + userId));
         if (sharedPostRepository.existsBySharedPostId(sharedPostId)) {
@@ -331,7 +330,7 @@ public class PostServiceImpl implements PostService {
 
     @Override
     public void addPostToFavourite(Long postId) {
-        Long userId = jwtUtils.getLoggedUserId();
+        Long userId = jwtUtils.getLoggedInUserId();
         Post post = postRepository.findById(postId)
                 .orElseThrow(() -> new NotFoundException("Not found post with id: " + postId));
         User user = userRepository.findById(userId)
@@ -347,7 +346,7 @@ public class PostServiceImpl implements PostService {
 
     @Override
     public void deletePostFromFavourite(Long postId) {
-        Long userId = jwtUtils.getLoggedUserId();
+        Long userId = jwtUtils.getLoggedInUserId();
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new NotFoundException("Not found user with id: " + userId));
         Post deletedPost = user.getFavouritePosts().stream()
@@ -371,7 +370,7 @@ public class PostServiceImpl implements PostService {
 
     @Override
     public void setPostCommentsAvailability(Long postId, boolean isBlocked) {
-        Long userId = jwtUtils.getLoggedUserId();
+        Long userId = jwtUtils.getLoggedInUserId();
         User loggedUser = userRepository.findById(userId)
                 .orElseThrow(() -> new NotFoundException("Not found user with id: " + userId));
         Post post = postRepository.findById(postId)
@@ -399,7 +398,7 @@ public class PostServiceImpl implements PostService {
 
     @Override
     public void setPostAccess(Long postId, boolean isPublic) {
-        Long userId = jwtUtils.getLoggedUserId();
+        Long userId = jwtUtils.getLoggedInUserId();
         User loggedUser = userRepository.findById(userId)
                 .orElseThrow(() -> new NotFoundException("Not found user with id: " + userId));
         Post post = postRepository.findById(postId)

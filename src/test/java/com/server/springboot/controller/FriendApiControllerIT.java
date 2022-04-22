@@ -2,9 +2,7 @@ package com.server.springboot.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.server.springboot.domain.dto.response.FriendDto;
-import com.server.springboot.domain.dto.response.GroupDto;
 import com.server.springboot.domain.entity.Friend;
-import com.server.springboot.domain.entity.Group;
 import com.server.springboot.domain.entity.User;
 import com.server.springboot.domain.mapper.FriendDtoListMapper;
 import com.server.springboot.domain.repository.FriendRepository;
@@ -15,7 +13,6 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.security.test.context.support.WithUserDetails;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 

@@ -59,7 +59,7 @@ public class JwtUtils {
                 .getSubject();
     }
 
-    public Long getLoggedUserId() {
+    public Long getLoggedInUserId() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         UserDetailsImpl loggedUser = (UserDetailsImpl) authentication.getPrincipal();
         return loggedUser.getUserId();

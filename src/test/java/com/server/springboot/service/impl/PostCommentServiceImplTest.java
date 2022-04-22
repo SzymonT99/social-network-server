@@ -1,31 +1,23 @@
 package com.server.springboot.service.impl;
 
 import com.server.springboot.domain.dto.request.RequestCommentDto;
-import com.server.springboot.domain.dto.request.RequestPostDto;
 import com.server.springboot.domain.dto.response.CommentDto;
-import com.server.springboot.domain.dto.response.PostDto;
 import com.server.springboot.domain.entity.*;
 import com.server.springboot.domain.enumeration.ActivityStatus;
 import com.server.springboot.domain.enumeration.AppRole;
 import com.server.springboot.domain.enumeration.Gender;
 import com.server.springboot.domain.mapper.*;
 import com.server.springboot.domain.repository.*;
-import com.server.springboot.exception.BadRequestException;
 import com.server.springboot.exception.ConflictRequestException;
 import com.server.springboot.exception.ForbiddenException;
 import com.server.springboot.security.JwtUtils;
 import com.server.springboot.service.NotificationService;
-import com.server.springboot.service.PostCommentService;
 import org.junit.jupiter.api.*;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.mock.web.MockMultipartFile;
-import org.springframework.web.multipart.MultipartFile;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -134,7 +126,7 @@ public class PostCommentServiceImplTest {
                 .commentText("Komentarz")
                 .build();
 
-        when(jwtUtils.getLoggedUserId()).thenReturn(1L);
+        when(jwtUtils.getLoggedInUserId()).thenReturn(1L);
         when(userRepository.findById(1L)).thenReturn(Optional.of(user));
         when(postRepository.findById(postId)).thenReturn(Optional.of(post));
 
@@ -157,7 +149,7 @@ public class PostCommentServiceImplTest {
                 .commentText("Komentarz edytowany")
                 .build();
 
-        when(jwtUtils.getLoggedUserId()).thenReturn(1L);
+        when(jwtUtils.getLoggedInUserId()).thenReturn(1L);
         when(userRepository.findById(1L)).thenReturn(Optional.of(user));
         when(commentRepository.findById(commentId)).thenReturn(Optional.of(comment));
         comment.setEdited(true);
@@ -172,7 +164,7 @@ public class PostCommentServiceImplTest {
     public void shouldDeleteCommentById() {
         Long commentId = 1L;
 
-        when(jwtUtils.getLoggedUserId()).thenReturn(1L);
+        when(jwtUtils.getLoggedInUserId()).thenReturn(1L);
         when(userRepository.findById(1L)).thenReturn(Optional.of(user));
         when(commentRepository.findById(commentId)).thenReturn(Optional.of(comment));
 
@@ -188,7 +180,7 @@ public class PostCommentServiceImplTest {
         commentAuthor.setUserId(2L);
         comment.setCommentAuthor(commentAuthor);
 
-        when(jwtUtils.getLoggedUserId()).thenReturn(1L);
+        when(jwtUtils.getLoggedInUserId()).thenReturn(1L);
         when(userRepository.findById(1L)).thenReturn(Optional.of(user));
         when(commentRepository.findById(commentId)).thenReturn(Optional.of(comment));
         when(roleRepository.findByName(AppRole.ROLE_ADMIN)).thenReturn(Optional.of(new Role(2, AppRole.ROLE_ADMIN)));
@@ -205,7 +197,7 @@ public class PostCommentServiceImplTest {
     public void shouldLikeCommentById() {
         Long commentId = 1L;
 
-        when(jwtUtils.getLoggedUserId()).thenReturn(1L);
+        when(jwtUtils.getLoggedInUserId()).thenReturn(1L);
         when(userRepository.findById(1L)).thenReturn(Optional.of(user));
         when(commentRepository.findById(commentId)).thenReturn(Optional.of(comment));
 
@@ -221,7 +213,7 @@ public class PostCommentServiceImplTest {
         likedComments.add(comment);
         user.setLikedComments(likedComments);
 
-        when(jwtUtils.getLoggedUserId()).thenReturn(1L);
+        when(jwtUtils.getLoggedInUserId()).thenReturn(1L);
         when(userRepository.findById(1L)).thenReturn(Optional.of(user));
         when(commentRepository.findById(commentId)).thenReturn(Optional.of(comment));
 
@@ -240,7 +232,7 @@ public class PostCommentServiceImplTest {
         likedComments.add(comment);
         user.setLikedComments(likedComments);
 
-        when(jwtUtils.getLoggedUserId()).thenReturn(1L);
+        when(jwtUtils.getLoggedInUserId()).thenReturn(1L);
         when(userRepository.findById(1L)).thenReturn(Optional.of(user));
 
         assertDoesNotThrow(() ->  postCommentService.dislikeCommentById(commentId));

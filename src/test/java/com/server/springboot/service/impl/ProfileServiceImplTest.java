@@ -281,7 +281,7 @@ public class ProfileServiceImplTest {
                 .dateOfBirth("1989-01-01")
                 .build();
 
-        when(jwtUtils.getLoggedUserId()).thenReturn(1L);
+        when(jwtUtils.getLoggedInUserId()).thenReturn(1L);
         when(userRepository.findById(userId)).thenReturn(Optional.of(user));
         when(userProfileRepository.findByUser(any(User.class))).thenReturn(Optional.of(userProfile));
 
@@ -297,7 +297,7 @@ public class ProfileServiceImplTest {
                 .name("Harry Pother")
                 .build();
 
-        when(jwtUtils.getLoggedUserId()).thenReturn(1L);
+        when(jwtUtils.getLoggedInUserId()).thenReturn(1L);
         when(userRepository.findById(1L)).thenReturn(Optional.of(user));
 
         profileService.addUserFavourite(requestUserFavouriteDto);
@@ -320,7 +320,7 @@ public class ProfileServiceImplTest {
                 .name("Star Wars")
                 .build();
 
-        when(jwtUtils.getLoggedUserId()).thenReturn(1L);
+        when(jwtUtils.getLoggedInUserId()).thenReturn(1L);
         when(userRepository.findById(1L)).thenReturn(Optional.of(user));
         when(userFavouriteRepository.findById(favouriteId)).thenReturn(Optional.of(savedFavourite));
 
@@ -340,7 +340,7 @@ public class ProfileServiceImplTest {
                 .name("Star Wars")
                 .build();
 
-        when(jwtUtils.getLoggedUserId()).thenReturn(1L);
+        when(jwtUtils.getLoggedInUserId()).thenReturn(1L);
         when(userRepository.findById(1L)).thenReturn(Optional.of(user));
         when(userFavouriteRepository.findById(favouriteId)).thenReturn(Optional.of(savedFavourite));
         doNothing().when(userFavouriteRepository).deleteById(favouriteId);
@@ -428,7 +428,7 @@ public class ProfileServiceImplTest {
                 .zipCode("33-100")
                 .build();
 
-        when(jwtUtils.getLoggedUserId()).thenReturn(1L);
+        when(jwtUtils.getLoggedInUserId()).thenReturn(1L);
         when(userRepository.findById(1L)).thenReturn(Optional.of(user));
 
         doAnswer(invocation -> {
@@ -462,7 +462,7 @@ public class ProfileServiceImplTest {
                 .userProfile(userProfile)
                 .build();
 
-        when(jwtUtils.getLoggedUserId()).thenReturn(1L);
+        when(jwtUtils.getLoggedInUserId()).thenReturn(1L);
         when(userRepository.findById(1L)).thenReturn(Optional.of(user));
         when(addressRepository.findById(addressId)).thenReturn(Optional.of(savedAddress));
 
@@ -485,7 +485,7 @@ public class ProfileServiceImplTest {
                 .startDate(LocalDate.now().minusYears(3L).toString())
                 .build();
 
-        when(jwtUtils.getLoggedUserId()).thenReturn(1L);
+        when(jwtUtils.getLoggedInUserId()).thenReturn(1L);
         when(userRepository.findById(1L)).thenReturn(Optional.of(user));
 
         doAnswer(invocation -> {
@@ -516,7 +516,7 @@ public class ProfileServiceImplTest {
                 .userProfile(userProfile)
                 .build();
 
-        when(jwtUtils.getLoggedUserId()).thenReturn(1L);
+        when(jwtUtils.getLoggedInUserId()).thenReturn(1L);
         when(userRepository.findById(1L)).thenReturn(Optional.of(user));
         when(schoolRepository.findById(schoolId)).thenReturn(Optional.of(savedSchool));
 
@@ -543,7 +543,7 @@ public class ProfileServiceImplTest {
                 .userProfile(userProfile)
                 .build();
 
-        when(jwtUtils.getLoggedUserId()).thenReturn(1L);
+        when(jwtUtils.getLoggedInUserId()).thenReturn(1L);
         when(userRepository.findById(1L)).thenReturn(Optional.of(user));
         when(schoolRepository.findById(schoolId)).thenReturn(Optional.of(savedSchool));
 

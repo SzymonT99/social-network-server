@@ -139,7 +139,7 @@ public class ProfileServiceImpl implements ProfileService {
 
     @Override
     public void editUserProfileInformation(Long userId, UpdateUserProfileDto updateUserProfileDto) {
-        Long loggedUserId = jwtUtils.getLoggedUserId();
+        Long loggedUserId = jwtUtils.getLoggedInUserId();
         User loggedUser = userRepository.findById(loggedUserId)
                 .orElseThrow(() -> new NotFoundException("Not found user with id: " + loggedUserId));
         User user = userRepository.findById(userId)
@@ -169,7 +169,7 @@ public class ProfileServiceImpl implements ProfileService {
 
     @Override
     public void addUserFavourite(RequestUserFavouriteDto requestUserFavouriteDto) {
-        Long userId = jwtUtils.getLoggedUserId();
+        Long userId = jwtUtils.getLoggedInUserId();
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new NotFoundException("Not found user with id: " + userId));
         UserFavourite userFavourite = userFavouriteMapper.convert(requestUserFavouriteDto);
@@ -179,7 +179,7 @@ public class ProfileServiceImpl implements ProfileService {
 
     @Override
     public void editUserFavouriteById(Long favouriteId, RequestUserFavouriteDto requestUserFavouriteDto) {
-        Long userId = jwtUtils.getLoggedUserId();
+        Long userId = jwtUtils.getLoggedInUserId();
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new NotFoundException("Not found user with id: " + userId));
         UserFavourite userFavourite = userFavouriteRepository.findById(favouriteId)
@@ -196,7 +196,7 @@ public class ProfileServiceImpl implements ProfileService {
 
     @Override
     public void deleteUserFavouriteById(Long favouriteId) {
-        Long userId = jwtUtils.getLoggedUserId();
+        Long userId = jwtUtils.getLoggedInUserId();
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new NotFoundException("Not found user with id: " + userId));
         UserFavourite userFavourite = userFavouriteRepository.findById(favouriteId)
@@ -314,7 +314,7 @@ public class ProfileServiceImpl implements ProfileService {
 
     @Override
     public void addUserAddress(RequestAddressDto requestAddressDto) {
-        Long userId = jwtUtils.getLoggedUserId();
+        Long userId = jwtUtils.getLoggedInUserId();
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new NotFoundException("Not found user with id: " + userId));
         Address address = addressMapper.convert(requestAddressDto);
@@ -325,7 +325,7 @@ public class ProfileServiceImpl implements ProfileService {
 
     @Override
     public void editUserAddress(Long addressId, RequestAddressDto requestAddressDto) {
-        Long userId = jwtUtils.getLoggedUserId();
+        Long userId = jwtUtils.getLoggedInUserId();
         User loggedUser = userRepository.findById(userId)
                 .orElseThrow(() -> new NotFoundException("Not found user with id: " + userId));
 
@@ -344,7 +344,7 @@ public class ProfileServiceImpl implements ProfileService {
 
     @Override
     public void createSchoolInformation(RequestSchoolDto requestSchoolDto) {
-        Long userId = jwtUtils.getLoggedUserId();
+        Long userId = jwtUtils.getLoggedInUserId();
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new NotFoundException("Not found user with id: " + userId));
         School addedSchool = schoolMapper.convert(requestSchoolDto);
@@ -354,7 +354,7 @@ public class ProfileServiceImpl implements ProfileService {
 
     @Override
     public void editSchoolInformation(Long schoolId, RequestSchoolDto requestSchoolDto) {
-        Long userId = jwtUtils.getLoggedUserId();
+        Long userId = jwtUtils.getLoggedInUserId();
         User loggedUser = userRepository.findById(userId)
                 .orElseThrow(() -> new NotFoundException("Not found user with id: " + userId));
         School school = schoolRepository.findById(schoolId)
@@ -375,7 +375,7 @@ public class ProfileServiceImpl implements ProfileService {
 
     @Override
     public void deleteSchoolInformation(Long schoolId) {
-        Long userId = jwtUtils.getLoggedUserId();
+        Long userId = jwtUtils.getLoggedInUserId();
         User loggedUser = userRepository.findById(userId)
                 .orElseThrow(() -> new NotFoundException("Not found user with id: " + userId));
         School school = schoolRepository.findById(schoolId)
@@ -389,7 +389,7 @@ public class ProfileServiceImpl implements ProfileService {
 
     @Override
     public void addUserWorkPlace(RequestWorkPlaceDto requestWorkPlaceDto) {
-        Long userId = jwtUtils.getLoggedUserId();
+        Long userId = jwtUtils.getLoggedInUserId();
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new NotFoundException("Not found user with id: " + userId));
         WorkPlace workPlace = workPlaceMapper.convert(requestWorkPlaceDto);
@@ -399,7 +399,7 @@ public class ProfileServiceImpl implements ProfileService {
 
     @Override
     public void editUserWorkPlace(Long workId, RequestWorkPlaceDto requestWorkPlaceDto) {
-        Long userId = jwtUtils.getLoggedUserId();
+        Long userId = jwtUtils.getLoggedInUserId();
         User loggedUser = userRepository.findById(userId)
                 .orElseThrow(() -> new NotFoundException("Not found user with id: " + userId));
         WorkPlace workPlace = workPlaceRepository.findById(workId)
@@ -420,7 +420,7 @@ public class ProfileServiceImpl implements ProfileService {
 
     @Override
     public void deleteUserWorkPlace(Long workId) {
-        Long userId = jwtUtils.getLoggedUserId();
+        Long userId = jwtUtils.getLoggedInUserId();
         User loggedUser = userRepository.findById(userId)
                 .orElseThrow(() -> new NotFoundException("Not found user with id: " + userId));
         WorkPlace workPlace = workPlaceRepository.findById(workId)

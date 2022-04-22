@@ -9,7 +9,6 @@ import com.server.springboot.domain.entity.UserProfile;
 import com.server.springboot.domain.enumeration.Gender;
 import com.server.springboot.domain.enumeration.RelationshipStatus;
 import com.server.springboot.domain.mapper.InterestDtoListMapper;
-import com.server.springboot.domain.repository.InterestRepository;
 import com.server.springboot.domain.repository.UserProfileRepository;
 import com.server.springboot.domain.repository.UserRepository;
 import org.junit.jupiter.api.Test;
