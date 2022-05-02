@@ -104,7 +104,6 @@ public class ProfileServiceImpl implements ProfileService {
         List<Friend> friends = friendRepository.findByUserAndIsInvitationAccepted(user, true);
         UserActivityDto userActivityDto = userActivityDtoMapper.convert(user);
         userActivityDto.setFriends(friendDtoListMapper.convert(friends));
-
         return userActivityDto;
     }
 
@@ -266,12 +265,12 @@ public class ProfileServiceImpl implements ProfileService {
                 .orElseThrow(() -> new NotFoundException("Not found user with id: " + userId));
         UserProfile userProfile = user.getUserProfile();
         if (userProfile.getProfilePhoto() != null) {
-            imageRepository.delete(userProfile.getProfilePhoto());
             try {
                 fileService.deleteImage(userProfile.getProfilePhoto().getImageId());
             } catch (IOException e) {
                 e.printStackTrace();
             }
+            imageRepository.delete(userProfile.getProfilePhoto());
         }
         Image image = fileService.storageOneImage(photo, user, true);
 
@@ -304,12 +303,12 @@ public class ProfileServiceImpl implements ProfileService {
                 && !user.getRoles().contains(roleRepository.findByName(AppRole.ROLE_ADMIN).get())) {
             throw new ForbiddenException("Invalid logged user id - profile photo deleting access forbidden");
         }
-        imageRepository.delete(userProfilePhoto);
         try {
             fileService.deleteImage(userProfilePhoto.getImageId());
         } catch (IOException e) {
             e.printStackTrace();
         }
+        imageRepository.delete(userProfilePhoto);
     }
 
     @Override

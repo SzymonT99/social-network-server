@@ -21,11 +21,10 @@ public class UserDetailsDtoMapper implements Converter<UserDetailsDto, User> {
 
     @Override
     public UserDetailsDto convert(User from) {
-        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd.MM.yyyy HH:mm:ss");
         return UserDetailsDto.builder()
                 .userId(from.getUserId())
                 .email(from.getEmail())
-                .createdAt(from.getCreatedAt().format(formatter))
+                .createdAt(from.getCreatedAt().toString())
                 .activityStatus(from.getActivityStatus())
                 .userProfile(userProfileDtoMapper.convert(from.getUserProfile()))
                 .build();

@@ -470,7 +470,7 @@ public class UserServiceImpl implements UserService {
             } else {
                 passwordReset.setUsed(true);
                 passwordResetRepository.save(passwordReset);
-                user.setPassword(resetPasswordDto.getNewPassword());
+                user.setPassword(passwordEncoder.encode(resetPasswordDto.getNewPassword()));
                 userRepository.save(user);
             }
         }

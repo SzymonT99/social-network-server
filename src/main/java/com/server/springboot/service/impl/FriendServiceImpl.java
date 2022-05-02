@@ -108,7 +108,7 @@ public class FriendServiceImpl implements FriendService {
             Friend acceptedFriend = Friend.builder()
                     .isInvitationAccepted(true)
                     .invitationDisplayed(true)
-                    .invitationDate(LocalDateTime.now())
+                    .invitationDate(null)
                     .friendFromDate(LocalDateTime.now())
                     .user(currentUser)
                     .userFriend(inviter)

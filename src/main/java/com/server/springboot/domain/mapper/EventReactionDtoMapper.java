@@ -26,12 +26,11 @@ public class EventReactionDtoMapper implements Converter<EventReactionDto, Event
 
     @Override
     public EventReactionDto convert(EventMember from) {
-        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd.MM.yyyy HH:mm:ss");
 
         return EventReactionDto.builder()
                 .eventMember(userDtoMapper.convert(from.getEventMember()))
                 .participationStatus(from.getParticipationStatus())
-                .addedIn(from.getAddedIn() != null ? from.getAddedIn().format(formatter) : null)
+                .addedIn(from.getAddedIn() != null ? from.getAddedIn().toString() : null)
                 .event(eventDtoMapper.convert(from.getEvent()))
                 .build();
     }

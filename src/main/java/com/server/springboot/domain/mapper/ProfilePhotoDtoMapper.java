@@ -11,12 +11,11 @@ public class ProfilePhotoDtoMapper implements Converter<ProfilePhotoDto, Image> 
 
     @Override
     public ProfilePhotoDto convert(Image from) {
-        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd.MM.yyyy HH:mm:ss");
         return ProfilePhotoDto.builder()
                 .filename(from.getFilename())
                 .url("http://localhost:8080/api/images/" + from.getImageId())
                 .type(from.getType())
-                .addedIn(from.getAddedIn().format(formatter))
+                .addedIn(from.getAddedIn().toString())
                 .build();
     }
 }

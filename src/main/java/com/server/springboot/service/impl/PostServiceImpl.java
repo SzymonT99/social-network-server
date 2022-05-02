@@ -233,8 +233,8 @@ public class PostServiceImpl implements PostService {
             postRepository.save(post);
         } else {
             Set<Image> lastImages = new HashSet<>(post.getImages());
-            sharedPostRepository.deleteAll(post.getSharedBasePosts());
             postRepository.deleteByPostId(postId);
+            sharedPostRepository.deleteAll(post.getSharedBasePosts());
             imageRepository.deleteAll(lastImages);
             if (lastImages.size() > 0) {
                 lastImages.forEach((lastImage -> {

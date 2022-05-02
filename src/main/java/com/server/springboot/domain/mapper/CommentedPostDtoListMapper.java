@@ -27,7 +27,6 @@ public class CommentedPostDtoListMapper implements Converter<List<CommentedPostD
 
     @Override
     public List<CommentedPostDto> convert(List<Comment> from) {
-        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd.MM.yyyy HH:mm:ss");
         List<CommentedPostDto> commentedPostDtoList = new ArrayList<>();
 
         from = from.stream()
@@ -45,8 +44,8 @@ public class CommentedPostDtoListMapper implements Converter<List<CommentedPostD
                     .commentedSharedPost(comment.getCommentedPost().getSharedNewPost() != null
                             ? sharedPostDtoMapper.convert(comment.getCommentedPost().getSharedNewPost())
                             : null)
-                    .createdAt(comment.getCreatedAt().format(formatter))
-                    .editedAt(comment.getEditedAt() != null ? comment.getEditedAt().format(formatter) : null)
+                    .createdAt(comment.getCreatedAt().toString())
+                    .editedAt(comment.getEditedAt() != null ? comment.getEditedAt().toString() : null)
                     .isEdited(comment.isEdited())
                     .build();
 

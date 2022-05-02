@@ -34,7 +34,7 @@ public class FriendDtoListMapper implements Converter<List<FriendDto>, List<Frie
         List<FriendDto> friendDtoList = new ArrayList<>();
 
         from = from.stream()
-                .sorted(Comparator.comparing(Friend::getInvitationDate).reversed())
+                .sorted(Comparator.comparing(Friend::getFriendFromDate).reversed())
                 .collect(Collectors.toList());
 
         for (Friend friend : from) {
@@ -47,7 +47,7 @@ public class FriendDtoListMapper implements Converter<List<FriendDto>, List<Frie
             FriendDto friendDto = FriendDto.builder()
                     .friendId(friend.getFriendId())
                     .isInvitationAccepted(friend.getIsInvitationAccepted() != null ? friend.getIsInvitationAccepted() : null)
-                    .invitationDate(friend.getInvitationDate().toString())
+                    .invitationDate(friend.getInvitationDate() != null ? friend.getInvitationDate().toString() : null)
                     .friendFromDate(friend.getFriendFromDate() != null
                             ? friend.getFriendFromDate().toString() : null)
                     .address(friend.getUserFriend().getUserProfile().getAddress() != null

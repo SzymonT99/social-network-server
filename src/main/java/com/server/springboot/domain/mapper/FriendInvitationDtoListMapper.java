@@ -2,6 +2,7 @@ package com.server.springboot.domain.mapper;
 
 import com.server.springboot.domain.dto.response.FriendInvitationDto;
 import com.server.springboot.domain.dto.response.UserDto;
+import com.server.springboot.domain.entity.ChatMessage;
 import com.server.springboot.domain.entity.Friend;
 import com.server.springboot.domain.entity.User;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -9,6 +10,7 @@ import org.springframework.stereotype.Component;
 
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -27,6 +29,9 @@ public class FriendInvitationDtoListMapper implements Converter<List<FriendInvit
     @Override
     public List<FriendInvitationDto> convert(List<Friend> from) {
         List<FriendInvitationDto> friendInvitationDtoList = new ArrayList<>();
+        from = from.stream()
+                .sorted(Comparator.comparing(Friend::getInvitationDate))
+                .collect(Collectors.toList());
 
         for (Friend friend : from) {
 

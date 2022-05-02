@@ -9,6 +9,7 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
@@ -16,6 +17,8 @@ import java.util.Optional;
 public interface FriendRepository extends JpaRepository<Friend, Long> {
 
     List<Friend> findByUserFriendAndIsInvitationAccepted(User userFriend, Boolean isInvitationAccepted);
+
+    List<Friend> findByUserAndIsInvitationAcceptedAndInvitationDateIsNotNull(User user, Boolean isInvitationAccepted);
 
     boolean existsByUserAndUserFriend(User user, User userFriend);
 
@@ -32,7 +35,7 @@ public interface FriendRepository extends JpaRepository<Friend, Long> {
                                       @Param("userFriend") User userFriend);
 
     @Modifying
-    @Query("UPDATE Friend f SET f.isUserNotifiedAboutAccepting = :isUserNotifiedAboutAccepting where f.userFriend = :user")
+    @Query("UPDATE Friend f SET f.isUserNotifiedAboutAccepting = :isUserNotifiedAboutAccepting where f.user = :user")
     void setUserNotificationDisplayed(@Param("isUserNotifiedAboutAccepting") boolean isUserNotifiedAboutAccepting,
                                       @Param("user") User user);
 }

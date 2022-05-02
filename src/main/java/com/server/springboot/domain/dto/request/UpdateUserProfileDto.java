@@ -1,5 +1,6 @@
 package com.server.springboot.domain.dto.request;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.*;
 
 import javax.validation.constraints.NotEmpty;
@@ -15,6 +16,7 @@ import javax.validation.constraints.NotNull;
 public class UpdateUserProfileDto {
 
     @NotNull
+    @JsonProperty(value = "isPublic")
     private boolean isPublic;
 
     @NotEmpty

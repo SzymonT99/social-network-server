@@ -25,14 +25,13 @@ public class SharedPostCommentActivityDtoMapper implements Converter<SharedPostC
 
     @Override
     public SharedPostCommentActivityDto convert(Comment from) {
-        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd.MM.yyyy HH:mm:ss");
 
         return SharedPostCommentActivityDto.builder()
                 .commentId(from.getCommentId())
                 .text(from.getText())
-                .createdAt(from.getCreatedAt().format(formatter))
+                .createdAt(from.getCreatedAt().toString())
                 .editedAt(from.getEditedAt() != null
-                        ? from.getEditedAt().format(formatter) : null)
+                        ? from.getEditedAt().toString() : null)
                 .isEdited(from.isEdited())
                 .commentAuthor(userDtoMapper.convert(from.getCommentAuthor()))
                 .userLikes(from.getLikes().stream().map(userDtoMapper::convert).collect(Collectors.toList()))

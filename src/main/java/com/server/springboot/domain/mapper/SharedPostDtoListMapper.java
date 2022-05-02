@@ -31,7 +31,6 @@ public class SharedPostDtoListMapper implements Converter<List<SharedPostDto>, L
     public List<SharedPostDto> convert(List<SharedPost> from) {
         List<SharedPostDto> sharedPostDtoList = new ArrayList<>();
 
-
         from = from.stream()
                 .sorted(Comparator.comparing(SharedPost::getDate).reversed())
                 .collect(Collectors.toList());

@@ -114,8 +114,8 @@ public class EventServiceImpl implements EventService {
         if (event.getImage() != null) {
             String lastImageId = event.getImage().getImageId();
             event.setImage(null);
-            imageRepository.deleteByImageId(lastImageId);
             fileService.deleteImage(lastImageId);
+            imageRepository.deleteByImageId(lastImageId);
         }
 
         if (imageFile != null) {

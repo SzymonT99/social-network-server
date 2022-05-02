@@ -24,16 +24,15 @@ public class EventMemberDtoListMapper implements Converter<List<EventMemberDto>,
     @Override
     public List<EventMemberDto> convert(List<EventMember> from) {
         List<EventMemberDto> eventMemberDtoList = new ArrayList<>();
-        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd.MM.yyyy HH:mm:ss");
 
         for (EventMember eventMember : from) {
             EventMemberDto eventMemberDto = EventMemberDto.builder()
                     .eventMember(userDtoMapper.convert(eventMember.getEventMember()))
                     .participationStatus(eventMember.getParticipationStatus())
                     .addedIn(eventMember.getAddedIn() != null
-                            ? eventMember.getAddedIn().format(formatter) : null)
+                            ? eventMember.getAddedIn().toString() : null)
                     .invitationDate(eventMember.getInvitationDate() != null
-                            ? eventMember.getInvitationDate().format(formatter) : null)
+                            ? eventMember.getInvitationDate().toString() : null)
                     .invitationDisplayed(eventMember.isInvitationDisplayed())
                     .build();
             eventMemberDtoList.add(eventMemberDto);

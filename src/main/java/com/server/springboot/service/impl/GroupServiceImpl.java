@@ -226,6 +226,7 @@ public class GroupServiceImpl implements GroupService {
         List<Group> groups = groupRepository.findByGroupInterestsInAndIsDeletedAndIsPublicOrderByCreatedAtDesc(userInterests, false, true);
         List<Group> filteredGroups = groups.stream()
                 .filter((group -> !userGroups.contains(group)))
+                .distinct()
                 .collect(Collectors.toList());
         return groupDtoListMapper.convert(filteredGroups);
     }

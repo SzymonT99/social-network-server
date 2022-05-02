@@ -293,18 +293,20 @@ public class ChatServiceImpl implements ChatService {
 
         UserDto messageAuthor = userDtoMapper.convert(senderUser);
 
-        if (messageDto.getMessageType() == MessageType.TYPING) {
+        if (messageDto.getMessageType() != MessageType.MESSAGE_EDIT
+                && messageDto.getMessageType() != MessageType.MESSAGE_DELETE) {
             return ChatMessageNotificationDto.builder()
                     .messageType(messageDto.getMessageType())
                     .typingMessage(messageDto.getMessage())
                     .chatId(messageDto.getChatId())
+                    .messageId(chatMessage != null ? chatMessage.getMessageId() : null)
                     .author(messageAuthor)
                     .build();
         } else {
             return ChatMessageNotificationDto.builder()
                     .messageType(messageDto.getMessageType())
                     .chatId(messageDto.getChatId())
-                    .messageId(chatMessage != null ? chatMessage.getMessageId() : null)
+                    .messageId(messageDto.getEditedMessageId())
                     .author(messageAuthor)
                     .build();
         }

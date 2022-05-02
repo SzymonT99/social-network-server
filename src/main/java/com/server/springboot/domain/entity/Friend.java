@@ -29,8 +29,7 @@ public class Friend {
     @Column(name = "invitation_displayed", nullable = false)
     private boolean invitationDisplayed;
 
-    @NotNull
-    @Column(name = "invitation_date", nullable = false)
+    @Column(name = "invitation_date")
     private LocalDateTime invitationDate;
 
     @Column(name = "friend_from_date")

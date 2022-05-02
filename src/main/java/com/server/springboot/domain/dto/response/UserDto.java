@@ -1,7 +1,6 @@
 package com.server.springboot.domain.dto.response;
 
 import com.server.springboot.domain.enumeration.ActivityStatus;
-import com.server.springboot.domain.enumeration.Gender;
 import lombok.*;
 
 @AllArgsConstructor
