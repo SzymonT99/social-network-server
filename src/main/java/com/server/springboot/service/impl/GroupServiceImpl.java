@@ -149,8 +149,8 @@ public class GroupServiceImpl implements GroupService {
         if (group.getImage() != null) {
             String lastImageId = group.getImage().getImageId();
             group.setImage(null);
+            fileService.deleteImage(lastImageId);
             imageRepository.deleteByImageId(lastImageId);
-            fileService.deleteImage(group.getImage().getImageId());
         }
 
         if (imageFile != null) {
