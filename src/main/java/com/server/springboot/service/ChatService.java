@@ -10,7 +10,7 @@ import java.util.List;
 
 public interface ChatService {
 
-    void addChat(RequestChatDto requestChatDto, MultipartFile imageFile);
+    void createChat(RequestChatDto requestChatDto, MultipartFile imageFile);
 
     void editChatById(Long chatId, RequestChatDto requestChatDto, MultipartFile imageFile);
 
@@ -25,7 +25,7 @@ public interface ChatService {
 
     ChatMessageDto findChatMessageById(Long messageId);
 
-    void editChatMessageById(Long messageId, RequestChatMessageDto requestChatMessageDto, MultipartFile image);
+    void editChatMessageById(Long messageId, RequestChatMessageDto requestChatMessageDto);
 
     void deleteChatMessageById(Long messageId);
 

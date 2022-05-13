@@ -22,10 +22,8 @@ import org.springframework.transaction.annotation.Transactional;
 @Service
 public class RefreshTokenServiceImpl implements RefreshTokenService {
 
-    @Value("${jwtRefreshExpirationMs}")
-    private Long refreshTokenExpirationMs;
+    private final Long refreshTokenExpirationMs = 86400000L;
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(RefreshTokenServiceImpl.class);
     private final RefreshTokenRepository refreshTokenRepository;
     private final UserRepository userRepository;
     private final JwtUtils jwtUtils;

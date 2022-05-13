@@ -21,9 +21,9 @@ public class ChatMessageDtoListMapper implements Converter<List<ChatMessageDto>,
     private final Converter<ImageDto, Image> imageDtoMapper;
 
     @Autowired
-    public ChatMessageDtoListMapper(Converter<UserDto, User> userDtoMapper, Converter<ImageDto, Image> imageDtoMapper) {
-        this.userDtoMapper = userDtoMapper;
-        this.imageDtoMapper = imageDtoMapper;
+    public ChatMessageDtoListMapper() {
+        this.userDtoMapper = new UserDtoMapper();
+        this.imageDtoMapper = new ImageDtoMapper();
     }
 
     @Override

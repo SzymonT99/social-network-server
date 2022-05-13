@@ -21,13 +21,11 @@ public class EventInvitationDtoListMapper implements Converter<List<EventInvitat
     private final Converter<List<EventMemberDto>, List<EventMember>> eventMemberDtoListMapper;
 
     @Autowired
-    public EventInvitationDtoListMapper(Converter<ImageDto, Image> imageDtoMapper, Converter<UserDto, User> userDtoMapper,
-                                        Converter<AddressDto, Address> addressDtoMapper,
-                                        Converter<List<EventMemberDto>, List<EventMember>> eventMemberDtoListMapper) {
-        this.imageDtoMapper = imageDtoMapper;
-        this.userDtoMapper = userDtoMapper;
-        this.addressDtoMapper = addressDtoMapper;
-        this.eventMemberDtoListMapper = eventMemberDtoListMapper;
+    public EventInvitationDtoListMapper() {
+        this.imageDtoMapper = new ImageDtoMapper();
+        this.userDtoMapper = new UserDtoMapper();
+        this.addressDtoMapper = new AddressDtoMapper();
+        this.eventMemberDtoListMapper = new EventMemberDtoListMapper();
     }
 
     @Override

@@ -25,11 +25,10 @@ public class SharedEventDtoMapper implements Converter<SharedEventDto, SharedEve
 
     @Override
     public SharedEventDto convert(SharedEvent from) {
-        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd.MM.yyyy HH:mm:ss");
 
         return SharedEventDto.builder()
                 .authorOfSharing(userDtoMapper.convert(from.getSharedEventUser()))
-                .sharingDate(from.getDate().format(formatter))
+                .sharingDate(from.getDate().toString())
                 .event(eventDtoMapper.convert(from.getEvent()))
                 .build();
     }

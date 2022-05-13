@@ -21,16 +21,12 @@ public class GroupDetailsDtoMapper implements Converter<GroupDetailsDto, Group>{
     private final Converter<List<InterestDto>, List<Interest>> interestDtoListMapper;
 
     @Autowired
-    public GroupDetailsDtoMapper(Converter<ImageDto, Image> imageDtoMapper,
-                                 Converter<UserDto, User> userDtoMapper,
-                                 Converter<List<PostDto>, List<Post>> postDtoListMapper,
-                                 Converter<List<GroupRuleDto>, List<GroupRule>> groupRuleDtoListMapper,
-                                 Converter<List<InterestDto>, List<Interest>> interestDtoListMapper) {
-        this.imageDtoMapper = imageDtoMapper;
-        this.userDtoMapper = userDtoMapper;
-        this.postDtoListMapper = postDtoListMapper;
-        this.groupRuleDtoListMapper = groupRuleDtoListMapper;
-        this.interestDtoListMapper = interestDtoListMapper;
+    public GroupDetailsDtoMapper() {
+        this.imageDtoMapper = new ImageDtoMapper();
+        this.userDtoMapper = new UserDtoMapper();
+        this.postDtoListMapper = new PostDtoListMapper();
+        this.groupRuleDtoListMapper = new GroupRuleDtoListMapper();
+        this.interestDtoListMapper = new InterestDtoListMapper();
     }
 
     @Override

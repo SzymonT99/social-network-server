@@ -87,7 +87,7 @@ public class User {
     private Set<Post> posts;
 
     @OneToMany(mappedBy = "commentAuthor", fetch = FetchType.LAZY,
-          cascade = CascadeType.ALL,orphanRemoval = true)
+            cascade = CascadeType.ALL, orphanRemoval = true)
     private Set<Comment> comments;
 
     @OneToMany(mappedBy = "sharedPostUser", fetch = FetchType.LAZY,
@@ -180,5 +180,21 @@ public class User {
 
     public void dislikeComment(Comment comment) {
         this.likedComments.remove(comment);
+    }
+
+    public User(User user) {
+        this.userId = user.getUserId();
+        this.username = user.getUsername();
+        this.password = user.getPassword();
+        this.email = user.getEmail();
+        this.phoneNumber = user.getPhoneNumber();
+        this.incorrectLoginCounter = user.getIncorrectLoginCounter();
+        this.createdAt = user.getCreatedAt();
+        this.verifiedAccount = user.isVerifiedAccount();
+        this.activityStatus = user.getActivityStatus();
+        this.isBlocked = user.isBlocked();
+        this.isBanned = user.isBanned();
+        this.userProfile = user.getUserProfile();
+        this.roles = user.getRoles();
     }
 }

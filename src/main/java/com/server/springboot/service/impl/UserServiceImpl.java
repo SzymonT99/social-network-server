@@ -6,7 +6,7 @@ import com.server.springboot.domain.entity.*;
 import com.server.springboot.domain.enumeration.ActionType;
 import com.server.springboot.domain.enumeration.ActivityStatus;
 import com.server.springboot.domain.enumeration.AppRole;
-import com.server.springboot.domain.mapper.Converter;
+import com.server.springboot.domain.mapper.*;
 import com.server.springboot.domain.repository.*;
 import com.server.springboot.exception.*;
 import com.server.springboot.security.JwtUtils;
@@ -14,7 +14,6 @@ import com.server.springboot.service.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -40,43 +39,44 @@ public class UserServiceImpl implements UserService {
     private static final int RESET_PASSWORD_TOKEN_EXPIRATION_TIME = 3600000;
     private final Integer MAX_LOGIN_ATTEMPTS = 5;
 
-    @Value("${jwtAccessExpirationMs}")
-    private Long accessTokenExpirationMs;
+    private static final Long accessTokenExpirationMs = 14400000L;
 
     private static final Logger LOGGER = LoggerFactory.getLogger(UserServiceImpl.class);
     private final UserRepository userRepository;
+    private final BCryptPasswordEncoder passwordEncoder;
     private final RoleRepository roleRepository;
     private final ReportRepository reportRepository;
     private final PasswordResetRepository passwordResetRepository;
     private final AccountVerificationRepository accountVerificationRepository;
     private final RefreshTokenRepository refreshTokenRepository;
-    private final Converter<User, CreateUserDto> userMapper;
     private final EmailService emailService;
     private final TemplateEngine templateEngine;
     private final AuthenticationManager authenticationManager;
     private final JwtUtils jwtUtils;
     private final RefreshTokenService refreshTokenService;
     private final UserDetailsServiceImpl userDetailsService;
-    private final Converter<Report, RequestReportDto> reportMapper;
-    private final Converter<List<ReportDto>, List<Report>> reportDtoListMapper;
-    private final Converter<List<UserDto>, List<User>> userDtoListMapper;
+    private final UserMapper userMapper;
+    private final ReportMapper reportMapper;
+    private final UserDtoListMapper userDtoListMapper;
+    private final ReportDtoListMapper reportDtoListMapper;
+    private final UserAccountDtoListMapper userAccountDtoListMapper;
     private final NotificationService notificationService;
-    private final Converter<List<UserAccountDto>, List<User>> userAccountDtoListMapper;
 
     @Autowired
-    public UserServiceImpl(UserRepository userRepository, RoleRepository roleRepository,
+    public UserServiceImpl(UserRepository userRepository, BCryptPasswordEncoder passwordEncoder, RoleRepository roleRepository,
                            ReportRepository reportRepository, PasswordResetRepository passwordResetRepository,
                            AccountVerificationRepository accountVerificationRepository,
-                           RefreshTokenRepository refreshTokenRepository, Converter<User, CreateUserDto> userMapper,
+                           RefreshTokenRepository refreshTokenRepository, UserMapper userMapper,
                            EmailService emailService, TemplateEngine templateEngine,
                            AuthenticationManager authenticationManager, JwtUtils jwtUtils,
                            RefreshTokenService refreshTokenService, UserDetailsServiceImpl userDetailsService,
-                           Converter<Report, RequestReportDto> reportMapper,
-                           Converter<List<ReportDto>, List<Report>> reportDtoListMapper,
-                           Converter<List<UserDto>, List<User>> userDtoListMapper,
+                           ReportMapper reportMapper,
+                           ReportDtoListMapper reportDtoListMapper,
+                           UserDtoListMapper userDtoListMapper,
                            NotificationService notificationService,
-                           Converter<List<UserAccountDto>, List<User>> userAccountDtoListMapper) {
+                           UserAccountDtoListMapper userAccountDtoListMapper) {
         this.userRepository = userRepository;
+        this.passwordEncoder = passwordEncoder;
         this.roleRepository = roleRepository;
         this.reportRepository = reportRepository;
         this.passwordResetRepository = passwordResetRepository;
@@ -107,9 +107,8 @@ public class UserServiceImpl implements UserService {
             throw new ForbiddenException("There is already a user with the given email");
         }
 
-        BCryptPasswordEncoder bCryptPasswordEncoder = new BCryptPasswordEncoder();
         User newUser = userMapper.convert(createUserDto);
-        newUser.setPassword(bCryptPasswordEncoder.encode(createUserDto.getPassword()));
+        newUser.setPassword(passwordEncoder.encode(createUserDto.getPassword()));
 
         Set<Role> roles = new HashSet<>();
         Role userRole = roleRepository.findByName(AppRole.ROLE_USER)
@@ -137,7 +136,7 @@ public class UserServiceImpl implements UserService {
                 .orElseThrow(() -> new NotFoundException("The specified account activation code was not found"));
 
         User user = accountVerification.getUser();
-        boolean verifiedAccount = userRepository.findByUsername(user.getUsername()).get().isVerifiedAccount();
+        boolean verifiedAccount = user.isVerifiedAccount();
         if (verifiedAccount) {
             LOGGER.info("---- Account is already activated");
             throw new BadRequestException("The account has already been activated");
@@ -168,25 +167,23 @@ public class UserServiceImpl implements UserService {
             userRepository.save(authorizedUser);
 
             if (authorizedUser.getIncorrectLoginCounter() >= MAX_LOGIN_ATTEMPTS + 1 && authorizedUser.isBlocked()) {
-                throw new ForbiddenException(String.format("User account with login: %s is blocked", userLoginDto.getLogin()));
+                throw new ForbiddenException("User account is blocked");
             }
         }
 
         Authentication authentication = authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(userLoginDto.getLogin(), userLoginDto.getPassword()));
 
-        // Gdy autentykacja jest pomyślna, wykonywany jest poniższy kod
         authorizedUser.setIncorrectLoginCounter(0);
         authorizedUser.setActivityStatus(ActivityStatus.ONLINE);
         userRepository.save(authorizedUser);
 
         if (authorizedUser.isBanned()) {
-            throw new ForbiddenException(String.format("User account with login: %s has been banned. " +
-                    "In order to unblock the account, please contact the admin", userLoginDto.getLogin()));
+            throw new ForbiddenException("User account with login has been banned.");
         }
 
         if (!authorizedUser.isVerifiedAccount()) {
-            throw new ConflictRequestException(String.format("User account with login: %s has not been activated", userLoginDto.getLogin()));
+            throw new ConflictRequestException("User account with login: %s has not been activated");
         }
 
         SecurityContextHolder.getContext().setAuthentication(authentication);
@@ -273,7 +270,6 @@ public class UserServiceImpl implements UserService {
                 .orElseThrow(() -> new NotFoundException("Not found user with given login: " + deleteUserDto.getLogin()));
 
         userRepository.delete(user);
-
     }
 
     @Override
@@ -286,6 +282,11 @@ public class UserServiceImpl implements UserService {
 
         Authentication authentication = authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(changeUsernameDto.getOldUsername(), changeUsernameDto.getPassword()));
+
+        if (userRepository.existsByUsername(changeUsernameDto.getNewUsername())) {
+            LOGGER.info("---- Username already exist");
+            throw new ForbiddenException("There is already a user with the given username");
+        }
 
         user.setUsername(changeUsernameDto.getNewUsername());
         userRepository.save(user);
@@ -322,6 +323,11 @@ public class UserServiceImpl implements UserService {
 
         Authentication authentication = authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(changeEmailDto.getOldEmail(), changeEmailDto.getPassword()));
+
+        if (userRepository.existsByEmail(changeEmailDto.getNewEmail())) {
+            LOGGER.info("---- Email already exist");
+            throw new ForbiddenException("There is already a user with the given email");
+        }
 
         user.setEmail(changeEmailDto.getNewEmail());
         userRepository.save(user);
@@ -360,8 +366,7 @@ public class UserServiceImpl implements UserService {
             throw new BadRequestException("Re-entered new password is not correct");
         }
 
-        BCryptPasswordEncoder bCryptPasswordEncoder = new BCryptPasswordEncoder();
-        user.setPassword(bCryptPasswordEncoder.encode(changeUserPasswordDto.getNewPassword()));
+        user.setPassword(passwordEncoder.encode(changeUserPasswordDto.getNewPassword()));
         userRepository.save(user);
 
         UserDetailsImpl userDetails = (UserDetailsImpl) authentication.getPrincipal();
@@ -402,7 +407,7 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public void reportUserBySuspectId(RequestReportDto requestReportDto) {
-        Long loggedUserId = jwtUtils.getLoggedUserId();
+        Long loggedUserId = jwtUtils.getLoggedInUserId();
         User loggedUser = userRepository.findById(loggedUserId)
                 .orElseThrow(() -> new NotFoundException("Not found user with id: " + loggedUserId));
         User suspectUser = userRepository.findById(requestReportDto.getSuspectId())
@@ -432,7 +437,7 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public void sendResetPasswordLink(String userEmail) {
+    public void sendResetPasswordToken(String userEmail) {
         User user = userRepository.findByEmail(userEmail)
                 .orElseThrow(() -> new NotFoundException("Not found user with given email: " + userEmail));
         String resetCode = UUID.randomUUID().toString();
@@ -465,7 +470,7 @@ public class UserServiceImpl implements UserService {
             } else {
                 passwordReset.setUsed(true);
                 passwordResetRepository.save(passwordReset);
-                user.setPassword(resetPasswordDto.getNewPassword());
+                user.setPassword(passwordEncoder.encode(resetPasswordDto.getNewPassword()));
                 userRepository.save(user);
             }
         }
@@ -479,7 +484,7 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public void changeActivityStatus(String status) {
-        Long loggedUserId = jwtUtils.getLoggedUserId();
+        Long loggedUserId = jwtUtils.getLoggedInUserId();
         User loggedUser = userRepository.findById(loggedUserId)
                 .orElseThrow(() -> new NotFoundException("Not found user with id: " + loggedUserId));
         loggedUser.setActivityStatus(ActivityStatus.valueOf(status));
@@ -515,7 +520,6 @@ public class UserServiceImpl implements UserService {
 
         UserProfile userProfile = user.getUserProfile();
 
-
         user.setUsername(userAccountUpdateDto.getUsername());
         user.setEmail(userAccountUpdateDto.getEmail());
         user.setPhoneNumber(userAccountUpdateDto.getPhoneNumber());
@@ -542,12 +546,15 @@ public class UserServiceImpl implements UserService {
     }
 
     public void informUserFriendsAboutActivity(User user) {
-        List<User> userFriendList = user.getUserFriends().stream()
-                .map(Friend::getUser)
-                .collect(Collectors.toList());
+        if (user.getUserFriends() != null) {
+            List<User> userFriendList = user.getUserFriends().stream()
+                    .map(Friend::getUser)
+                    .collect(Collectors.toList());
 
-        for (User userFriend : userFriendList) {
-            notificationService.sendNotificationToUser(user, userFriend.getUserId(), ActionType.FRIENDS_STATUS);
+            for (User userFriend : userFriendList) {
+                notificationService.sendNotificationToUser(user, userFriend.getUserId(), ActionType.FRIENDS_STATUS);
+            }
         }
+
     }
 }

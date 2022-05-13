@@ -19,17 +19,14 @@ public class CommentedPostDtoListMapper implements Converter<List<CommentedPostD
     private final Converter<SharedPostDto, SharedPost> sharedPostDtoMapper;
 
     @Autowired
-    public CommentedPostDtoListMapper(Converter<UserDto, User> userDtoMapper,
-                                      Converter<PostDto, Post> postDtoMapper,
-                                      Converter<SharedPostDto, SharedPost> sharedPostDtoMapper) {
-        this.userDtoMapper = userDtoMapper;
-        this.postDtoMapper = postDtoMapper;
-        this.sharedPostDtoMapper = sharedPostDtoMapper;
+    public CommentedPostDtoListMapper() {
+        this.userDtoMapper = new UserDtoMapper();
+        this.postDtoMapper = new PostDtoMapper();
+        this.sharedPostDtoMapper = new SharedPostDtoMapper();
     }
 
     @Override
     public List<CommentedPostDto> convert(List<Comment> from) {
-        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd.MM.yyyy HH:mm:ss");
         List<CommentedPostDto> commentedPostDtoList = new ArrayList<>();
 
         from = from.stream()
@@ -47,8 +44,8 @@ public class CommentedPostDtoListMapper implements Converter<List<CommentedPostD
                     .commentedSharedPost(comment.getCommentedPost().getSharedNewPost() != null
                             ? sharedPostDtoMapper.convert(comment.getCommentedPost().getSharedNewPost())
                             : null)
-                    .createdAt(comment.getCreatedAt().format(formatter))
-                    .editedAt(comment.getEditedAt() != null ? comment.getEditedAt().format(formatter) : null)
+                    .createdAt(comment.getCreatedAt().toString())
+                    .editedAt(comment.getEditedAt() != null ? comment.getEditedAt().toString() : null)
                     .isEdited(comment.isEdited())
                     .build();
 

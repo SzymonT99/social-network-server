@@ -39,7 +39,7 @@ public class FriendApiController {
     @ApiOperation(value = "Get all received invitations to friends")
     @GetMapping(value = "/friends/invitations/received")
     public ResponseEntity<List<FriendInvitationDto>> getUserReceivedInvitationToFriends(@RequestParam(value = "userId") Long userId,
-                                                                                @RequestParam(value = "isDisplayed") boolean isDisplayed) {
+                                                                                        @RequestParam(value = "isDisplayed") boolean isDisplayed) {
         LOGGER.info("---- Get all received invitation to friends");
         return new ResponseEntity<>(friendService.findAllUserReceivedInvitationsToFriends(userId, isDisplayed), HttpStatus.OK);
     }

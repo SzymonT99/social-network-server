@@ -21,25 +21,22 @@ public class PostDtoMapper implements Converter<PostDto, Post> {
     private final Converter<LikedPostDto, LikedPost> likedPostDtoMapper;
 
     @Autowired
-    public PostDtoMapper(Converter<List<ImageDto>, List<Image>> imageDtoListMapper, Converter<UserDto, User> userDtoMapper,
-                         Converter<List<CommentDto>, List<Comment>> commentDtoListMapper,
-                         Converter<LikedPostDto, LikedPost> likedPostDtoMapper) {
-        this.imageDtoListMapper = imageDtoListMapper;
-        this.userDtoMapper = userDtoMapper;
-        this.commentDtoListMapper = commentDtoListMapper;
-        this.likedPostDtoMapper = likedPostDtoMapper;
+    public PostDtoMapper() {
+        this.imageDtoListMapper = new ImageDtoListMapper();
+        this.userDtoMapper = new UserDtoMapper();
+        this.commentDtoListMapper = new CommentDtoListMapper();
+        this.likedPostDtoMapper = new LikedPostDtoMapper();
     }
 
     @Override
     public PostDto convert(Post from) {
-        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd.MM.yyyy HH:mm:ss");
         return PostDto.builder()
                 .postId(from.getPostId())
                 .postAuthor(userDtoMapper.convert(from.getPostAuthor()))
                 .text(from.getText())
                 .images(from.getImages() != null ? imageDtoListMapper.convert(Lists.newArrayList(from.getImages())) : new ArrayList<>())
                 .createdAt(from.getCreatedAt().toString())
-                .editedAt(from.getEditedAt() != null ? from.getEditedAt().format(formatter) : null)
+                .editedAt(from.getEditedAt() != null ? from.getEditedAt().toString() : null)
                 .isPublic(from.isPublic())
                 .isCommentingBlocked(from.isCommentingBlocked())
                 .isEdited(from.isEdited())
@@ -54,7 +51,7 @@ public class PostDtoMapper implements Converter<PostDto, Post> {
                                         .authorOfSharing(userDtoMapper.convert(sharedPost.getSharedPostUser()))
                                         .sharingText(sharedPost.getNewPost().getText())
                                         .isPublic(sharedPost.getNewPost().isPublic())
-                                        .date(sharedPost.getDate().format(formatter))
+                                        .date(sharedPost.getDate().toString())
                                         .build())
                                 .collect(Collectors.toList()) : new ArrayList<>()
                 )

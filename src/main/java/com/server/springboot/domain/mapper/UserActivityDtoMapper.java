@@ -19,16 +19,12 @@ public class UserActivityDtoMapper implements Converter<UserActivityDto, User> {
     private final Converter<List<GroupDto>, List<Group>> groupDtoListMapper;
 
     @Autowired
-    public UserActivityDtoMapper(Converter<List<PostDto>, List<Post>> postDtoListMapper,
-                                 Converter<List<CommentedPostDto>, List<Comment>> commentedPostDtoListMapper,
-                                 Converter<List<SharedPostDto>, List<SharedPost>> sharedPostDtoListMapper,
-                                 Converter<List<SharedEventDto>, List<SharedEvent>> sharedEventDtoListMapper,
-                                 Converter<List<GroupDto>, List<Group>> groupDtoListMapper) {
-        this.postDtoListMapper = postDtoListMapper;
-        this.commentedPostDtoListMapper = commentedPostDtoListMapper;
-        this.sharedPostDtoListMapper = sharedPostDtoListMapper;
-        this.sharedEventDtoListMapper = sharedEventDtoListMapper;
-        this.groupDtoListMapper = groupDtoListMapper;
+    public UserActivityDtoMapper() {
+        this.postDtoListMapper = new PostDtoListMapper();
+        this.commentedPostDtoListMapper = new CommentedPostDtoListMapper();
+        this.sharedPostDtoListMapper = new SharedPostDtoListMapper();
+        this.sharedEventDtoListMapper = new SharedEventDtoListMapper();
+        this.groupDtoListMapper = new GroupDtoListMapper();
     }
 
 

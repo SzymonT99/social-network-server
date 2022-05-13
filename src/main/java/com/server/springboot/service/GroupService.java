@@ -10,7 +10,7 @@ import java.util.List;
 
 public interface GroupService {
 
-    GroupDetailsDto addGroup(RequestGroupDto requestGroupDto, MultipartFile imageFile);
+    GroupDetailsDto createGroup(RequestGroupDto requestGroupDto, MultipartFile imageFile);
 
     void editGroup(Long groupId, RequestGroupDto requestGroupDto, MultipartFile imageFile) throws IOException;
 

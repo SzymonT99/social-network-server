@@ -19,9 +19,9 @@ public class GroupMemberDtoListMapper implements Converter<List<GroupMemberDto>,
     private final Converter<AddressDto, Address> addressDtoMapper;
 
     @Autowired
-    public GroupMemberDtoListMapper(Converter<UserDto, User> userDtoMapper, Converter<AddressDto, Address> addressDtoMapper) {
-        this.userDtoMapper = userDtoMapper;
-        this.addressDtoMapper = addressDtoMapper;
+    public GroupMemberDtoListMapper() {
+        this.userDtoMapper = new UserDtoMapper();
+        this.addressDtoMapper = new AddressDtoMapper();
     }
 
     @Override

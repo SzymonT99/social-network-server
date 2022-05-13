@@ -19,6 +19,8 @@ public interface CommentRepository extends JpaRepository<Comment, Long> {
     @Transactional
     void deleteByCommentId(Long commentId);
 
+    List<Comment> findAllByCommentAuthor(User user);
+
     List<Comment> findAllByCommentAuthorInAndCreatedAtIsGreaterThan(List<User> users, LocalDateTime dateLimit);
 
     List<Comment> findAllByCommentedPostIn(List<Post> posts);

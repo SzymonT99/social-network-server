@@ -3,7 +3,6 @@ package com.server.springboot.service.impl;
 import com.google.common.collect.Lists;
 import com.server.springboot.domain.dto.response.*;
 import com.server.springboot.domain.entity.*;
-import com.server.springboot.domain.enumeration.ActionType;
 import com.server.springboot.domain.enumeration.ActivityType;
 import com.server.springboot.domain.enumeration.GroupMemberStatus;
 import com.server.springboot.domain.enumeration.NotificationType;
@@ -15,9 +14,7 @@ import com.server.springboot.service.EventService;
 import com.server.springboot.service.GroupService;
 import com.server.springboot.service.UserActivityService;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.*;
@@ -105,7 +102,7 @@ public class UserActivityServiceImpl implements UserActivityService {
 
     @Override
     public List<BoardActivityItemDto> findUserActivityBoard() {
-        Long loggedUserId = jwtUtils.getLoggedUserId();
+        Long loggedUserId = jwtUtils.getLoggedInUserId();
         User user = userRepository.findById(loggedUserId)
                 .orElseThrow(() -> new NotFoundException("Not found user with given id: " + loggedUserId));
 
@@ -115,6 +112,7 @@ public class UserActivityServiceImpl implements UserActivityService {
 
         List<Group> userGroups = groupMemberRepository.findByMemberAndGroupMemberStatus(user, GroupMemberStatus.JOINED).stream()
                 .map(GroupMember::getGroup)
+                .filter(group -> !group.isDeleted())
                 .collect(Collectors.toList());
 
         List<Post> createdPosts = postRepository.findAllByPostAuthorInAndCreatedAtIsGreaterThanAndIsDeleted(
@@ -132,40 +130,45 @@ public class UserActivityServiceImpl implements UserActivityService {
         List<LikedPost> likedPosts = likedPostRepository.findAllByLikedPostUserInAndDateIsGreaterThan(
                 activeUsers.stream().filter(activeUser -> !activeUser.getUserId().equals(loggedUserId)).collect(Collectors.toList()),
                 LocalDateTime.now().minusWeeks(2)).stream()
-                .filter(likedPost -> likedPost.getPost().getSharedNewPost() == null
-                        && !likedPost.getPost().isDeleted() && likedPost.getPost().getChangedProfileImage() == null)
+                .filter(likedPost -> likedPost.getPost().getSharedNewPost() == null && !likedPost.getPost().isDeleted()
+                        && likedPost.getPost().getChangedProfileImage() == null && likedPost.getPost().getGroup() == null)
                 .collect(Collectors.toList());
 
         List<LikedPost> likedSharedPosts = likedPostRepository.findAllByLikedPostUserInAndDateIsGreaterThan(
                 activeUsers.stream().filter(activeUser -> !activeUser.getUserId().equals(loggedUserId)).collect(Collectors.toList()),
                 LocalDateTime.now().minusWeeks(2)).stream()
-                .filter(likedPost -> likedPost.getPost().getSharedNewPost() != null && !likedPost.getPost().isDeleted())
+                .filter(likedPost -> likedPost.getPost().getSharedNewPost() != null && !likedPost.getPost().isDeleted()
+                        && likedPost.getPost().getSharedNewPost().getBasePost().getGroup() == null)
                 .collect(Collectors.toList());
 
         List<Comment> comments = commentRepository.findAllByCommentAuthorInAndCreatedAtIsGreaterThan(
                 activeUsers.stream().filter(activeUser -> !activeUser.getUserId().equals(loggedUserId)).collect(Collectors.toList()),
                 LocalDateTime.now().minusWeeks(2)).stream()
-                .filter(comment -> comment.getCommentedPost().getSharedNewPost() == null
-                        && !comment.getCommentedPost().isDeleted() && comment.getCommentedPost().getChangedProfileImage() == null)
+                .filter(comment -> comment.getCommentedPost().getSharedNewPost() == null && !comment.getCommentedPost().isDeleted()
+                        && comment.getCommentedPost().getChangedProfileImage() == null && comment.getCommentedPost().getGroup() == null)
                 .collect(Collectors.toList());
 
         List<Comment> commentedSharedPosts = commentRepository.findAllByCommentAuthorInAndCreatedAtIsGreaterThan(
                 activeUsers.stream().filter(activeUser -> !activeUser.getUserId().equals(loggedUserId)).collect(Collectors.toList()),
                 LocalDateTime.now().minusWeeks(2)).stream()
-                .filter(comment -> comment.getCommentedPost().getSharedNewPost() != null && !comment.getCommentedPost().isDeleted())
+                .filter(comment -> comment.getCommentedPost().getSharedNewPost() != null && !comment.getCommentedPost().isDeleted()
+                        && comment.getCommentedPost().getSharedNewPost().getBasePost().getGroup() == null)
                 .collect(Collectors.toList());
 
         List<SharedPost> sharedPosts = sharedPostRepository.findAllBySharedPostUserInAndDateIsGreaterThan(
                 activeUsers,
-                LocalDateTime.now().minusWeeks(2));
+                LocalDateTime.now().minusWeeks(2)).stream()
+                .filter(sharedPost -> !sharedPost.getNewPost().isDeleted()).collect(Collectors.toList());
 
         List<SharedEvent> sharedEvents = sharedEventRepository.findAllBySharedEventUserInAndDateIsGreaterThan(
                 activeUsers,
-                LocalDateTime.now().minusWeeks(2));
+                LocalDateTime.now().minusWeeks(2)).stream()
+                .filter(sharedEvent -> !sharedEvent.getEvent().isDeleted()).collect(Collectors.toList());
 
         List<EventMember> eventReaction = eventMemberRepository.findAllByEventMemberInAndAddedInIsGreaterThan(
                 activeUsers,
-                LocalDateTime.now().minusWeeks(2));
+                LocalDateTime.now().minusWeeks(2)).stream()
+                .filter(eventMember -> !eventMember.getEvent().isDeleted()).collect(Collectors.toList());
 
         List<GroupMember> groupJoining = groupMemberRepository.findAllByMemberInAndGroupMemberStatusAndAddedInIsGreaterThan(
                 activeUsers,
@@ -305,7 +308,7 @@ public class UserActivityServiceImpl implements UserActivityService {
 
     @Override
     public List<NotificationDto> findUserNotifications(boolean isDisplayed) {
-        Long loggedUserId = jwtUtils.getLoggedUserId();
+        Long loggedUserId = jwtUtils.getLoggedInUserId();
         User user = userRepository.findById(loggedUserId)
                 .orElseThrow(() -> new NotFoundException("Not found user with given id: " + loggedUserId));
 
@@ -333,7 +336,8 @@ public class UserActivityServiceImpl implements UserActivityService {
 
         List<SharedPost> sharedPosts = sharedPostRepository.findAllByBasePostIn(userPosts);
 
-        List<Friend> acceptedFriends = friendRepository.findByUserFriendAndIsInvitationAccepted(user, true);
+        List<Friend> acceptedFriends = friendRepository
+                .findByUserAndIsInvitationAcceptedAndInvitationDateIsNotNull(user, true);
 
         List<Post> groupPosts = postRepository.findAllByGroupIn(userGroups);
 
@@ -394,8 +398,8 @@ public class UserActivityServiceImpl implements UserActivityService {
                     .notificationType(NotificationType.ACCEPTANCE_INVITATION_TO_FRIENDS)
                     .notificationDate(acceptedFriend.getFriendFromDate().toString())
                     .isNotificationDisplayed(acceptedFriend.isUserNotifiedAboutAccepting())
-                    .activityInitiator(userDtoMapper.convert(acceptedFriend.getUser()))
-                    .details(Collections.singletonMap("userFriendId", acceptedFriend.getUser().getUserId()))
+                    .activityInitiator(userDtoMapper.convert(acceptedFriend.getUserFriend()))
+                    .details(Collections.singletonMap("userFriendId", acceptedFriend.getUserFriend().getUserId()))
                     .build();
             notificationList.add(notificationDto);
         });

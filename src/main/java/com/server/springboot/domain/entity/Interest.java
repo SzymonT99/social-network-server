@@ -33,4 +33,7 @@ public class Interest {
     @ManyToMany(mappedBy = "groupInterests")
     private Set<Group> interestedGroup;
 
+    public Interest(String name) {
+        this.name = name;
+    }
 }

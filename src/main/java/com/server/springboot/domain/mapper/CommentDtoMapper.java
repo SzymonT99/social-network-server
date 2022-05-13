@@ -16,8 +16,8 @@ public class CommentDtoMapper implements Converter<CommentDto, Comment> {
     private final Converter<UserDto, User> userDtoMapper;
 
     @Autowired
-    public CommentDtoMapper(Converter<UserDto, User> userDtoMapper) {
-        this.userDtoMapper = userDtoMapper;
+    public CommentDtoMapper() {
+        this.userDtoMapper = new UserDtoMapper();
     }
 
     @Override

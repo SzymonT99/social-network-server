@@ -19,14 +19,11 @@ import java.util.stream.Collectors;
 public class JwtUtils {
     private static final Logger LOGGER = LoggerFactory.getLogger(JwtUtils.class);
 
-    @Value("${jwtSecret}")
-    private String jwtSecret;
+    private final String jwtSecret = "&b&ODcA4((&`v@#Pe/v@d0ej?Fc[UL";
 
-    @Value("${jwtAccessExpirationMs}")
-    private Long accessTokenExpirationMs;
+    private final Long accessTokenExpirationMs = 14400000L;
 
-    @Value("${jwtRefreshExpirationMs}")
-    private Long refreshTokenExpirationMs;
+    private final Long refreshTokenExpirationMs = 60480000L;
 
     public String generateAccessToken(UserDetailsImpl userPrincipal) {
         String authorities = userPrincipal.getAuthorities().stream()
@@ -62,7 +59,7 @@ public class JwtUtils {
                 .getSubject();
     }
 
-    public Long getLoggedUserId() {
+    public Long getLoggedInUserId() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         UserDetailsImpl loggedUser = (UserDetailsImpl) authentication.getPrincipal();
         return loggedUser.getUserId();

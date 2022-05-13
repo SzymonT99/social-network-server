@@ -18,8 +18,8 @@ public class ChatMemberDtoListMapper implements Converter<List<ChatMemberDto>, L
     private final Converter<UserDto, User> userDtoMapper;
 
     @Autowired
-    public ChatMemberDtoListMapper(Converter<UserDto, User> userDtoMapper) {
-        this.userDtoMapper = userDtoMapper;
+    public ChatMemberDtoListMapper() {
+        this.userDtoMapper = new UserDtoMapper();
     }
 
     @Override

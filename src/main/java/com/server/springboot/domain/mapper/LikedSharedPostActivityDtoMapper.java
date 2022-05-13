@@ -24,11 +24,9 @@ public class LikedSharedPostActivityDtoMapper implements Converter<LikedSharedPo
 
     @Override
     public LikedSharedPostActivityDto convert(LikedPost from) {
-        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd.MM.yyyy HH:mm:ss");
-
         return LikedSharedPostActivityDto.builder()
                 .likedUser(userDtoMapper.convert(from.getLikedPostUser()))
-                .date(from.getDate().format(formatter))
+                .date(from.getDate().toString())
                 .sharedPost(sharedPostDtoMapper.convert(from.getPost().getSharedNewPost()))
                 .build();
     }

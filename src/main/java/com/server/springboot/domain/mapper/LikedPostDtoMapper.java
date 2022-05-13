@@ -15,17 +15,15 @@ public class LikedPostDtoMapper implements Converter<LikedPostDto, LikedPost> {
     private final Converter<UserDto, User> userDtoMapper;
 
     @Autowired
-    public LikedPostDtoMapper(Converter<UserDto, User> userDtoMapper) {
-        this.userDtoMapper = userDtoMapper;
+    public LikedPostDtoMapper() {
+        this.userDtoMapper = new UserDtoMapper();
     }
 
     @Override
     public LikedPostDto convert(LikedPost from) {
-        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd.MM.yyyy HH:mm:ss");
-
         return LikedPostDto.builder()
                 .likedUser(userDtoMapper.convert(from.getLikedPostUser()))
-                .date(from.getDate().format(formatter))
+                .date(from.getDate().toString())
                 .build();
     }
 }

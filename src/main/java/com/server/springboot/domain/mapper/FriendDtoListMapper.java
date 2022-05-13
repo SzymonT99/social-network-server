@@ -23,11 +23,10 @@ public class FriendDtoListMapper implements Converter<List<FriendDto>, List<Frie
     private final Converter<AddressDto, Address> addressDtoMapper;
 
     @Autowired
-    public FriendDtoListMapper(Converter<UserDto, User> userDtoMapper,
-                               Converter<List<UserDto>, List<User>> userDtoListMapper, Converter<AddressDto, Address> addressDtoMapper) {
-        this.userDtoMapper = userDtoMapper;
-        this.userDtoListMapper = userDtoListMapper;
-        this.addressDtoMapper = addressDtoMapper;
+    public FriendDtoListMapper() {
+        this.userDtoMapper = new UserDtoMapper();
+        this.userDtoListMapper = new UserDtoListMapper();
+        this.addressDtoMapper = new AddressDtoMapper();
     }
 
     @Override
@@ -35,7 +34,7 @@ public class FriendDtoListMapper implements Converter<List<FriendDto>, List<Frie
         List<FriendDto> friendDtoList = new ArrayList<>();
 
         from = from.stream()
-                .sorted(Comparator.comparing(Friend::getInvitationDate).reversed())
+                .sorted(Comparator.comparing(Friend::getFriendFromDate).reversed())
                 .collect(Collectors.toList());
 
         for (Friend friend : from) {
@@ -48,7 +47,7 @@ public class FriendDtoListMapper implements Converter<List<FriendDto>, List<Frie
             FriendDto friendDto = FriendDto.builder()
                     .friendId(friend.getFriendId())
                     .isInvitationAccepted(friend.getIsInvitationAccepted() != null ? friend.getIsInvitationAccepted() : null)
-                    .invitationDate(friend.getInvitationDate().toString())
+                    .invitationDate(friend.getInvitationDate() != null ? friend.getInvitationDate().toString() : null)
                     .friendFromDate(friend.getFriendFromDate() != null
                             ? friend.getFriendFromDate().toString() : null)
                     .address(friend.getUserFriend().getUserProfile().getAddress() != null

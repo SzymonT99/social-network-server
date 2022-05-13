@@ -20,12 +20,10 @@ public class ChatDtoListMapper implements Converter<List<ChatDto>, List<Chat>> {
     private final Converter<ImageDto, Image> imageDtoMapper;
 
     @Autowired
-    public ChatDtoListMapper(Converter<List<ChatMemberDto>, List<ChatMember>> chatMemberDtoListMapper,
-                             Converter<UserDto, User> userDtoMapper,
-                             Converter<ImageDto, Image> imageDtoMapper) {
-        this.chatMemberDtoListMapper = chatMemberDtoListMapper;
-        this.userDtoMapper = userDtoMapper;
-        this.imageDtoMapper = imageDtoMapper;
+    public ChatDtoListMapper() {
+        this.chatMemberDtoListMapper = new ChatMemberDtoListMapper();
+        this.userDtoMapper = new UserDtoMapper();
+        this.imageDtoMapper = new ImageDtoMapper();
     }
 
     @Override

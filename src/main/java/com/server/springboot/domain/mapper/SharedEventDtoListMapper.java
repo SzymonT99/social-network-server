@@ -23,14 +23,13 @@ public class SharedEventDtoListMapper implements Converter<List<SharedEventDto>,
     private final Converter<UserDto, User> userDtoMapper;
 
     @Autowired
-    public SharedEventDtoListMapper(Converter<EventDto, Event> eventDtoMapper, Converter<UserDto, User> userDtoMapper) {
-        this.eventDtoMapper = eventDtoMapper;
-        this.userDtoMapper = userDtoMapper;
+    public SharedEventDtoListMapper() {
+        this.eventDtoMapper = new EventDtoMapper();
+        this.userDtoMapper = new UserDtoMapper();
     }
 
     @Override
     public List<SharedEventDto> convert(List<SharedEvent> from) {
-        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd.MM.yyyy HH:mm:ss");
         List<SharedEventDto> sharedEventDtoList = new ArrayList<>();
 
         from = from.stream()
@@ -40,7 +39,7 @@ public class SharedEventDtoListMapper implements Converter<List<SharedEventDto>,
         for (SharedEvent sharedEvent : from) {
             SharedEventDto sharedEventDto = SharedEventDto.builder()
                     .authorOfSharing(userDtoMapper.convert(sharedEvent.getSharedEventUser()))
-                    .sharingDate(sharedEvent.getDate().format(formatter))
+                    .sharingDate(sharedEvent.getDate().toString())
                     .event(eventDtoMapper.convert(sharedEvent.getEvent()))
                     .build();
             sharedEventDtoList.add(sharedEventDto);

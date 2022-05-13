@@ -17,14 +17,11 @@ public class ChatDetailsDtoMapper implements Converter<ChatDetailsDto, Chat>{
     private final Converter<List<ChatMessageDto>, List<ChatMessage>> chatMessageDtoListMapper;
 
     @Autowired
-    public ChatDetailsDtoMapper(Converter<List<ChatMemberDto>, List<ChatMember>> chatMemberDtoListMapper,
-                                Converter<UserDto, User> userDtoMapper,
-                                Converter<ImageDto, Image> imageDtoMapper,
-                                Converter<List<ChatMessageDto>, List<ChatMessage>> chatMessageDtoListMapper) {
-        this.chatMemberDtoListMapper = chatMemberDtoListMapper;
-        this.userDtoMapper = userDtoMapper;
-        this.imageDtoMapper = imageDtoMapper;
-        this.chatMessageDtoListMapper = chatMessageDtoListMapper;
+    public ChatDetailsDtoMapper() {
+        this.chatMemberDtoListMapper = new ChatMemberDtoListMapper();
+        this.userDtoMapper = new UserDtoMapper();
+        this.imageDtoMapper = new ImageDtoMapper();
+        this.chatMessageDtoListMapper = new ChatMessageDtoListMapper();
     }
 
     @Override

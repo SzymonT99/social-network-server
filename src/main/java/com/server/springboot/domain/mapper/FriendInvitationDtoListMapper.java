@@ -2,6 +2,7 @@ package com.server.springboot.domain.mapper;
 
 import com.server.springboot.domain.dto.response.FriendInvitationDto;
 import com.server.springboot.domain.dto.response.UserDto;
+import com.server.springboot.domain.entity.ChatMessage;
 import com.server.springboot.domain.entity.Friend;
 import com.server.springboot.domain.entity.User;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -9,6 +10,7 @@ import org.springframework.stereotype.Component;
 
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -19,14 +21,17 @@ public class FriendInvitationDtoListMapper implements Converter<List<FriendInvit
     private final Converter<List<UserDto>, List<User>> userDtoListMapper;
 
     @Autowired
-    public FriendInvitationDtoListMapper(Converter<UserDto, User> userDtoMapper, Converter<List<UserDto>, List<User>> userDtoListMapper) {
-        this.userDtoMapper = userDtoMapper;
-        this.userDtoListMapper = userDtoListMapper;
+    public FriendInvitationDtoListMapper() {
+        this.userDtoMapper = new UserDtoMapper();
+        this.userDtoListMapper = new UserDtoListMapper();
     }
 
     @Override
     public List<FriendInvitationDto> convert(List<Friend> from) {
         List<FriendInvitationDto> friendInvitationDtoList = new ArrayList<>();
+        from = from.stream()
+                .sorted(Comparator.comparing(Friend::getInvitationDate))
+                .collect(Collectors.toList());
 
         for (Friend friend : from) {
 

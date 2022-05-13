@@ -17,14 +17,11 @@ public class UserProfileDtoMapper implements Converter<UserProfileDto, UserProfi
     private final Converter<List<WorkPlaceDto>, List<WorkPlace>> workPlaceDtoListMapper;
 
     @Autowired
-    public UserProfileDtoMapper(Converter<ImageDto, Image> imageDtoMapper,
-                                Converter<AddressDto, Address> addressDtoMapper,
-                                Converter<List<SchoolDto>, List<School>> schoolDtoListMapper,
-                                Converter<List<WorkPlaceDto>, List<WorkPlace>> workPlaceDtoListMapper) {
-        this.imageDtoMapper = imageDtoMapper;
-        this.addressDtoMapper = addressDtoMapper;
-        this.schoolDtoListMapper = schoolDtoListMapper;
-        this.workPlaceDtoListMapper = workPlaceDtoListMapper;
+    public UserProfileDtoMapper() {
+        this.imageDtoMapper = new ImageDtoMapper();
+        this.addressDtoMapper = new AddressDtoMapper();
+        this.schoolDtoListMapper = new SchoolDtoListMapper();
+        this.workPlaceDtoListMapper = new WorkPlaceDtoListMapper();
     }
 
     @Override

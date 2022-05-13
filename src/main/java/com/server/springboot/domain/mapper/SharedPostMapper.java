@@ -11,7 +11,6 @@ public class SharedPostMapper implements Converter<Post, RequestSharePostDto> {
 
     @Override
     public Post convert(RequestSharePostDto from) {
-        System.out.println(from);
         return Post.builder()
                 .text(from.getText())
                 .isPublic(from.isPublic())

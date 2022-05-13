@@ -125,7 +125,7 @@ public class UserApiController {
     @PostMapping(value = "/users/reset-password/step1")
     public ResponseEntity<?> sendResetPasswordLink(@Email @RequestParam(value = "userEmail") String userEmail) {
         LOGGER.info("---- Send reset password link for user with email: {}", userEmail);
-        userService.sendResetPasswordLink(userEmail);
+        userService.sendResetPasswordToken(userEmail);
         return new ResponseEntity<>(HttpStatus.CREATED);
     }
 
@@ -184,7 +184,7 @@ public class UserApiController {
     @PreAuthorize("hasRole('ROLE_ADMIN')")
     @GetMapping(value = "/users/accounts")
     public ResponseEntity<UserAccountPageDto> getUsersAccounts(@RequestParam(value = "page", defaultValue = "8") int page,
-                                                                 @RequestParam(value = "size", defaultValue = "8") int size) {
+                                                               @RequestParam(value = "size", defaultValue = "8") int size) {
         LOGGER.info("---- Admin get users accounts on panel");
         return new ResponseEntity<>(userService.getUsersAccounts(page, size), HttpStatus.OK);
     }

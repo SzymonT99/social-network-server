@@ -1,19 +1,16 @@
 package com.server.springboot.service.impl;
 
 import com.server.springboot.domain.dto.response.*;
-import com.server.springboot.domain.entity.Address;
 import com.server.springboot.domain.entity.Friend;
-import com.server.springboot.domain.entity.Image;
 import com.server.springboot.domain.entity.User;
 import com.server.springboot.domain.enumeration.ActionType;
-import com.server.springboot.domain.mapper.Converter;
+import com.server.springboot.domain.mapper.*;
 import com.server.springboot.domain.repository.FriendRepository;
 import com.server.springboot.domain.repository.UserRepository;
 import com.server.springboot.exception.*;
 import com.server.springboot.security.JwtUtils;
 import com.server.springboot.service.FriendService;
 import com.server.springboot.service.NotificationService;
-import com.server.springboot.service.UserActivityService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -29,23 +26,21 @@ public class FriendServiceImpl implements FriendService {
     private final UserRepository userRepository;
     private final FriendRepository friendRepository;
     private final JwtUtils jwtUtils;
-    private final Converter<List<FriendInvitationDto>, List<Friend>> friendInvitationDtoListMapper;
-    private final Converter<List<SentFriendInvitationDto>, List<Friend>> sentFriendInvitationDtoListMapper;
-    private final Converter<List<FriendDto>, List<Friend>> friendDtoListMapper;
-    private final Converter<ProfilePhotoDto, Image> profilePhotoDtoMapper;
-    private final Converter<AddressDto, Address> addressDtoMapper;
-    private final Converter<List<UserDto>, List<User>> userDtoListMapper;
+    private final FriendInvitationDtoListMapper friendInvitationDtoListMapper;
+    private final SentFriendInvitationDtoListMapper sentFriendInvitationDtoListMapper;
+    private final FriendDtoListMapper friendDtoListMapper;
+    private final ProfilePhotoDtoMapper profilePhotoDtoMapper;
+    private final AddressDtoMapper addressDtoMapper;
+    private final UserDtoListMapper userDtoListMapper;
     private final NotificationService notificationService;
-
 
     @Autowired
     public FriendServiceImpl(UserRepository userRepository, FriendRepository friendRepository, JwtUtils jwtUtils,
-                             Converter<List<FriendInvitationDto>, List<Friend>> friendInvitationDtoListMapper,
-                             Converter<List<SentFriendInvitationDto>, List<Friend>> sentFriendInvitationDtoListMapper,
-                             Converter<List<FriendDto>, List<Friend>> friendDtoListMapper,
-                             Converter<ProfilePhotoDto, Image> profilePhotoDtoMapper,
-                             Converter<AddressDto, Address> addressDtoMapper,
-                             Converter<List<UserDto>, List<User>> userDtoListMapper,
+
+                             FriendInvitationDtoListMapper friendInvitationDtoListMapper,
+                             SentFriendInvitationDtoListMapper sentFriendInvitationDtoListMapper,
+                             FriendDtoListMapper friendDtoListMapper, ProfilePhotoDtoMapper profilePhotoDtoMapper,
+                             AddressDtoMapper addressDtoMapper, UserDtoListMapper userDtoListMapper,
                              NotificationService notificationService) {
         this.userRepository = userRepository;
         this.friendRepository = friendRepository;
@@ -61,16 +56,15 @@ public class FriendServiceImpl implements FriendService {
 
     @Override
     public void inviteToFriendsByUserId(Long userId) {
-        Long loggedUserId = jwtUtils.getLoggedUserId();
-        User user = userRepository.findById(loggedUserId)
-                .orElseThrow(() -> new NotFoundException("Not found user with id: " + loggedUserId));
+        Long loggedInUserId = jwtUtils.getLoggedInUserId();
+        User loggedInUser = userRepository.findById(loggedInUserId).get();
         User invitedUser = userRepository.findById(userId)
-                .orElseThrow(() -> new NotFoundException("Not found user with id: " + userId));
-        if (friendRepository.existsByUserAndUserFriend(user, invitedUser)) {
-            throw new ConflictRequestException("Friend request has already been sent to user with id: " + userId);
+                .orElseThrow(() -> new NotFoundException("Not found invited loggedInUser with id: " + userId));
+        if (friendRepository.existsByUserAndUserFriend(loggedInUser, invitedUser)) {
+            throw new ConflictRequestException("Friend request has already been sent to loggedInUser with id: " + userId);
         }
         Friend friend = Friend.builder()
-                .user(user)
+                .user(loggedInUser)
                 .userFriend(invitedUser)
                 .isInvitationAccepted(null)
                 .invitationDate(LocalDateTime.now())
@@ -79,7 +73,7 @@ public class FriendServiceImpl implements FriendService {
                 .build();
         friendRepository.save(friend);
 
-        notificationService.sendNotificationToUser(user, invitedUser.getUserId(), ActionType.FRIEND_INVITATION);
+        notificationService.sendNotificationToUser(loggedInUser, invitedUser.getUserId(), ActionType.FRIEND_INVITATION);
     }
 
     @Override
@@ -95,7 +89,7 @@ public class FriendServiceImpl implements FriendService {
 
     @Override
     public void respondToFriendInvitation(Long inviterId, String reactionToInvitation) {
-        Long loggedUserId = jwtUtils.getLoggedUserId();
+        Long loggedUserId = jwtUtils.getLoggedInUserId();
         User currentUser = userRepository.findById(loggedUserId)
                 .orElseThrow(() -> new NotFoundException("Not found user with id: " + loggedUserId));
         User inviter = userRepository.findById(inviterId)
@@ -114,7 +108,7 @@ public class FriendServiceImpl implements FriendService {
             Friend acceptedFriend = Friend.builder()
                     .isInvitationAccepted(true)
                     .invitationDisplayed(true)
-                    .invitationDate(LocalDateTime.now())
+                    .invitationDate(null)
                     .friendFromDate(LocalDateTime.now())
                     .user(currentUser)
                     .userFriend(inviter)
@@ -135,7 +129,7 @@ public class FriendServiceImpl implements FriendService {
     @Override
     @Transactional
     public void deleteFriendById(Long friendId, boolean isDeletedInvitation) {
-        Long loggedUserId = jwtUtils.getLoggedUserId();
+        Long loggedUserId = jwtUtils.getLoggedInUserId();
         User currentUser = userRepository.findById(loggedUserId)
                 .orElseThrow(() -> new NotFoundException("Not found user with id: " + loggedUserId));
         Friend friend = friendRepository.findById(friendId)
@@ -174,7 +168,7 @@ public class FriendServiceImpl implements FriendService {
 
     @Override
     public List<FriendSuggestionDto> findAllFriendsSuggestions() {
-        Long loggedUserId = jwtUtils.getLoggedUserId();
+        Long loggedUserId = jwtUtils.getLoggedInUserId();
         User loggedUser = userRepository.findById(loggedUserId)
                 .orElseThrow(() -> new NotFoundException("Not found user with id: " + loggedUserId));
         List<User> loggedUserFriends = loggedUser.getFriends().stream()
@@ -189,7 +183,6 @@ public class FriendServiceImpl implements FriendService {
                         && !friendRepository.existsByUserAndUserFriend(loggedUser, userEl)
                         && !friendRepository.existsByUserAndUserFriend(userEl, loggedUser))
                 .collect(Collectors.toList());
-
         List<FriendSuggestionDto> friendSuggestionList = new ArrayList<>();
 
         for (User currentUser : users) {

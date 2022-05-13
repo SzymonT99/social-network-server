@@ -22,10 +22,9 @@ public class GroupThreadAnswerDtoListMapper implements Converter<List<GroupThrea
     private final Converter<List<GroupThreadAnswerReviewDto>, List<ThreadAnswerReview>> groupThreadAnswerReviewDtoListMapper;
 
     @Autowired
-    public GroupThreadAnswerDtoListMapper(Converter<GroupMemberDto, GroupMember> groupMemberDtoMapper,
-                                          Converter<List<GroupThreadAnswerReviewDto>, List<ThreadAnswerReview>> groupThreadAnswerReviewDtoListMapper) {
-        this.groupMemberDtoMapper = groupMemberDtoMapper;
-        this.groupThreadAnswerReviewDtoListMapper = groupThreadAnswerReviewDtoListMapper;
+    public GroupThreadAnswerDtoListMapper() {
+        this.groupMemberDtoMapper = new GroupMemberDtoMapper();
+        this.groupThreadAnswerReviewDtoListMapper = new GroupThreadAnswerReviewDtoListMapper();
     }
 
     @Override
