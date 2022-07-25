@@ -158,6 +158,7 @@ public class ProfileServiceImpl implements ProfileService {
 
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
         userProfile.setDateOfBirth(LocalDate.parse(updateUserProfileDto.getDateOfBirth(), formatter));
+        userProfile.setAge(LocalDate.now().getYear() - LocalDate.parse(updateUserProfileDto.getDateOfBirth(), formatter).getYear());
 
         userProfile.setJob(updateUserProfileDto.getJob());
         userProfile.setRelationshipStatus(RelationshipStatus.valueOf(updateUserProfileDto.getRelationshipStatus()));

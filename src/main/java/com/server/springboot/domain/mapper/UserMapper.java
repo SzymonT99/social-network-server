@@ -4,7 +4,6 @@ import com.server.springboot.domain.dto.request.CreateUserDto;
 import com.server.springboot.domain.entity.User;
 import com.server.springboot.domain.entity.UserProfile;
 import com.server.springboot.domain.enumeration.ActivityStatus;
-import com.server.springboot.domain.enumeration.AppRole;
 import org.springframework.stereotype.Component;
 
 import java.time.LocalDateTime;

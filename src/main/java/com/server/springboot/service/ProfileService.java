@@ -2,9 +2,6 @@ package com.server.springboot.service;
 
 import com.server.springboot.domain.dto.request.*;
 import com.server.springboot.domain.dto.response.*;
-import com.server.springboot.domain.enumeration.FavouriteType;
-import com.server.springboot.domain.enumeration.RelationshipStatus;
-import com.server.springboot.domain.enumeration.SchoolType;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
