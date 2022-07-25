@@ -30,8 +30,8 @@ To run the server you must:
     * `mvn spring-boot:run`
 
 ## Database
-The MySQL relational database was used.
-<br />
+The MySQL relational database was used.<br />
 - ERD diagram
+![ERD](https://user-images.githubusercontent.com/72529852/180804203-798e5ee3-b587-46e7-9d0c-3cfe444951e9.png)
   
-  ![ERD](./src/main/resources/ERD.png)
+  
